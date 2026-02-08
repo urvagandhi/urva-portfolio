@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-light dark:bg-dark;
+}
+
+/* Dark mode gradient background */
+.dark body,
+.dark {
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbar - Light Mode */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Custom Scrollbar - Dark Mode */
+.dark ::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #58E6D9;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #7aeee3;
+}
+
+/* Glowing effects for dark mode */
+.dark .glow-effect {
+  box-shadow: 0 0 20px rgba(88, 230, 217, 0.3);
+}
+
+.dark .glow-effect:hover {
+  box-shadow: 0 0 30px rgba(88, 230, 217, 0.5);
+}
+
+/* Enhanced card borders for dark mode */
+.dark .card-glow {
+  border-color: rgba(88, 230, 217, 0.3);
+  box-shadow: 0 4px 20px rgba(88, 230, 217, 0.1);
+}
+
+/* Gradient text utility */
+.gradient-text-dark {
+  background: linear-gradient(90deg, #58E6D9 0%, #B63E96 50%, #58E6D9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
