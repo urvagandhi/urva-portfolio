@@ -145,24 +145,58 @@ const NavBar = () => {
                     <CustomLink href="#projects" title="Projects" />
                 </nav>
 
-                <nav className="flex items-center justify-center gap-3">
-                    <SocialIcon href="https://x.com/urva_gandhi">
+                <nav className="flex items-center justify-center gap-3" aria-label="Social media links">
+                    <motion.a
+                        href="https://x.com/urva_gandhi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-6"
+                        aria-label="Follow me on Twitter"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
                         <TwitterIcon />
-                    </SocialIcon>
-                    <SocialIcon href="https://github.com/urvagandhi">
+                    </motion.a>
+                    <motion.a
+                        href="https://github.com/urvagandhi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-6"
+                        aria-label="View my GitHub profile"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
                         <GithubIcon />
-                    </SocialIcon>
-                    <SocialIcon href="https://www.linkedin.com/in/urva-gandhi/">
+                    </motion.a>
+                    <motion.a
+                        href="https://www.linkedin.com/in/urva-gandhi/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-6"
+                        aria-label="Connect on LinkedIn"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
                         <LinkedInIcon />
-                    </SocialIcon>
-                    <SocialIcon href="https://leetcode.com/Urva_Gandhi/">
+                    </motion.a>
+                    <motion.a
+                        href="https://leetcode.com/Urva_Gandhi/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-6"
+                        aria-label="See my LeetCode profile"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
                         <LeetCodeIcon />
-                    </SocialIcon>
+                    </motion.a>
 
                     <button
+                        type="button"
                         onClick={() => setMode(mode === "light" ? "dark" : "light")}
                         className={`w-6 h-6 ml-3 flex items-center justify-center rounded-full p-1 ease
                             ${mode === "light" ? "bg-dark text-light" : "bg-light text-dark"}`}
+                        aria-label={mode === "light" ? "Switch to dark mode" : "Switch to light mode"}
                     >
                         {mode === "dark" ? (
                             <SunIcon className="fill-dark" />
@@ -198,30 +232,46 @@ const NavBar = () => {
                         <CustomMobileLink href="#projects" title="Projects" className="" toggle={handleClick} />
                     </nav>
 
-                    <nav className="flex items-center justify-center flex-wrap mt-6">
-                        <motion.a href="https://x.com/urva_gandhi" target={"_blank"}
+                    <nav className="flex items-center justify-center flex-wrap mt-6" aria-label="Social media links">
+                        <motion.a
+                            href="https://x.com/urva_gandhi"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-6 mr-3 sm:mx-1"
+                            aria-label="Follow me on Twitter"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
-                            className="w-6 mr-3 sm:mx-1"
                         >
                             <TwitterIcon />
                         </motion.a>
-                        <motion.a href="https://github.com/urvagandhi" target={"_blank"}
+                        <motion.a
+                            href="https://github.com/urvagandhi"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="w-6 mx-3 bg-light rounded-full dark:bg-dark sm:mx-1"
+                            aria-label="View my GitHub profile"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
                         >
                             <GithubIcon />
                         </motion.a>
-                        <motion.a href="https://www.linkedin.com/in/urva-gandhi/" target={"_blank"}
+                        <motion.a
+                            href="https://www.linkedin.com/in/urva-gandhi/"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="w-6 mx-3 sm:mx-1"
+                            aria-label="Connect on LinkedIn"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
                         >
                             <LinkedInIcon />
                         </motion.a>
-                        <motion.a href="https://leetcode.com/Urva_Gandhi/" target={"_blank"}
+                        <motion.a
+                            href="https://leetcode.com/Urva_Gandhi/"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="w-6 mx-3 sm:mx-1"
+                            aria-label="See my LeetCode profile"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
                         >
@@ -229,10 +279,12 @@ const NavBar = () => {
                         </motion.a>
 
                         <button
+                            type="button"
                             onClick={() => setMode(mode === "light" ? "dark" : "light")}
                             className={`ml-3 flex items-center justify-center rounded-full p-1
                             ${mode === "light" ? "bg-dark text-light" : "bg-light text-dark"}
                             `}
+                            aria-label={mode === "light" ? "Switch to dark mode" : "Switch to light mode"}
                         >
                             {
                                 mode === "dark" ?

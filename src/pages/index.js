@@ -74,7 +74,7 @@ const FeaturedProject = ({ type, title, summary, img, link, github }) => {
           {summary}
         </p>
         <div className="mt-2 flex items-center">
-          <Link href={github} target="_blank" className="w-10">
+          <Link href={github} target="_blank" className="w-10" aria-label={`View ${title} on GitHub`}>
             <GithubIcon />
           </Link>
           <Link
@@ -131,7 +131,7 @@ const Project = ({ type, title, summary, img, link, github }) => {
           >
             Visit
           </Link>
-          <Link href={github} target="_blank" className="w-8 md:w-6">
+          <Link href={github} target="_blank" className="w-8 md:w-6" aria-label={`View ${title} on GitHub`}>
             <GithubIcon />
           </Link>
         </div>
@@ -164,6 +164,7 @@ export default function Home() {
                   className="h-auto w-full rounded-2xl"
                   sizes="(max-width: 768px) 100vw, 400px"
                   priority
+                  fetchPriority="high"
                 />
               </div>
             </div>
@@ -232,7 +233,6 @@ export default function Home() {
                 alt="Urva Gandhi"
                 className="h-auto w-full rounded-2xl"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                priority
               />
             </div>
 
