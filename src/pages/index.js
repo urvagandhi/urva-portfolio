@@ -286,7 +286,7 @@ export default function Home() {
                 title="CoinTrack"
                 summary="Unified finance dashboard aggregating portfolio data from multiple stock broker APIs (Zerodha, Angel One, etc.) into a single view. Features P&L tracking, live market data, watchlist, and exportable reports. Tech: Spring Boot (Java 21), JWT, MongoDB, Next.js."
                 img="/images/projects/coinTrack.png"
-                link="https://github.com/urvagandhi/cointrack"
+                link="https://cointrack-finance.vercel.app/"
                 github="https://github.com/urvagandhi/cointrack"
               />
             </div>
