@@ -7,23 +7,37 @@ const Skill = ({ name, x, y, lg, md, sm, xs, color = "default" }) => {
   const [position, setPosition] = useState({ x, y });
 
   useEffect(() => {
+    let timeoutId = null;
+    
     const handleResize = () => {
-      if (window.innerWidth < 480 && xs) {
-        setPosition(xs);
-      } else if (window.innerWidth < 768 && sm) {
-        setPosition(sm);
-      } else if (window.innerWidth < 1024 && md) {
-        setPosition(md);
-      } else if (window.innerWidth < 1280 && lg) {
-        setPosition(lg);
-      } else {
-        setPosition({ x, y });
+      // Debounce resize calculations
+      if (timeoutId) {
+        clearTimeout(timeoutId);
       }
+      
+      timeoutId = setTimeout(() => {
+        if (window.innerWidth < 480 && xs) {
+          setPosition(xs);
+        } else if (window.innerWidth < 768 && sm) {
+          setPosition(sm);
+        } else if (window.innerWidth < 1024 && md) {
+          setPosition(md);
+        } else if (window.innerWidth < 1280 && lg) {
+          setPosition(lg);
+        } else {
+          setPosition({ x, y });
+        }
+      }, 150); // Debounce by 150ms
     };
 
     handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [x, y, lg, md, sm, xs]);
   
   const colorClasses = {
@@ -39,11 +53,9 @@ const Skill = ({ name, x, y, lg, md, sm, xs, color = "default" }) => {
   return (
     <motion.div
       ref={ref}
-      className={`absolute flex cursor-pointer items-center justify-center rounded-full ${colorClasses[color]} px-6 py-3 font-semibold text-light shadow-lg backdrop-blur-sm lg:px-4 lg:py-2 md:px-3 md:py-1.5 md:text-sm xs:px-2 xs:py-1 xs:text-xs z-10`}
+      className={`absolute flex cursor-pointer items-center justify-center rounded-full ${colorClasses[color]} px-6 py-3 font-semibold text-light shadow-lg backdrop-blur-sm lg:px-4 lg:py-2 md:px-3 md:py-1.5 md:text-sm xs:px-2 xs:py-1 xs:text-xs z-10 will-change-transform hover:scale-110 transition-transform duration-300`}
       whileHover={{ 
-        scale: 1.15, 
-        boxShadow: "0 0 25px rgba(147, 51, 234, 0.5)",
-        transition: { duration: 0.3 }
+        scale: 1.1
       }}
       initial={{ x: 0, y: 0, opacity: 0 }}
       animate={isInView ? { 
@@ -114,21 +126,10 @@ const Skills = () => {
         
         {/* Center - Pulsing */}
         <motion.div
-          className="flex cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-dark via-gray-800 to-dark p-8 font-bold text-light shadow-2xl dark:from-light dark:via-gray-200 dark:to-light dark:text-dark lg:p-6 md:p-4 xs:p-2 xs:text-xs z-20"
+          className="flex cursor-pointer items-center justify-center rounded-full bg-gradient-to-br from-dark via-gray-800 to-dark p-8 font-bold text-light shadow-2xl dark:from-light dark:via-gray-200 dark:to-light dark:text-dark lg:p-6 md:p-4 xs:p-2 xs:text-xs z-20 will-change-transform"
           whileHover={{ scale: 1.1 }}
-          animate={{ 
-            boxShadow: [
-              "0 0 20px rgba(88, 230, 217, 0.3)",
-              "0 0 50px rgba(88, 230, 217, 0.6)",
-              "0 0 20px rgba(88, 230, 217, 0.3)"
-            ]
-          }}
-          transition={{ 
-            boxShadow: { 
-              duration: 2, 
-              repeat: Infinity, 
-              ease: "easeInOut" 
-            }
+          style={{
+            boxShadow: "0 0 30px rgba(88, 230, 217, 0.4)"
           }}
         >
           Full-Stack

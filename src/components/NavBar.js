@@ -89,11 +89,38 @@ const NavBar = () => {
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
+        let rafId = null;
+        let lastScrollY = window.scrollY;
+        
         const handleScroll = () => {
-            setScrolled(window.scrollY > 20);
+            // Cancel any pending RAF
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+            }
+            
+            // Throttle with requestAnimationFrame
+            rafId = requestAnimationFrame(() => {
+                const currentScrollY = window.scrollY;
+                const shouldBeScrolled = currentScrollY > 20;
+                const wasScrolled = lastScrollY > 20;
+                
+                // Only update state if threshold crossed
+                if (shouldBeScrolled !== wasScrolled) {
+                    setScrolled(shouldBeScrolled);
+                }
+                
+                lastScrollY = currentScrollY;
+            });
         };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        
+        // Use passive listener for better scroll performance
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+            }
+        };
     }, []);
 
     const handleClick = () => {

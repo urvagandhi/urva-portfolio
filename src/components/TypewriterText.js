@@ -19,18 +19,36 @@ const TypewriterText = ({ text, className = "" }) => {
 
   useEffect(() => {
     let index = 0;
-    const intervalId = setInterval(() => {
-      setDisplayedText((prev) => {
-        if (index < text.length) {
-          index++;
-          return text.slice(0, index);
-        }
-        clearInterval(intervalId);
-        return prev;
-      });
-    }, 150); // Adjust typing speed here (50ms per character)
-
-    return () => clearInterval(intervalId);
+    let lastTime = 0;
+    let rafId = null;
+    const typingSpeed = 100; // ms per character
+    
+    const typeCharacter = (timestamp) => {
+      if (!lastTime) lastTime = timestamp;
+      const elapsed = timestamp - lastTime;
+      
+      if (elapsed >= typingSpeed) {
+        setDisplayedText((prev) => {
+          if (index < text.length) {
+            index++;
+            lastTime = timestamp;
+            return text.slice(0, index);
+          }
+          return prev;
+        });
+      }
+      
+      if (index < text.length) {
+        rafId = requestAnimationFrame(typeCharacter);
+      }
+    };
+    
+    rafId = requestAnimationFrame(typeCharacter);
+    return () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, [text]);
 
   return (

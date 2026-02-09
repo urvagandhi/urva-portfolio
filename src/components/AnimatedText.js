@@ -8,8 +8,8 @@ const quote = {
   animate: {
     opacity: 1,
     transition: {
-      delay: 0.5,
-      staggerChildren: 0.08,
+      delay: 0.2,
+      staggerChildren: 0.05,
     },
   },
 };
@@ -23,7 +23,7 @@ const singleWord = {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 1,
+      duration: 0.6,
     },
   },
 };
