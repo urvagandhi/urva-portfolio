@@ -12,6 +12,8 @@ import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
+import SectionHeading from "@/components/SectionHeading";
+import { BorderBeam } from "@/components/magicui/border-beam";
 import { useEffect, useRef } from "react";
 import profilePic from "../../public/images/profile/urva.png";
 import profilePic2 from "../../public/images/profile/urva_2.jpeg";
@@ -47,6 +49,7 @@ const FeaturedProject = ({ type, title, summary, img, link, github }) => {
   return (
     <article className="relative flex w-full items-center justify-between rounded-3xl rounded-br-2xl border border-solid border-dark bg-light p-12 shadow-2xl dark:border-primaryDark/30 dark:bg-dark dark:shadow-dark-glow lg:flex-col lg:p-8 xs:rounded-2xl xs:rounded-br-3xl xs:p-4">
       <div className="absolute -right-5 -bottom-5 -z-10 h-full w-full rounded-[2.5rem] rounded-br-3xl bg-dark dark:bg-primaryDark/20 md:-right-3 md:-bottom-3 xs:-right-2 xs:-bottom-2 xs:rounded-[1.5rem]" />
+      <BorderBeam size={250} duration={12} delay={9} colorFrom="#58E6D9" colorTo="#8B5CF6" />
       <Link
         href={link}
         target="_blank"
@@ -96,6 +99,7 @@ const Project = ({ type, title, summary, img, link, github }) => {
   return (
     <article className="relative flex w-full flex-col items-center justify-center rounded-2xl rounded-br-2xl border border-solid border-dark bg-light p-6 shadow-2xl dark:border-primaryDark/30 dark:bg-dark dark:shadow-dark-glow xs:p-4">
       <div className="absolute -right-5 -bottom-5 -z-10 h-full w-full rounded-[2rem] rounded-br-3xl bg-dark dark:bg-primaryDark/20 md:-right-3 md:-bottom-3 xs:-right-2 xs:-bottom-2 xs:rounded-[1.5rem]" />
+      <BorderBeam size={150} duration={10} delay={5} colorFrom="#58E6D9" colorTo="#8B5CF6" />
       <Link
         href={link}
         target="_blank"
@@ -195,12 +199,12 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="w-full dark:text-light border-t-2 border-solid border-dark dark:border-light">
-        <Layout className="pt-16">
-          <AnimatedText
-            text="About Me"
-            className="mb-16 !text-8xl !leading-tight lg:!text-7xl sm:!text-6xl xs:!text-4xl sm:mb-8"
-          />
+      <section id="about" className="relative w-full dark:text-light border-t-2 border-solid border-dark dark:border-light overflow-hidden">
+        {/* About Section Content */}
+        <Layout className="relative pt-16 z-10">
+          <div className="w-full flex justify-center mb-16 sm:mb-8">
+            <SectionHeading title="About Me" subTitle="GET TO KNOW" theme="emerald" />
+          </div>
           <div className="grid w-full grid-cols-8 gap-16 sm:gap-8">
             <div className="col-span-3 flex flex-col items-start justify-start xl:col-span-4 md:order-2 md:col-span-8">
               <h2 className="mb-4 text-lg font-bold uppercase text-dark/75 dark:text-light/75">
@@ -230,6 +234,7 @@ export default function Home() {
 
             <div className="relative col-span-3 h-max rounded-2xl border-2 border-solid border-dark bg-light p-8 shadow-2xl dark:border-primaryDark/30 dark:bg-dark dark:shadow-dark-glow xl:col-span-4 md:col-span-8 md:order-1">
               <div className="absolute -right-5 -bottom-5 -z-10 h-full w-full rounded-[2rem] rounded-br-3xl bg-dark dark:bg-primaryDark/20 md:-right-3 md:-bottom-3" />
+              <BorderBeam size={200} duration={10} delay={5} colorFrom="#58E6D9" colorTo="#8B5CF6" />
               <Image
                 src={profilePic2}
                 alt="Urva Gandhi"
@@ -277,10 +282,9 @@ export default function Home() {
       {/* Projects Section */}
       <section id="projects" className="w-full mb-16 dark:text-light border-t-2 border-solid border-dark dark:border-light">
         <Layout className="pt-16">
-          <AnimatedText
-            text="My Projects"
-            className="mb-16 !text-8xl !leading-tight lg:!text-7xl sm:mb-8 sm:!text-6xl xs:!text-4xl"
-          />
+          <div className="w-full flex justify-center mb-16 sm:mb-8">
+            <SectionHeading title="Projects" subTitle="MY WORK" theme="blue" />
+          </div>
           <div className="grid grid-cols-12 gap-24 gap-y-32 xl:gap-x-16 lg:gap-x-8 md:gap-y-24 sm:gap-x-0">
             <div className="col-span-12">
               <FeaturedProject

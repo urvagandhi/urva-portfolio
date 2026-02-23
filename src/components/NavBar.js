@@ -5,8 +5,6 @@ import { createPortal } from "react-dom";
 import {
     GithubIcon,
     LinkedInIcon,
-    MoonIcon,
-    SunIcon,
     TwitterIcon,
     PinterestIcon,
     DribbbleIcon,
@@ -14,6 +12,7 @@ import {
 } from "./Icons";
 import Logo from "./Logo";
 import useThemeSwitcher from "./hooks/useThemeSwitcher";
+import ThemeSwitcher from "./ThemeSwitcher";
 
 const CustomLink = ({ href, title, className = "" }) => {
     const handleClick = (e) => {
@@ -218,19 +217,7 @@ const NavBar = () => {
                         <LeetCodeIcon />
                     </motion.a>
 
-                    <button
-                        type="button"
-                        onClick={() => setMode(mode === "light" ? "dark" : "light")}
-                        className={`w-6 h-6 ml-3 flex items-center justify-center rounded-full p-1 ease
-                            ${mode === "light" ? "bg-dark text-light" : "bg-light text-dark"}`}
-                        aria-label={mode === "light" ? "Switch to dark mode" : "Switch to light mode"}
-                    >
-                        {mode === "dark" ? (
-                            <SunIcon className="fill-dark" />
-                        ) : (
-                            <MoonIcon className="fill-dark" />
-                        )}
-                    </button>
+                    <ThemeSwitcher mode={mode} setMode={setMode} className="ml-3" />
                 </nav>
             </div>
 
@@ -305,20 +292,7 @@ const NavBar = () => {
                             <LeetCodeIcon />
                         </motion.a>
 
-                        <button
-                            type="button"
-                            onClick={() => setMode(mode === "light" ? "dark" : "light")}
-                            className={`ml-3 flex items-center justify-center rounded-full p-1
-                            ${mode === "light" ? "bg-dark text-light" : "bg-light text-dark"}
-                            `}
-                            aria-label={mode === "light" ? "Switch to dark mode" : "Switch to light mode"}
-                        >
-                            {
-                                mode === "dark" ?
-                                    <SunIcon className={"fill-dark"} />
-                                    : <MoonIcon className={"fill-dark"} />
-                            }
-                        </button>
+                        <ThemeSwitcher mode={mode} setMode={setMode} className="ml-3 sm:mx-1" />
                     </nav>
                 </motion.div>,
                 document.body

@@ -1,6 +1,7 @@
 import { motion, useScroll } from "framer-motion";
 import { useRef } from "react";
 import LiIcon from "./LiIcon";
+import SectionHeading from "./SectionHeading";
 
 const Details = ({ position, company, companyLink, time, address, work }) => {
     const ref = useRef(null);
@@ -44,9 +45,9 @@ const Experience = () => {
 
     return (
         <div className="my-64">
-            <h2 className="font-bold text-8xl mb-32 w-full text-center md:text-6xl xs:text-4xl md:mb-16">
-                Hackathons & Achievements
-            </h2>
+            <div className="w-full flex justify-center mb-32 md:mb-16">
+                <SectionHeading title="Hackathons" subTitle="ACHIEVEMENTS" theme="rose" />
+            </div>
 
             <div ref={ref} className="relative w-[75%] mx-auto lg:w-[90%] md:w-full">
                 <motion.div

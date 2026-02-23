@@ -1,5 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import SectionHeading from "./SectionHeading";
 
 const Skill = ({ name, x, y, lg, md, sm, xs, color = "default" }) => {
   const ref = useRef(null);
@@ -78,15 +79,9 @@ const Skill = ({ name, x, y, lg, md, sm, xs, color = "default" }) => {
 const Skills = () => {
   return (
     <>
-      <motion.h2 
-        className="mt-64 w-full text-center text-8xl font-bold md:mt-32 md:text-6xl xs:text-4xl"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        viewport={{ once: true }}
-      >
-        Skills
-      </motion.h2>
+      <div className="w-full flex justify-center mt-64 md:mt-32">
+        <SectionHeading title="Skills" subTitle="MY EXPERTISE" theme="purple" />
+      </div>
       
       {/* Legend */}
       <motion.div 
