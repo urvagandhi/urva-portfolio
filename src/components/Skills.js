@@ -4,7 +4,7 @@ import SectionHeading from "./SectionHeading";
 
 const Skill = ({ name, x, y, lg, md, sm, xs, color = "default" }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: false, amount: 0.1 });
+  const isInView = useInView(ref, { once: true, amount: 0.1 });
   const [position, setPosition] = useState({ x, y });
 
   useEffect(() => {
@@ -54,21 +54,22 @@ const Skill = ({ name, x, y, lg, md, sm, xs, color = "default" }) => {
   return (
     <motion.div
       ref={ref}
-      className={`absolute flex cursor-pointer items-center justify-center rounded-full ${colorClasses[color]} px-6 py-3 font-semibold text-light shadow-lg backdrop-blur-sm lg:px-4 lg:py-2 md:px-3 md:py-1.5 md:text-sm xs:px-2 xs:py-1 xs:text-xs z-10 will-change-transform hover:scale-110 transition-transform duration-300`}
-      whileHover={{ 
-        scale: 1.1
+      className={`absolute flex cursor-pointer items-center justify-center rounded-full ${colorClasses[color]} px-6 py-3 font-semibold text-light shadow-lg backdrop-blur-sm lg:px-4 lg:py-2 md:px-3 md:py-1.5 md:text-sm xs:px-2 xs:py-1 xs:text-xs z-10`}
+      whileHover={{
+        scale: 1.1,
+        transition: { type: "spring", stiffness: 300, damping: 20 }
       }}
       initial={{ x: 0, y: 0, opacity: 0 }}
-      animate={isInView ? { 
-        x: position.x, 
-        y: position.y, 
+      animate={isInView ? {
+        x: position.x,
+        y: position.y,
         opacity: 1,
       } : { x: 0, y: 0, opacity: 0 }}
-      transition={{ 
-        duration: 1.5, 
-        type: "spring", 
-        stiffness: 50,
-        damping: 20
+      transition={{
+        duration: 1.2,
+        type: "spring",
+        stiffness: 80,
+        damping: 15
       }}
     >
       {name}

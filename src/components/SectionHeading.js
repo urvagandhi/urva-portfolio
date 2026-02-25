@@ -81,7 +81,7 @@ const SectionHeading = ({ title, subTitle, className = "", theme = "blue" }) => 
         </motion.h2>
 
         {/* Floating Dots */}
-        <div className="absolute top-0 -right-12 sm:-right-8 flex flex-row items-end gap-1.5">
+        <div className="absolute top-0 -right-12 sm:-right-8 flex flex-row items-end gap-1.5" aria-hidden="true">
           <motion.span 
             className={`w-1.5 h-1.5 rounded-full ${colors.dots[0]}`} 
             initial={{ opacity: 0, scale: 0 }}

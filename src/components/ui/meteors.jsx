@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -11,20 +11,24 @@ export const Meteors = ({
   angle = 215,
   className
 }) => {
-  const [meteorStyles, setMeteorStyles] = useState([])
+  const [windowWidth, setWindowWidth] = useState(0)
 
   useEffect(() => {
-    const styles = [...new Array(number)].map(() => ({
+    setWindowWidth(window.innerWidth)
+  }, [])
+
+  const meteorStyles = useMemo(() => {
+    if (!windowWidth) return []
+    return [...new Array(number)].map(() => ({
       "--angle": -angle + "deg",
       top: "-5%",
-      left: `calc(0% + ${Math.floor(Math.random() * window.innerWidth)}px)`,
+      left: `calc(0% + ${Math.floor(Math.random() * windowWidth)}px)`,
       animationDelay: Math.random() * (maxDelay - minDelay) + minDelay + "s",
       animationDuration:
         Math.floor(Math.random() * (maxDuration - minDuration) + minDuration) +
         "s",
     }))
-    setMeteorStyles(styles)
-  }, [number, minDelay, maxDelay, minDuration, maxDuration, angle])
+  }, [number, minDelay, maxDelay, minDuration, maxDuration, angle, windowWidth])
 
   return (
     <>

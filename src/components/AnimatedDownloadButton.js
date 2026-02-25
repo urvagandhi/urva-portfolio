@@ -1,10 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LinkArrow } from "./Icons";
 
 const AnimatedDownloadButton = ({ href = "/resume.pdf", filename = "resume.pdf" }) => {
   const [status, setStatus] = useState("idle"); // idle, downloading, completed
   const [progress, setProgress] = useState(0);
+  const intervalRef = useRef(null);
+  const timeoutRef = useRef(null);
+
+  // Cleanup on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const startDownload = (e) => {
     e.preventDefault();
@@ -14,12 +24,13 @@ const AnimatedDownloadButton = ({ href = "/resume.pdf", filename = "resume.pdf" 
     setProgress(0);
 
     // Simulate download progress
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
-          clearInterval(interval);
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
           setStatus("completed");
-          
+
           // Trigger actual download
           const link = document.createElement("a");
           link.href = href;
@@ -27,13 +38,14 @@ const AnimatedDownloadButton = ({ href = "/resume.pdf", filename = "resume.pdf" 
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          
+
           // Reset after delay
-          setTimeout(() => {
+          timeoutRef.current = setTimeout(() => {
             setStatus("idle");
             setProgress(0);
+            timeoutRef.current = null;
           }, 3000);
-          
+
           return 100;
         }
         return prev + 1; // Animation speed
@@ -67,11 +79,11 @@ const AnimatedDownloadButton = ({ href = "/resume.pdf", filename = "resume.pdf" 
             exit={{ opacity: 0, scale: 0.8 }}
           >
             {/* Percentage Text */}
-            <span className="mb-2 text-sm font-bold text-dark dark:text-light">
+            <span className="mb-2 text-sm font-bold text-dark dark:text-light" aria-live="polite">
               Downloading... {progress.toFixed(0)}%
             </span>
 
-            <div className="relative w-full h-1 bg-gray-300 dark:bg-gray-700 rounded-full mt-1">
+            <div className="relative w-full h-1 bg-gray-300 dark:bg-gray-700 rounded-full mt-1" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}>
               {/* String / Progress Line */}
               <motion.div 
                 className="absolute top-0 left-0 h-full bg-primary dark:bg-primaryDark rounded-full"

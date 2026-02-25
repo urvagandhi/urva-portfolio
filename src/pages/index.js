@@ -155,6 +155,14 @@ export default function Home() {
           name="description"
           content="Urva Gandhi - Computer Science undergraduate at Nirma University. Full-stack developer with expertise in React.js, Spring Boot, and Machine Learning. 1st Place Winner at RWEsearch Health AI Hackathon 2025."
         />
+        <meta property="og:title" content="Urva Gandhi | Full-Stack Developer Portfolio" />
+        <meta property="og:description" content="Full-stack developer with expertise in React.js, Spring Boot, and Machine Learning. 1st Place Winner at RWEsearch Health AI Hackathon 2025." />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="/images/profile/urva.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Urva Gandhi | Full-Stack Developer Portfolio" />
+        <meta name="twitter:description" content="Full-stack developer with expertise in React.js, Spring Boot, and Machine Learning." />
+        <meta name="twitter:image" content="/images/profile/urva.png" />
       </Head>
       <TransitionEffect />
 

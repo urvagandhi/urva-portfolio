@@ -24,18 +24,23 @@ const ThemeSwitcher = ({ mode, setMode, className = "" }) => {
     );
 
     const transition = document.startViewTransition(() => {
-      // Force DOM class update for new snapshot
+      // Update DOM class directly for the snapshot
       if (nextMode === "dark") {
         document.documentElement.classList.add("dark");
       } else {
         document.documentElement.classList.remove("dark");
       }
+      // Persist and broadcast BEFORE flushSync so all listeners
+      // (e.g. _app.js particle color) update within the same synchronous flush
+      window.localStorage.setItem("theme", nextMode);
+      window.dispatchEvent(new CustomEvent("themeChange", { detail: nextMode }));
+      // Synchronously update React state so the new snapshot reflects the correct UI
+      flushSync(() => {
+        setMode(nextMode);
+      });
     });
 
     transition.ready.then(() => {
-      // Update React state after the transition snapshot is ready
-      setMode(nextMode);
-
       const clipPath = [
         `circle(0px at ${x}px ${y}px)`,
         `circle(${endRadius}px at ${x}px ${y}px)`,
@@ -55,7 +60,6 @@ const ThemeSwitcher = ({ mode, setMode, className = "" }) => {
       );
     }).catch((e) => {
       console.warn("View transition aborted", e);
-      setMode(nextMode); // Ensure state updates even if transition fails
     });
   };
 

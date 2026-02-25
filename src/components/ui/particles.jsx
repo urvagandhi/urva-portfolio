@@ -210,13 +210,16 @@ export const Particles = ({
 
   const animate = () => {
     clearContext()
-    circles.current.forEach((circle, i) => {
+    const replacements = []
+    // Iterate backwards so splice doesn't skip elements
+    for (let i = circles.current.length - 1; i >= 0; i--) {
+      const circle = circles.current[i]
       // Handle the alpha value
       const edge = [
-        circle.x + circle.translateX - circle.size, // distance from left edge
-        canvasSize.current.w - circle.x - circle.translateX - circle.size, // distance from right edge
-        circle.y + circle.translateY - circle.size, // distance from top edge
-        canvasSize.current.h - circle.y - circle.translateY - circle.size, // distance from bottom edge
+        circle.x + circle.translateX - circle.size,
+        canvasSize.current.w - circle.x - circle.translateX - circle.size,
+        circle.y + circle.translateY - circle.size,
+        canvasSize.current.h - circle.y - circle.translateY - circle.size,
       ]
       const closestEdge = edge.reduce((a, b) => Math.min(a, b))
       const remapClosestEdge = parseFloat(remapValue(closestEdge, 0, 20, 0, 1).toFixed(2))
@@ -246,13 +249,14 @@ export const Particles = ({
         circle.y < -circle.size ||
         circle.y > canvasSize.current.h + circle.size
       ) {
-        // remove the circle from the array
         circles.current.splice(i, 1)
-        // create a new circle
-        const newCircle = circleParams()
-        drawCircle(newCircle)
+        replacements.push(circleParams())
       }
-    })
+    }
+    // Add replacement circles after iteration is complete
+    for (const newCircle of replacements) {
+      drawCircle(newCircle)
+    }
     rafID.current = window.requestAnimationFrame(animate)
   }
 

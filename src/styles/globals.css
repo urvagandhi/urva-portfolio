@@ -78,6 +78,7 @@ body {
   display: inline-block;
   width: 60px;
   height: 34px;
+  view-transition-name: theme-toggle;
 }
 
 .theme-switch-wrapper .theme-switch-input {

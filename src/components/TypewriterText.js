@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
 const cursorVariants = {
@@ -16,33 +16,31 @@ const cursorVariants = {
 
 const TypewriterText = ({ text, className = "" }) => {
   const [displayedText, setDisplayedText] = useState("");
+  const indexRef = useRef(0);
+  const lastTimeRef = useRef(0);
 
   useEffect(() => {
-    let index = 0;
-    let lastTime = 0;
+    indexRef.current = 0;
+    lastTimeRef.current = 0;
+    setDisplayedText("");
     let rafId = null;
     const typingSpeed = 100; // ms per character
-    
+
     const typeCharacter = (timestamp) => {
-      if (!lastTime) lastTime = timestamp;
-      const elapsed = timestamp - lastTime;
-      
-      if (elapsed >= typingSpeed) {
-        setDisplayedText((prev) => {
-          if (index < text.length) {
-            index++;
-            lastTime = timestamp;
-            return text.slice(0, index);
-          }
-          return prev;
-        });
+      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
+      const elapsed = timestamp - lastTimeRef.current;
+
+      if (elapsed >= typingSpeed && indexRef.current < text.length) {
+        indexRef.current++;
+        lastTimeRef.current = timestamp;
+        setDisplayedText(text.slice(0, indexRef.current));
       }
-      
-      if (index < text.length) {
+
+      if (indexRef.current < text.length) {
         rafId = requestAnimationFrame(typeCharacter);
       }
     };
-    
+
     rafId = requestAnimationFrame(typeCharacter);
     return () => {
       if (rafId) {

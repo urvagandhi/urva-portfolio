@@ -5,6 +5,7 @@ const CircularText = ({ className }) => (
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 300 300"
         className={className}
+        aria-hidden="true"
     >
         <defs>
             <path
@@ -29,6 +30,7 @@ const HireMe = () => {
                 <Link
                     href="mailto:urvagandhi24@gmail.com"
                     className="flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-dark text-light shadow-md border border-solid border-dark w-20 h-20 rounded-full font-semibold hover:bg-light hover:text-dark dark:bg-light dark:text-dark dark:hover:bg-dark dark:hover:text-light dark:hover:border-light md:w-12 md:h-12 md:text-[10px]"
+                    aria-label="Send me an email to hire me"
                 >
                     Hire Me
                 </Link>

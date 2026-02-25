@@ -1,20 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const useThemeSwitcher = () => {
-    const preferDarkQuery = "(prefer-color-scheme: dark)";
-    const [mode, setMode] = useState("");
+    const preferDarkQuery = "(prefers-color-scheme: dark)";
+    const [mode, setMode] = useState("light");
+    const prevMode = useRef(null);
 
     useEffect(() => {
         const mediaQuery = window.matchMedia(preferDarkQuery);
-        const userPref = window.localStorage.getItem("theme");
 
         const handleChange = () => {
-            if (userPref) {
-                let check = userPref === "dark" ? "dark" : "light";
-                setMode(check);
+            const userPref = window.localStorage.getItem("theme");
+            if (userPref === "dark" || userPref === "light") {
+                setMode(userPref);
             } else {
-                let check = mediaQuery.matches ? "dark" : "light";
-                setMode(check);
+                setMode(mediaQuery.matches ? "dark" : "light");
             }
         };
 
@@ -24,6 +23,9 @@ const useThemeSwitcher = () => {
 
         // SYNC STATE ACROSS COMPONENT INSTANCES
         const handleCustomThemeChange = (e) => {
+            // Mark prevMode so the sync useEffect below becomes a no-op
+            // (ThemeSwitcher already handled localStorage, DOM class, and event dispatch)
+            prevMode.current = e.detail;
             setMode(e.detail);
         };
         window.addEventListener("themeChange", handleCustomThemeChange);
@@ -35,6 +37,10 @@ const useThemeSwitcher = () => {
     }, []);
 
     useEffect(() => {
+        // Skip if mode hasn't actually changed (prevents redundant event dispatches)
+        if (mode === prevMode.current) return;
+        prevMode.current = mode;
+
         if (mode === "dark") {
             window.localStorage.setItem("theme", "dark");
             document.documentElement.classList.add("dark");
