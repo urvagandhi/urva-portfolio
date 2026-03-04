@@ -14,7 +14,19 @@ import Image from "next/image";
 import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading";
 import { BorderBeam } from "@/components/magicui/border-beam";
+import useThemeSwitcher from "@/components/hooks/useThemeSwitcher";
+import dynamic from "next/dynamic";
 import { useEffect, useRef } from "react";
+
+// Dynamically import heavy chart components that render below the fold
+const GithubGraph = dynamic(() => import("@/components/GithubGraph"), { 
+  ssr: false, 
+  loading: () => <div className="h-[200px] w-full animate-pulse rounded-xl bg-dark/5 dark:bg-light/10" /> 
+});
+const LeetcodeGraph = dynamic(() => import("@/components/LeetcodeGraph"), { 
+  ssr: false,
+  loading: () => <div className="h-[200px] w-full animate-pulse rounded-xl bg-dark/5 dark:bg-light/10" /> 
+});
 import profilePic from "../../public/images/profile/urva.png";
 import profilePic2 from "../../public/images/profile/urva_2.jpeg";
 
@@ -45,7 +57,7 @@ const AnimatedNumbers = ({ value }) => {
   return <span ref={ref}></span>;
 };
 
-const FeaturedProject = ({ type, title, summary, img, link, github }) => {
+const FeaturedProject = ({ type, title, summary, img, link, github, tech }) => {
   return (
     <article className="relative flex w-full items-center justify-between rounded-3xl rounded-br-2xl border border-solid border-dark bg-light p-12 shadow-2xl dark:border-primaryDark/30 dark:bg-dark dark:shadow-dark-glow lg:flex-col lg:p-8 xs:rounded-2xl xs:rounded-br-3xl xs:p-4">
       <div className="absolute -right-5 -bottom-5 -z-10 h-full w-full rounded-[2.5rem] rounded-br-3xl bg-dark dark:bg-primaryDark/20 md:-right-3 md:-bottom-3 xs:-right-2 xs:-bottom-2 xs:rounded-[1.5rem]" />
@@ -78,6 +90,15 @@ const FeaturedProject = ({ type, title, summary, img, link, github }) => {
         <p className="my-2 rounded-md font-medium text-dark dark:text-light sm:text-sm">
           {summary}
         </p>
+        {tech && (
+          <div className="my-2 flex flex-wrap gap-2">
+            {tech.split(',').map((item, index) => (
+              <span key={index} className="rounded-full bg-dark/5 dark:bg-light/10 px-3 py-1 text-xs font-semibold text-primary dark:text-primaryDark border border-solid border-primary/20 dark:border-primaryDark/20 shadow-sm">
+                {item.trim()}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="mt-2 flex items-center">
           <Link href={github} target="_blank" className="w-10" aria-label={`View ${title} on GitHub`}>
             <GithubIcon />
@@ -95,7 +116,7 @@ const FeaturedProject = ({ type, title, summary, img, link, github }) => {
   );
 };
 
-const Project = ({ type, title, summary, img, link, github }) => {
+const Project = ({ type, title, summary, img, link, github, tech }) => {
   return (
     <article className="relative flex w-full flex-col items-center justify-center rounded-2xl rounded-br-2xl border border-solid border-dark bg-light p-6 shadow-2xl dark:border-primaryDark/30 dark:bg-dark dark:shadow-dark-glow xs:p-4">
       <div className="absolute -right-5 -bottom-5 -z-10 h-full w-full rounded-[2rem] rounded-br-3xl bg-dark dark:bg-primaryDark/20 md:-right-3 md:-bottom-3 xs:-right-2 xs:-bottom-2 xs:rounded-[1.5rem]" />
@@ -129,6 +150,15 @@ const Project = ({ type, title, summary, img, link, github }) => {
             {summary}
           </p>
         )}
+        {tech && (
+          <div className="my-2 flex flex-wrap gap-2">
+            {tech.split(',').map((item, index) => (
+              <span key={index} className="rounded-full bg-dark/5 dark:bg-light/10 px-2 py-1 text-[11px] font-semibold text-primary dark:text-primaryDark border border-solid border-primary/20 dark:border-primaryDark/20 shadow-sm">
+                {item.trim()}
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex w-full items-center justify-between mt-2">
           <Link
             href={link}
@@ -147,22 +177,101 @@ const Project = ({ type, title, summary, img, link, github }) => {
 };
 
 export default function Home() {
+  const [mode] = useThemeSwitcher();
+
   return (
     <>
       <Head>
         <title>Urva Gandhi | Full-Stack Developer Portfolio</title>
         <meta
           name="description"
-          content="Urva Gandhi - Computer Science undergraduate at Nirma University. Full-stack developer with expertise in React.js, Spring Boot, and Machine Learning. 1st Place Winner at RWEsearch Health AI Hackathon 2025."
+          content="Urva Gandhi — Computer Science undergraduate at Nirma University. Full-stack developer specializing in React.js, Spring Boot, and Machine Learning. 1st Place Winner at RWEsearch Health AI Hackathon 2025. Explore projects, skills, and experience."
         />
-        <meta property="og:title" content="Urva Gandhi | Full-Stack Developer Portfolio" />
-        <meta property="og:description" content="Full-stack developer with expertise in React.js, Spring Boot, and Machine Learning. 1st Place Winner at RWEsearch Health AI Hackathon 2025." />
+
+        {/* SEO meta tags */}
+        <meta name="keywords" content="Urva Gandhi, Urva Gandhi portfolio, full-stack developer, software engineer, Nirma University, React developer, Spring Boot developer, machine learning engineer, hackathon winner, Java developer, Python developer, web developer portfolio, computer science student" />
+        <meta name="author" content="Urva Gandhi" />
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <link rel="canonical" href="https://urvagandhi-portfolio.vercel.app/" />
+
+        {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="/images/profile/urva.png" />
+        <meta property="og:url" content="https://urvagandhi-portfolio.vercel.app/" />
+        <meta property="og:site_name" content="Urva Gandhi Portfolio" />
+        <meta property="og:title" content="Urva Gandhi | Full-Stack Developer Portfolio" />
+        <meta property="og:description" content="Full-stack developer specializing in React.js, Spring Boot, and Machine Learning. 1st Place Winner at RWEsearch Health AI Hackathon 2025. View projects, skills, and experience." />
+        <meta property="og:image" content="https://urvagandhi-portfolio.vercel.app/images/profile/urva.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="Urva Gandhi — Full-Stack Developer" />
+        <meta property="og:locale" content="en_US" />
+
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Urva Gandhi | Full-Stack Developer Portfolio" />
-        <meta name="twitter:description" content="Full-stack developer with expertise in React.js, Spring Boot, and Machine Learning." />
-        <meta name="twitter:image" content="/images/profile/urva.png" />
+        <meta name="twitter:description" content="Full-stack developer specializing in React.js, Spring Boot, and Machine Learning. Explore projects and experience." />
+        <meta name="twitter:image" content="https://urvagandhi-portfolio.vercel.app/images/profile/urva.png" />
+        <meta name="twitter:image:alt" content="Urva Gandhi — Full-Stack Developer" />
+
+        {/* JSON-LD Structured Data for Google Knowledge Graph */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": "https://urvagandhi-portfolio.vercel.app/#website",
+                  "name": "Urva Gandhi Portfolio",
+                  "url": "https://urvagandhi-portfolio.vercel.app",
+                  "description": "Portfolio of Urva Gandhi — Full-Stack Developer & ML Engineer",
+                  "inLanguage": "en-US"
+                },
+                {
+                  "@type": "WebPage",
+                  "@id": "https://urvagandhi-portfolio.vercel.app/#webpage",
+                  "url": "https://urvagandhi-portfolio.vercel.app/",
+                  "name": "Urva Gandhi | Full-Stack Developer Portfolio",
+                  "isPartOf": { "@id": "https://urvagandhi-portfolio.vercel.app/#website" },
+                  "about": { "@id": "https://urvagandhi-portfolio.vercel.app/#person" },
+                  "description": "Portfolio showcasing projects, skills, and experience of Urva Gandhi — a full-stack developer and ML engineer.",
+                  "inLanguage": "en-US"
+                },
+                {
+                  "@type": "Person",
+                  "@id": "https://urvagandhi-portfolio.vercel.app/#person",
+                  "name": "Urva Gandhi",
+                  "url": "https://urvagandhi-portfolio.vercel.app",
+                  "image": "https://urvagandhi-portfolio.vercel.app/images/profile/urva.png",
+                  "jobTitle": "Full-Stack Developer",
+                  "description": "Computer Science undergraduate at Nirma University. Full-stack developer with expertise in React.js, Spring Boot, and Machine Learning.",
+                  "alumniOf": {
+                    "@type": "CollegeOrUniversity",
+                    "name": "Nirma University",
+                    "url": "https://www.nirmauni.ac.in/"
+                  },
+                  "knowsAbout": [
+                    "Full-Stack Development",
+                    "React.js",
+                    "Next.js",
+                    "Spring Boot",
+                    "Java",
+                    "Python",
+                    "Machine Learning",
+                    "Artificial Intelligence",
+                    "Data Structures and Algorithms",
+                    "System Design"
+                  ],
+                  "sameAs": [
+                    "https://github.com/urvagandhi",
+                    "https://leetcode.com/Urva_Gandhi/"
+                  ]
+                }
+              ]
+            })
+          }}
+        />
       </Head>
       <TransitionEffect />
 
@@ -234,7 +343,7 @@ export default function Home() {
                 Open to collaborating on real-time financial data pipelines, ML deployment workflows & MLOps,
                 and turning Hackathon prototypes into Production systems. I&apos;ve solved {" "}
                 <Link href="https://leetcode.com/Urva_Gandhi/" target="_blank" className="underline underline-offset-2 text-primary dark:text-primaryDark">
-                  150+ LeetCode problems
+                  200+ LeetCode problems
                 </Link>{" "}
                 and completed 4+ major projects.
               </p>
@@ -254,7 +363,7 @@ export default function Home() {
             <div className="col-span-2 flex flex-col items-end justify-between xl:col-span-8 xl:flex-row xl:items-center md:order-3">
               <Link href="https://leetcode.com/Urva_Gandhi/" target="_blank" className="flex flex-col items-end justify-center xl:items-center group">
                 <span className="inline-block text-7xl font-bold md:text-6xl sm:text-5xl xs:text-4xl group-hover:text-primary dark:group-hover:text-primaryDark transition-colors duration-300">
-                  <AnimatedNumbers value={150} />+
+                  <AnimatedNumbers value={200} />+
                 </span>
                 <h2 className="mb-4 text-xl font-medium capitalize text-dark/75 dark:text-light/75 xl:text-center md:text-lg sm:text-base xs:text-sm group-hover:text-primary dark:group-hover:text-primaryDark transition-colors duration-300">
                   LeetCode Problems
@@ -287,6 +396,19 @@ export default function Home() {
         </Layout>
       </section>
 
+      {/* Contributions Section */}
+      <section id="contributions" className="w-full mb-16 dark:text-light border-t-2 border-solid border-dark dark:border-light">
+        <Layout className="pt-16">
+          <div className="w-full flex justify-center mb-16 sm:mb-8">
+            <SectionHeading title="Contributions" subTitle="MY ACTIVITY" theme="emerald" />
+          </div>
+          <div className="w-full grid grid-cols-2 gap-8 xl:grid-cols-1">
+            <GithubGraph username="urvagandhi" themeMode={mode} />
+            <LeetcodeGraph username="Urva_Gandhi" themeMode={mode} />
+          </div>
+        </Layout>
+      </section>
+
       {/* Projects Section */}
       <section id="projects" className="w-full mb-16 dark:text-light border-t-2 border-solid border-dark dark:border-light">
         <Layout className="pt-16">
@@ -298,7 +420,8 @@ export default function Home() {
               <FeaturedProject
                 type="Featured Project - Finance | Ongoing"
                 title="CoinTrack"
-                summary="Unified finance dashboard aggregating portfolio data from multiple stock broker APIs (Zerodha, Angel One, etc.) into a single view. Features P&L tracking, live market data, watchlist, and exportable reports. Tech: Spring Boot (Java 21), JWT, MongoDB, Next.js."
+                summary="Unified finance dashboard aggregating portfolio data from multiple stock broker APIs (Zerodha, Angel One, etc.) into a single view. Features P&L tracking, live market data, watchlist, and exportable reports."
+                tech="Spring Boot (Java 21), JWT, MongoDB, Next.js"
                 img="/images/projects/coinTrack.png"
                 link="https://cointrack-finance.vercel.app/"
                 github="https://github.com/urvagandhi/cointrack"
@@ -308,7 +431,8 @@ export default function Home() {
               <Project
                 type="Full-Stack & ML | 🏆 1st Place Winner"
                 title="RWEsearch - Healthcare Analytics"
-                summary="Built a platform predicting hospital readmissions (30/60/90 days) with Smart Model Loader for instant ML evaluation. Features interactive Streamlit dashboard with visualizations. Tech: Python, Streamlit, Scikit-learn, XGBoost, Docker."
+                summary="Built a platform predicting hospital readmissions (30/60/90 days) with Smart Model Loader for instant ML evaluation. Features interactive Streamlit dashboard with visualizations."
+                tech="Python, Streamlit, Scikit-learn, XGBoost, Docker"
                 img="/images/projects/RWEsearch.png"
                 link="https://github.com/urvagandhi/RWEsearch-Hackathon"
                 github="https://github.com/urvagandhi/RWEsearch-Hackathon"
@@ -318,7 +442,8 @@ export default function Home() {
               <Project
                 type="AI & Document Intelligence | Adobe Hackathon"
                 title="Connecting the Dots: PDF Intelligence"
-                summary="Offline PDF analysis engine built for Adobe Hackathon. Features structured outline extraction with hierarchy detection, and persona-driven document intelligence that adapts content for different user roles. Tech: Python, PyMuPDF, Docker."
+                summary="Offline PDF analysis engine built for Adobe Hackathon. Features structured outline extraction with hierarchy detection, and persona-driven document intelligence that adapts content for different user roles."
+                tech="Python, PyMuPDF, Docker"
                 img="/images/projects/Adobe_PDF.png"
                 link="https://github.com/urvagandhi/CTRL_ALT_Adobe-PS_1A"
                 github="https://github.com/urvagandhi/CTRL_ALT_Adobe-PS_1B"
@@ -328,7 +453,8 @@ export default function Home() {
               <FeaturedProject
                 type="Featured Project - AI Security"
                 title="CodeGuardian"
-                summary="AI-driven multi-language vulnerability detection engine using graph-aware transformers and static analysis. Auto-scans code to identify security flaws, maps to CWE/CVE, and generates explainable remediation suggestions. Tech: Python, PyTorch, Transformers, LoRA/QLoRA."
+                summary="AI-driven multi-language vulnerability detection engine using graph-aware transformers and static analysis. Auto-scans code to identify security flaws, maps to CWE/CVE, and generates explainable remediation suggestions."
+                tech="Python, PyTorch, Transformers, LoRA/QLoRA"
                 img="/images/projects/codeGuardian.jpeg"
                 link="https://github.com/Harsh204k/codeGuardian"
                 github="https://github.com/Harsh204k/codeGuardian"

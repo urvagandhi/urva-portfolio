@@ -4,12 +4,9 @@
 User-agent: *
 Allow: /
 
-# Crawl-delay to be respectful to servers (optional)
-Crawl-delay: 1
-
 # Block access to Next.js internal directories
 Disallow: /_next/webpack-hmr
 Disallow: /_next/static/webpack/
 
-# Sitemap location (update with your actual domain)
+# Sitemap location
 Sitemap: https://urvagandhi-portfolio.vercel.app/sitemap.xml

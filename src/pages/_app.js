@@ -58,6 +58,8 @@ export default function App({ Component, pageProps }) {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/images/profile/urva-circular.png" />
+        <title>Urva Gandhi | Software Developer Portfolio</title>
+        <meta name="description" content="Urva Gandhi — Full-stack developer, ML enthusiast, and hackathon winner. Explore projects, skills, and experience." />
       </Head>
 
       {/* Intro loader overlay */}

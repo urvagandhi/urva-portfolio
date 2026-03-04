@@ -9,6 +9,7 @@ export default function NotFound() {
       <Head>
         <title>Page Not Found | Urva Gandhi</title>
         <meta name="description" content="The page you are looking for does not exist." />
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
       <TransitionEffect />
       <main className="flex min-h-screen items-center text-dark dark:text-light pt-24">

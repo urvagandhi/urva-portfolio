@@ -4,6 +4,8 @@ const nextConfig = {
 
   // Target modern browsers to reduce polyfills and bundle size
   compiler: {
+    // Enable styled-components hydration to prevent SSR mismatches
+    styledComponents: true,
     // Remove console logs in production for cleaner output
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn'],
