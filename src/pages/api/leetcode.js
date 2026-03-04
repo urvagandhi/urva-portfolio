@@ -71,6 +71,12 @@ export default async function handler(req, res) {
     // Fill in missing dates for the requested year, or the last 365 days
     // This is optional if react-activity-calendar can handle sparse data (it can, but needs start/end if we want a full year)
 
+    // Set cache headers - cache for 24 hours (86400s), serve stale while revalidating for another 12 hours
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=86400, stale-while-revalidate=43200"
+    );
+
     res.status(200).json({
       activeYears: calendar.activeYears,
       totalActiveDays: calendar.totalActiveDays,
