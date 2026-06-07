@@ -224,11 +224,18 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
 
 ---
 
-## <img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="28"> &nbsp;LeetCode Journey
+## <img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="28"> &nbsp;Competitive Programming
 
 <div align="center">
-  <a href="https://leetcode.com/Urva_Gandhi/">
-    <img src="https://leetcard.jacoblin.cool/Urva_Gandhi?theme=dark&font=Fira%20Code&ext=heatmap&border=0&radius=10" width="70%"/>
+  
+  [![LeetCode](https://img.shields.io/badge/LeetCode-FFA116?style=for-the-badge&logo=LeetCode&logoColor=black)](https://leetcode.com/u/urva_gandhi)
+  [![Codeforces](https://img.shields.io/badge/Codeforces-1F8ACB?style=for-the-badge&logo=Codeforces&logoColor=white)](https://codeforces.com/profile/Urva_Gandhi)
+  [![CodeChef](https://img.shields.io/badge/CodeChef-5B4636?style=for-the-badge&logo=CodeChef&logoColor=white)](https://codechef.com/users/urva_gandhi)
+
+  <br/><br/>
+
+  <a href="https://leetcode.com/u/urva_gandhi">
+    <img src="https://leetcard.jacoblin.cool/urva_gandhi?theme=dark&font=Fira%20Code&ext=heatmap&border=0&radius=10" width="70%"/>
   </a>
 </div>
 

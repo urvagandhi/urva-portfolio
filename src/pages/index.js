@@ -27,6 +27,7 @@ const LeetcodeGraph = dynamic(() => import("@/components/LeetcodeGraph"), {
   ssr: false,
   loading: () => <div className="h-[200px] w-full animate-pulse rounded-xl bg-dark/5 dark:bg-light/10" /> 
 });
+import CodingProfiles from "@/components/CodingProfiles";
 import profilePic from "../../public/images/profile/urva.png";
 import profilePic2 from "../../public/images/profile/urva_2.jpeg";
 
@@ -185,7 +186,7 @@ export default function Home() {
         <title>Urva Gandhi | Full-Stack Developer Portfolio</title>
         <meta
           name="description"
-          content="Urva Gandhi — Computer Science undergraduate at Nirma University. Full-stack developer specializing in React.js, Spring Boot, and Machine Learning. 1st Place Winner at RWEsearch Health AI Hackathon 2025. Explore projects, skills, and experience."
+          content="Urva Gandhi — Computer Science undergraduate at Nirma University. Full-stack developer specializing in React.js, Spring Boot, and Machine Learning. 3x Hackathon Winner across 500+ teams. Explore projects, skills, and experience."
         />
 
         {/* SEO meta tags */}
@@ -199,7 +200,7 @@ export default function Home() {
         <meta property="og:url" content="https://urvagandhi-portfolio.vercel.app/" />
         <meta property="og:site_name" content="Urva Gandhi Portfolio" />
         <meta property="og:title" content="Urva Gandhi | Full-Stack Developer Portfolio" />
-        <meta property="og:description" content="Full-stack developer specializing in React.js, Spring Boot, and Machine Learning. 1st Place Winner at RWEsearch Health AI Hackathon 2025. View projects, skills, and experience." />
+        <meta property="og:description" content="Full-stack developer specializing in React.js, Spring Boot, and Machine Learning. 3x Hackathon Winner across 500+ teams. View projects, skills, and experience." />
         <meta property="og:image" content="https://urvagandhi-portfolio.vercel.app/images/profile/urva.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
@@ -265,7 +266,7 @@ export default function Home() {
                   ],
                   "sameAs": [
                     "https://github.com/urvagandhi",
-                    "https://leetcode.com/Urva_Gandhi/"
+                    "https://leetcode.com/u/urva_gandhi"
                   ]
                 }
               ]
@@ -342,8 +343,8 @@ export default function Home() {
               <p className="font-medium">
                 Open to collaborating on real-time financial data pipelines, ML deployment workflows & MLOps,
                 and turning Hackathon prototypes into Production systems. I&apos;ve solved {" "}
-                <Link href="https://leetcode.com/Urva_Gandhi/" target="_blank" className="underline underline-offset-2 text-primary dark:text-primaryDark">
-                  200+ LeetCode problems
+                <Link href="https://leetcode.com/u/urva_gandhi" target="_blank" className="underline underline-offset-2 text-primary dark:text-primaryDark">
+                  270+ DSA problems in Java
                 </Link>{" "}
                 and completed 4+ major projects.
               </p>
@@ -361,9 +362,9 @@ export default function Home() {
             </div>
 
             <div className="col-span-2 flex flex-col items-end justify-between xl:col-span-8 xl:flex-row xl:items-center md:order-3">
-              <Link href="https://leetcode.com/Urva_Gandhi/" target="_blank" className="flex flex-col items-end justify-center xl:items-center group">
+              <Link href="https://leetcode.com/u/urva_gandhi" target="_blank" className="flex flex-col items-end justify-center xl:items-center group">
                 <span className="inline-block text-7xl font-bold md:text-6xl sm:text-5xl xs:text-4xl group-hover:text-primary dark:group-hover:text-primaryDark transition-colors duration-300">
-                  <AnimatedNumbers value={200} />+
+                  <AnimatedNumbers value={270} />+
                 </span>
                 <h2 className="mb-4 text-xl font-medium capitalize text-dark/75 dark:text-light/75 xl:text-center md:text-lg sm:text-base xs:text-sm group-hover:text-primary dark:group-hover:text-primaryDark transition-colors duration-300">
                   LeetCode Problems
@@ -381,10 +382,10 @@ export default function Home() {
 
               <div className="flex flex-col items-end justify-center xl:items-center">
                 <span className="inline-block text-7xl font-bold md:text-6xl sm:text-5xl xs:text-4xl">
-                  <AnimatedNumbers value={1} />+
+                  <AnimatedNumbers value={3} />x
                 </span>
                 <h2 className="mb-4 text-xl font-medium capitalize text-dark/75 dark:text-light/75 xl:text-center md:text-lg sm:text-base xs:text-sm">
-                  Hackathons Won
+                  Hackathon Winner
                 </h2>
               </div>
             </div>
@@ -404,8 +405,9 @@ export default function Home() {
           </div>
           <div className="w-full grid grid-cols-2 gap-8 xl:grid-cols-1">
             <GithubGraph username="urvagandhi" themeMode={mode} />
-            <LeetcodeGraph username="Urva_Gandhi" themeMode={mode} />
+            <LeetcodeGraph username="urva_gandhi" themeMode={mode} />
           </div>
+          <CodingProfiles />
         </Layout>
       </section>
 

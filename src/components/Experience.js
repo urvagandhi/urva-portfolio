@@ -57,21 +57,39 @@ const Experience = () => {
                 />
                 <ul className="w-full flex flex-col items-start justify-between ml-4 xs:ml-2">
                     <Details
+                        position="Track Runner-Up"
+                        company="HACKaMINeD 2026"
+                        companyLink="https://github.com/urvagandhi"
+                        time="2026"
+                        address="Remote"
+                        work="Developed 'Agent PaperPal', an advanced AI research assistant project. Secured Track Runner-Up out of 400+ teams and 2300+ registrations. Implemented agentic workflows to streamline academic paper analysis, semantic citation mapping, and interactive querying."
+                    />
+
+                    <Details
+                        position="2nd Runner-Up"
+                        company="Odoo × Gujarat Vidyapith Hackathon 2026"
+                        companyLink="https://github.com/urvagandhi"
+                        time="2026"
+                        address="Gujarat, India"
+                        work="Created a Product Lifecycle Management (PLM) solution integrated with Odoo. Won 2nd Runner-Up for demonstrating rapid backend development, ERP integration workflows, and clean database design."
+                    />
+
+                    <Details
                         position="1st Place Winner"
-                        company="RWEsearch & Health AI Hackathon 2025"
+                        company="RWEsearch & Health AI Innovation Hackathon 2025"
                         companyLink="https://github.com/urvagandhi/RWEsearch-Hackathon"
                         time="August 2025 - September 2025"
                         address="Remote"
-                        work="Built a healthcare analytics platform predicting hospital readmissions (30/60/90 days) and delivering cost + clinical insights. Designed a Smart Model Loader for instant evaluation of ML models (Logistic Regression, Random Forest, XGBoost, Deep Learning). Developed an interactive Streamlit dashboard with visualizations."
+                        work="Developed a healthcare analytics platform predicting hospital readmissions (30/60/90 days) and delivering cost + clinical insights. Ranked 1st Place among 140+ competing teams. Designed a Smart Model Loader for instant evaluation of ML models (Logistic Regression, Random Forest, XGBoost, Deep Learning). Developed an interactive Streamlit dashboard."
                     />
 
                     <Details
                         position="Round 2 Qualifier"
-                        company="Adobe India Hackathon 2025"
+                        company="Adobe India 'Connecting the Dots' Hackathon 2025"
                         companyLink="https://github.com/urvagandhi/CTRL ALT Adobe-PS 1A"
                         time="July 2025"
                         address="Remote"
-                        work="Participated in Adobe's 'Connecting the Dots' hackathon. Built an offline PDF Outline Extractor using heuristics on font size, boldness, and layout. Designed a persona-driven document intelligence pipeline with keyword filtering + semantic ranking. Optimized processing: <10s per 50-page PDF."
+                        work="Participated in Adobe's 'Connecting the Dots' hackathon, qualifying for Round 2. Built an offline PDF Outline Extractor using heuristics on font size, boldness, and layout. Designed a persona-driven document intelligence pipeline with keyword filtering + semantic ranking. Optimized processing to <10s per 50-page PDF."
                     />
 
                     <Details

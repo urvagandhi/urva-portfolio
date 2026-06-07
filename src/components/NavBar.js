@@ -9,6 +9,8 @@ import {
     PinterestIcon,
     DribbbleIcon,
     LeetCodeIcon,
+    CodeforcesIcon,
+    CodeChefIcon,
 } from "./Icons";
 import Logo from "./Logo";
 import useThemeSwitcher from "./hooks/useThemeSwitcher";
@@ -206,7 +208,7 @@ const NavBar = () => {
                         <LinkedInIcon />
                     </motion.a>
                     <motion.a
-                        href="https://leetcode.com/Urva_Gandhi/"
+                        href="https://leetcode.com/u/urva_gandhi"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-6"
@@ -215,6 +217,28 @@ const NavBar = () => {
                         whileTap={{ scale: 0.9 }}
                     >
                         <LeetCodeIcon />
+                    </motion.a>
+                    <motion.a
+                        href="https://codeforces.com/profile/Urva_Gandhi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-6"
+                        aria-label="See my Codeforces profile"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <CodeforcesIcon />
+                    </motion.a>
+                    <motion.a
+                        href="https://codechef.com/users/urva_gandhi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-6"
+                        aria-label="See my CodeChef profile"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.9 }}
+                    >
+                        <CodeChefIcon />
                     </motion.a>
 
                     <ThemeSwitcher mode={mode} setMode={setMode} className="ml-3" />
@@ -281,7 +305,7 @@ const NavBar = () => {
                             <LinkedInIcon />
                         </motion.a>
                         <motion.a
-                            href="https://leetcode.com/Urva_Gandhi/"
+                            href="https://leetcode.com/u/urva_gandhi"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-6 mx-3 sm:mx-1"
@@ -290,6 +314,28 @@ const NavBar = () => {
                             whileTap={{ scale: 0.9 }}
                         >
                             <LeetCodeIcon />
+                        </motion.a>
+                        <motion.a
+                            href="https://codeforces.com/profile/Urva_Gandhi"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-6 mx-3 sm:mx-1"
+                            aria-label="See my Codeforces profile"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.9 }}
+                        >
+                            <CodeforcesIcon />
+                        </motion.a>
+                        <motion.a
+                            href="https://codechef.com/users/urva_gandhi"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-6 mx-3 sm:mx-1"
+                            aria-label="See my CodeChef profile"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.9 }}
+                        >
+                            <CodeChefIcon />
                         </motion.a>
 
                         <ThemeSwitcher mode={mode} setMode={setMode} className="ml-3 sm:mx-1" />
