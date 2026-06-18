@@ -10,13 +10,13 @@ const CircularText = ({ className }) => (
         <defs>
             <path
                 id="circlePath"
-                d="M 150, 150 m -120, 0 a 120,120 0 1,1 240,0 a 120,120 0 1,1 -240,0"
+                d="M 150, 150 m -100, 0 a 100,100 0 1,1 200,0 a 100,100 0 1,1 -200,0"
                 fill="none"
             />
         </defs>
-        <text fontSize="22" fontWeight="700" letterSpacing="3">
+        <text fontSize="22" fontWeight="700" letterSpacing="4">
             <textPath href="#circlePath" startOffset="0%">
-                FULL STACK DEVELOPER • FULL STACK DEVELOPER •
+                Software Engineer • Software Engineer • 
             </textPath>
         </text>
     </svg>

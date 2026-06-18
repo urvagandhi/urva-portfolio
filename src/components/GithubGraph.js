@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { GitHubCalendar } from "react-github-calendar";
 
 export default function GithubGraph({ username, themeMode }) {
@@ -8,21 +8,42 @@ export default function GithubGraph({ username, themeMode }) {
 
   useEffect(() => {
     setMounted(true);
-    // Standard GitHub year generation (say, from 2020 to current)
+    // User's GitHub account was created in 2024, so generate years from 2024 to current
     const currentYear = new Date().getFullYear();
     const activeYears = [];
-    for (let y = currentYear; y >= currentYear - 4; y--) {
+    for (let y = currentYear; y >= 2024; y--) {
       activeYears.push(y);
     }
     setYears(activeYears);
   }, []);
 
-  if (!mounted) return null;
-
   const explicitTheme = {
     light: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
     dark: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
   };
+
+  const transformContributions = useCallback((contributions) => {
+    if (!contributions || contributions.length === 0) {
+      // Safe fallback to prevent "Activity data must not be empty" crash
+      const days = [];
+      const startDate = new Date(Date.UTC(selectedYear, 0, 1));
+      const endDate = new Date(Date.UTC(selectedYear, 11, 31));
+      const current = new Date(startDate);
+      while (current <= endDate) {
+        const dateStr = current.toISOString().split("T")[0];
+        days.push({
+          date: dateStr,
+          count: 0,
+          level: 0,
+        });
+        current.setUTCDate(current.getUTCDate() + 1);
+      }
+      return days;
+    }
+    return contributions;
+  }, [selectedYear]);
+
+  if (!mounted) return null;
 
   return (
     <div className="w-full h-full flex flex-col items-start gap-4 mb-4">
@@ -38,6 +59,7 @@ export default function GithubGraph({ username, themeMode }) {
             blockSize={14}
             blockMargin={5}
             fontSize={14}
+            transformData={transformContributions}
           />
         </div>
 
@@ -61,3 +83,4 @@ export default function GithubGraph({ username, themeMode }) {
     </div>
   );
 }
+

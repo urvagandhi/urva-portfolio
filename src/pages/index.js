@@ -16,7 +16,7 @@ import SectionHeading from "@/components/SectionHeading";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import useThemeSwitcher from "@/components/hooks/useThemeSwitcher";
 import dynamic from "next/dynamic";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Dynamically import heavy chart components that render below the fold
 const GithubGraph = dynamic(() => import("@/components/GithubGraph"), { 
@@ -179,6 +179,29 @@ const Project = ({ type, title, summary, img, link, github, tech }) => {
 
 export default function Home() {
   const [mode] = useThemeSwitcher();
+  const [leetcodeSolvedCount, setLeetcodeSolvedCount] = useState(270);
+  const [topLanguage, setTopLanguage] = useState("Java");
+
+  useEffect(() => {
+    fetch("/api/leetcode?username=urva_gandhi")
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.error) {
+          const totalSolved = data.submitStats?.acSubmissionNum?.find(q => q.difficulty === "All")?.count
+            || data.submitStats?.acSubmissionNum?.[0]?.count;
+          if (totalSolved) {
+            setLeetcodeSolvedCount(totalSolved);
+          }
+          const topLang = data.languages?.length > 0
+            ? [...data.languages].sort((a, b) => b.problemsSolved - a.problemsSolved)[0]?.languageName
+            : null;
+          if (topLang) {
+            setTopLanguage(topLang);
+          }
+        }
+      })
+      .catch((err) => console.error("Failed to fetch Leetcode count for index page", err));
+  }, []);
 
   return (
     <>
@@ -302,7 +325,7 @@ export default function Home() {
                 Hackathon winner. Obsessed with building systems that actually matter.
               </p>
               <div className="mt-2 flex items-center self-start lg:self-center">
-                <AnimatedDownloadButton href="/resume.pdf" />
+                <AnimatedDownloadButton href="/urva-gandhi_resume.pdf" />
                 <Link
                   href="mailto:urvagandhi24@gmail.com"
                   className="ml-4 text-lg font-medium capitalize text-dark underline dark:text-light md:text-base"
@@ -344,7 +367,7 @@ export default function Home() {
                 Open to collaborating on real-time financial data pipelines, ML deployment workflows & MLOps,
                 and turning Hackathon prototypes into Production systems. I&apos;ve solved {" "}
                 <Link href="https://leetcode.com/u/urva_gandhi" target="_blank" className="underline underline-offset-2 text-primary dark:text-primaryDark">
-                  270+ DSA problems in Java
+                  {leetcodeSolvedCount}+ DSA problems in {topLanguage}
                 </Link>{" "}
                 and completed 4+ major projects.
               </p>
@@ -364,7 +387,7 @@ export default function Home() {
             <div className="col-span-2 flex flex-col items-end justify-between xl:col-span-8 xl:flex-row xl:items-center md:order-3">
               <Link href="https://leetcode.com/u/urva_gandhi" target="_blank" className="flex flex-col items-end justify-center xl:items-center group">
                 <span className="inline-block text-7xl font-bold md:text-6xl sm:text-5xl xs:text-4xl group-hover:text-primary dark:group-hover:text-primaryDark transition-colors duration-300">
-                  <AnimatedNumbers value={270} />+
+                  <AnimatedNumbers value={leetcodeSolvedCount} />+
                 </span>
                 <h2 className="mb-4 text-xl font-medium capitalize text-dark/75 dark:text-light/75 xl:text-center md:text-lg sm:text-base xs:text-sm group-hover:text-primary dark:group-hover:text-primaryDark transition-colors duration-300">
                   LeetCode Problems

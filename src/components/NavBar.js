@@ -170,6 +170,7 @@ const NavBar = () => {
                 <nav className="flex items-center justify-center gap-8">
                     <CustomLink href="#home" title="Home" />
                     <CustomLink href="#about" title="About" />
+                    <CustomLink href="#contributions" title="Contributions" />
                     <CustomLink href="#projects" title="Projects" />
                 </nav>
 
@@ -267,6 +268,7 @@ const NavBar = () => {
                     <nav className="flex items-center flex-col justify-center">
                         <CustomMobileLink href="#home" title="Home" className="" toggle={handleClick} />
                         <CustomMobileLink href="#about" title="About" className="" toggle={handleClick} />
+                        <CustomMobileLink href="#contributions" title="Contributions" className="" toggle={handleClick} />
                         <CustomMobileLink href="#projects" title="Projects" className="" toggle={handleClick} />
                     </nav>
 

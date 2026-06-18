@@ -49,7 +49,7 @@ export default function LeetcodeGraph({ username, themeMode }) {
           setData(filledData);
 
           if (json.activeYears) {
-            setYears(json.activeYears);
+            setYears([...json.activeYears].sort((a, b) => b - a));
           }
         }
       } catch (err) {

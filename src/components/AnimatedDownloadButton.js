@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LinkArrow } from "./Icons";
+import { Download, DownloadCloud, DownloadCloudIcon } from "lucide-react";
 
-const AnimatedDownloadButton = ({ href = "/resume.pdf", filename = "resume.pdf" }) => {
+const AnimatedDownloadButton = ({ href = "/urva-gandhi_resume.pdf", filename = "urva-gandhi_resume.pdf" }) => {
   const [status, setStatus] = useState("idle"); // idle, downloading, completed
   const [progress, setProgress] = useState(0);
   const intervalRef = useRef(null);
