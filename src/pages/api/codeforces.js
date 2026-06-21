@@ -1,3 +1,24 @@
+/**
+ * Codeforces API Handler
+ * ─────────────────────────────────────────────────────────────────────
+ * Data fetched dynamically via official Codeforces REST API:
+ *   - User Info:    https://codeforces.com/api/user.info?handles={handle}
+ *   - Rating History: https://codeforces.com/api/user.rating?handle={handle}
+ *   - Submissions:  https://codeforces.com/api/user.status?handle={handle}
+ *
+ * Method: REST (public API, no auth required)
+ *
+ * Data returned:
+ *   - info: handle, rating, maxRating, rank, maxRank, avatar, country, org
+ *   - derivedMetrics: totalSolved, highestProblemRating, contestCount,
+ *     bestContestRank, averageContestRank, ratingGain, streaks,
+ *     activeDays, acceptanceRate, favoriteTag, primaryLanguage
+ *   - difficultyDistribution, languageDistribution
+ *   - recentSubmissions (last 15)
+ *   - contestHistory (full rating change history)
+ *   - calendar (submission heatmap data)
+ * ─────────────────────────────────────────────────────────────────────
+ */
 export default async function handler(req, res) {
   const { username } = req.query;
   const handle = username || "Urva_Gandhi";
@@ -192,7 +213,7 @@ export default async function handler(req, res) {
 
     res.setHeader(
       "Cache-Control",
-      "public, s-maxage=86400, stale-while-revalidate=43200"
+      "public, s-maxage=300, stale-while-revalidate=300"
     );
 
     res.status(200).json({

@@ -9,12 +9,14 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
-import { Particles } from "@/components/ui/particles";
-import {
-  CursorProvider,
-  Cursor,
-  CursorFollow,
-} from "@/components/animate-ui/components/animate/cursor";
+import dynamic from "next/dynamic";
+
+const Particles = dynamic(() => import("@/components/ui/particles").then(mod => mod.Particles), {
+  ssr: false,
+});
+const CustomCursor = dynamic(() => import("@/components/CustomCursor"), {
+  ssr: false,
+});
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -57,7 +59,12 @@ export default function App({ Component, pageProps }) {
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/images/profile/urva-circular.png" />
+        {/* Main Tab Favicon (Transparent circular profile, gorgeous on both light/dark tabs) */}
+        <link rel="icon" type="image/png" href="/images/profile/urva-circular.png" />
+        {/* Preloading platform assets for rapid rendering */}
+        <link rel="prefetch" href="/images/icons8-hackerrank-doodle-16.png" />
+        <link rel="prefetch" href="/images/icons8-geeksforgeeks-color-16.png" />
+        <link rel="prefetch" href="/images/icons8-codeforces-external-tal-revivo-color-tal-revivo-16.png" />
         <title>Urva Gandhi | Software Developer Portfolio</title>
         <meta name="description" content="Urva Gandhi — Full-stack developer, ML enthusiast, and hackathon winner. Explore projects, skills, and experience." />
       </Head>
@@ -97,12 +104,7 @@ export default function App({ Component, pageProps }) {
         />
         {/* Global custom cursor - client-side only, hidden during loader */}
         {mounted && !loading && (
-          <CursorProvider global>
-            <Cursor className="text-primary dark:text-primaryDark" />
-            <CursorFollow side="bottom" sideOffset={15} align="end" alignOffset={5}>
-              Developer
-            </CursorFollow>
-          </CursorProvider>
+          <CustomCursor />
         )}
 
         <NavBar />

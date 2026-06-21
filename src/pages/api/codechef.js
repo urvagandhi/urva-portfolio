@@ -1,3 +1,24 @@
+/**
+ * CodeChef API Handler
+ * ─────────────────────────────────────────────────────────────────────
+ * Data scraped dynamically from CodeChef User Profile page:
+ *   - Profile URL:  https://www.codechef.com/users/{username}
+ *   - Recent Subs:  https://www.codechef.com/recent/user?page=0&user_handle={username}
+ *
+ * Method: HTML Scraping (no public REST API available)
+ *
+ * Data extracted via regex from the profile page HTML:
+ *   - Rating, Stars, Highest Rating
+ *   - Global Rank, Country Rank
+ *   - Name, Avatar, Country, Institution
+ *   - Problems Solved count
+ *   - Badges (image, title, description)
+ *   - Daily Submission stats (heatmap / contributions)
+ *   - Rating History (contest-by-contest)
+ *   - Recent Submissions (from AJAX endpoint)
+ *   - Derived: Language stats, streaks, active days, acceptance rate
+ * ─────────────────────────────────────────────────────────────────────
+ */
 export default async function handler(req, res) {
   const { username, year } = req.query;
 
@@ -236,7 +257,7 @@ export default async function handler(req, res) {
     // Cache responses
     res.setHeader(
       "Cache-Control",
-      "public, s-maxage=86400, stale-while-revalidate=43200"
+      "public, s-maxage=300, stale-while-revalidate=300"
     );
 
     res.status(200).json({

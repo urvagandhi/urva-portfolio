@@ -15,6 +15,7 @@ import {
 import Logo from "./Logo";
 import useThemeSwitcher from "./hooks/useThemeSwitcher";
 import ThemeSwitcher from "./ThemeSwitcher";
+import { useModalControls } from "@/components/hooks/useModalControls";
 
 const CustomLink = ({ href, title, className = "" }) => {
     const handleClick = (e) => {
@@ -88,6 +89,7 @@ const NavBar = () => {
     const [mode, setMode] = useThemeSwitcher();
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const { canPortal } = useModalControls(isOpen, () => setIsOpen(false));
 
     useEffect(() => {
         let rafId = null;
@@ -247,7 +249,7 @@ const NavBar = () => {
             </div>
 
             {/* Mobile Navigation Menu - Rendered via Portal to escape Header's transform context */}
-            {isOpen && typeof document !== 'undefined' ? createPortal(
+            {isOpen && canPortal ? createPortal(
                 <motion.div
                     className="fixed inset-0 z-40 bg-dark/50 dark:bg-light/20 backdrop-blur-sm"
                     initial={{ opacity: 0 }}
@@ -258,7 +260,7 @@ const NavBar = () => {
                 document.body
             ) : null}
 
-            {isOpen && typeof document !== 'undefined' ? createPortal(
+            {isOpen && canPortal ? createPortal(
                 <motion.div
                     className="fixed top-1/2 left-1/2 z-50 flex flex-col justify-between items-center bg-dark/90 dark:bg-light/75 rounded-2xl backdrop-blur-md py-20 min-w-[70vw] sm:min-w-[90vw] shadow-2xl border border-light/10 dark:border-dark/10"
                     initial={{ scale: 0.5, opacity: 0, x: "-50%", y: "-50%" }}

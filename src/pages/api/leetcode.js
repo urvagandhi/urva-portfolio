@@ -1,3 +1,25 @@
+/**
+ * LeetCode API Handler
+ * ─────────────────────────────────────────────────────────────────────
+ * Data fetched dynamically via LeetCode GraphQL API:
+ *   - Endpoint: https://leetcode.com/graphql
+ *
+ * Method: GraphQL (single query, no auth required)
+ *
+ * GraphQL query fetches:
+ *   - allQuestionsCount (total problems by difficulty)
+ *   - matchedUser: profile, submitStatsGlobal, languageProblemCount,
+ *     badges, activeBadge, userCalendar (streak, heatmap)
+ *   - userContestRanking (rating, globalRanking, topPercentage)
+ *   - userContestRankingHistory (per-contest performance)
+ *   - recentSubmissionList (last 15 submissions)
+ *
+ * Derived metrics computed server-side:
+ *   - longestStreak, mostActiveDay, mostActiveMonth
+ *   - yearContributions, avgSubmissionsPerActiveDay
+ *   - Contribution calendar formatted for react-activity-calendar
+ * ─────────────────────────────────────────────────────────────────────
+ */
 export default async function handler(req, res) {
   const { username, year } = req.query;
 
@@ -226,7 +248,7 @@ export default async function handler(req, res) {
 
     res.setHeader(
       "Cache-Control",
-      "public, s-maxage=86400, stale-while-revalidate=43200"
+      "public, s-maxage=300, stale-while-revalidate=300"
     );
 
     res.status(200).json({

@@ -1,8 +1,10 @@
 import { motion, useScroll, AnimatePresence } from "framer-motion";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import LiIcon from "./LiIcon";
 import SectionHeading from "./SectionHeading";
 import { Award, X } from "lucide-react";
+import { useModalControls } from "@/components/hooks/useModalControls";
 
 const Details = ({ position, company, companyLink, time, address, work, certificate, onViewCertificate }) => {
     const ref = useRef(null);
@@ -48,6 +50,11 @@ const Details = ({ position, company, companyLink, time, address, work, certific
 const Experience = () => {
     const ref = useRef(null);
     const [activeCertificate, setActiveCertificate] = useState(null);
+
+    const { canPortal } = useModalControls(
+        !!activeCertificate,
+        () => setActiveCertificate(null)
+    );
 
     const { scrollYProgress } = useScroll({
         target: ref,
@@ -126,90 +133,108 @@ const Experience = () => {
                 </ul>
             </div>
 
-            {/* Certificate Modal Overlay */}
-            <AnimatePresence>
-                {activeCertificate && (
-                    <motion.div
-                        key="certificate-modal"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        onClick={() => setActiveCertificate(null)}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark/60 dark:bg-black/80 backdrop-blur-md cursor-default"
-                    >
-                        {/* Background Decorative Glows */}
-                        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-rose-500/15 dark:bg-rose-500/10 blur-[100px] pointer-events-none" />
-                        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-amber-500/10 dark:bg-amber-500/5 blur-[100px] pointer-events-none" />
-
+            {canPortal && createPortal(
+                <AnimatePresence>
+                    {activeCertificate && (
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, rotateX: -10, y: 30 }}
-                            animate={{ opacity: 1, scale: 1, rotateX: 0, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, rotateX: 10, y: 30 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="relative w-full max-w-4xl h-[80vh] bg-light/90 dark:bg-dark/90 backdrop-blur-xl border border-solid border-white/20 dark:border-white/5 shadow-[0_25px_50px_-12px_rgba(244,63,94,0.15)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] rounded-[2.5rem] overflow-hidden flex flex-col cursor-default"
+                            key="certificate-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="fixed inset-0 z-50 flex items-center justify-center p-4 cursor-default"
                         >
-                            {/* Top Decorative Border */}
-                            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-rose-500 via-amber-500 to-rose-500" />
+                            {/* Backdrop */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                onMouseDown={() => setActiveCertificate(null)}
+                                className="absolute inset-0 bg-dark/60 dark:bg-black/80 backdrop-blur-md"
+                            />
+                            {/* Background Decorative Glows */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="absolute inset-0 pointer-events-none overflow-hidden"
+                            >
+                                <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-rose-500/15 dark:bg-rose-500/10 blur-[100px]" />
+                                <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-amber-500/10 dark:bg-amber-500/5 blur-[100px]" />
+                            </motion.div>
 
-                            {/* Header */}
-                            <div className="px-8 py-5 border-b border-solid border-dark/10 dark:border-light/10 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500/10 to-amber-500/10 text-rose-500 dark:text-rose-400 border border-solid border-rose-500/20">
-                                        <Award className="w-6 h-6 animate-pulse" />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, rotateX: -5, y: 15 }}
+                                animate={{ opacity: 1, scale: 1, rotateX: 0, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, rotateX: 5, y: 15 }}
+                                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                className="relative w-full max-w-4xl h-[80vh] bg-light/90 dark:bg-dark/90 backdrop-blur-xl border border-solid border-white/20 dark:border-white/5 shadow-[0_25px_50px_-12px_rgba(244,63,94,0.15)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] rounded-[2.5rem] overflow-hidden flex flex-col cursor-default"
+                            >
+                                {/* Top Decorative Border */}
+                                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-rose-500 via-amber-500 to-rose-500" />
+
+                                {/* Header */}
+                                <div className="px-8 py-5 border-b border-solid border-dark/10 dark:border-light/10 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-xl bg-gradient-to-br from-rose-500/10 to-amber-500/10 text-rose-500 dark:text-rose-400 border border-solid border-rose-500/20">
+                                            <Award className="w-6 h-6 animate-pulse" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <h3 className="text-xl font-bold text-dark dark:text-light tracking-wide sm:text-base">
+                                                {activeCertificate.title}
+                                            </h3>
+                                            <span className="text-xs font-semibold text-rose-500/80 dark:text-rose-400/80">
+                                                Verified Achievement Certificate
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col">
-                                        <h3 className="text-xl font-bold text-dark dark:text-light tracking-wide sm:text-base">
-                                            {activeCertificate.title}
-                                        </h3>
-                                        <span className="text-xs font-semibold text-rose-500/80 dark:text-rose-400/80">
-                                            Verified Achievement Certificate
-                                        </span>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setActiveCertificate(null)}
-                                    className="p-2.5 rounded-2xl bg-dark/5 dark:bg-light/5 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 border border-solid border-transparent hover:border-rose-500/20 transition-all duration-300 cursor-pointer text-dark/75 dark:text-light/75"
-                                    aria-label="Close certificate"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            {/* Image Container */}
-                            <div className="flex-1 p-8 flex items-center justify-center min-h-0 bg-dark/5 dark:bg-black/20">
-                                <div className="relative max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl border border-solid border-white/30 dark:border-white/10 group">
-                                    {/* Glass reflection shine */}
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
-                                    
-                                    <img
-                                        src={activeCertificate.url}
-                                        alt={activeCertificate.title}
-                                        className="max-w-full max-h-[50vh] object-contain rounded-2xl transition-all duration-500 group-hover:scale-[1.01]"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Action Footer */}
-                            <div className="px-8 py-5 border-t border-solid border-dark/10 dark:border-light/10 flex items-center justify-between sm:flex-col sm:gap-4 sm:items-stretch bg-light/30 dark:bg-dark/30">
-                                <span className="text-xs font-bold text-dark/40 dark:text-light/40 tracking-wider uppercase">
-                                    Hackathon Achievement Portal
-                                </span>
-                                <div className="flex items-center gap-3 sm:justify-end">
-                                    <a
-                                        href={activeCertificate.url.replace('.png', '.pdf')}
-                                        download
-                                        className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white dark:text-dark dark:from-rose-400 dark:to-amber-400 dark:hover:from-rose-500 dark:hover:to-amber-500 font-extrabold text-sm transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-rose-500/20 hover:-translate-y-0.5 cursor-pointer"
+                                    <button
+                                        onClick={() => setActiveCertificate(null)}
+                                        className="p-2.5 rounded-2xl bg-dark/5 dark:bg-light/5 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:bg-rose-500/20 dark:hover:text-rose-400 border border-solid border-transparent hover:border-rose-500/20 transition-all duration-300 cursor-pointer text-dark/75 dark:text-light/75"
+                                        aria-label="Close certificate"
                                     >
-                                        Download PDF
-                                    </a>
+                                        <X className="w-5 h-5" />
+                                    </button>
                                 </div>
-                            </div>
+
+                                {/* Image Container */}
+                                <div className="flex-1 p-8 flex items-center justify-center min-h-0 bg-dark/5 dark:bg-black/20">
+                                    <div className="relative max-w-full max-h-full rounded-2xl overflow-hidden shadow-2xl border border-solid border-white/30 dark:border-white/10 group">
+                                        {/* Glass reflection shine */}
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none" />
+                                        
+                                        <img
+                                            src={activeCertificate.url}
+                                            alt={activeCertificate.title}
+                                            className="max-w-full max-h-[50vh] object-contain rounded-2xl transition-all duration-500 group-hover:scale-[1.01]"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Action Footer */}
+                                <div className="px-8 py-5 border-t border-solid border-dark/10 dark:border-light/10 flex items-center justify-between sm:flex-col sm:gap-4 sm:items-stretch bg-light/30 dark:bg-dark/30">
+                                    <span className="text-xs font-bold text-dark/40 dark:text-light/40 tracking-wider uppercase">
+                                        Hackathon Achievement Portal
+                                    </span>
+                                    <div className="flex items-center gap-3 sm:justify-end">
+                                        <a
+                                            href={activeCertificate.url.replace('.png', '.pdf')}
+                                            download
+                                            className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white dark:text-dark dark:from-rose-400 dark:to-amber-400 dark:hover:from-rose-500 dark:hover:to-amber-500 font-extrabold text-sm transition-all duration-300 shadow-md hover:shadow-lg hover:shadow-rose-500/20 hover:-translate-y-0.5 cursor-pointer"
+                                        >
+                                            Download PDF
+                                        </a>
+                                    </div>
+                                </div>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </div>
     );
 };
