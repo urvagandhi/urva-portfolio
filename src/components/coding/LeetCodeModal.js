@@ -29,7 +29,7 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
   const profile = data?.profile || {};
   const contest = data?.contestRanking || {};
   const submitStats = data?.submitStats?.acSubmissionNum || [];
-  const languageStats = data?.languageStats || [];
+  const languageStats = data?.languages || [];
   const badges = data?.badges || [];
   const recentSubmissions = data?.recentSubmissions || [];
   const loading = !data;
@@ -50,9 +50,12 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
   const easyPercent = easyTotal > 0 ? Math.round((easySolved / easyTotal) * 100) : 0;
   const mediumPercent = mediumTotal > 0 ? Math.round((mediumSolved / mediumTotal) * 100) : 0;
   const hardPercent = hardTotal > 0 ? Math.round((hardSolved / hardTotal) * 100) : 0;
-  const acceptanceRate = data?.submitStats?.acSubmissionNum?.find(q => q.difficulty === "All")?.submissions 
-    ? ((data.submitStats.acSubmissionNum.find(q => q.difficulty === "All").count / data.submitStats.acSubmissionNum.find(q => q.difficulty === "All").submissions) * 100).toFixed(1)
-    : "54.2";
+  const totalSubmissions = data?.submitStats?.totalSubmissionNum?.find(q => q.difficulty === "All")?.submissions;
+  const acSubmissions = data?.submitStats?.acSubmissionNum?.find(q => q.difficulty === "All")?.submissions;
+
+  const acceptanceRate = (totalSubmissions && acSubmissions)
+    ? ((acSubmissions / totalSubmissions) * 100).toFixed(2)
+    : "N/A";
 
   // Languages used
   const languages = languageStats.slice(0, 4) || [];
