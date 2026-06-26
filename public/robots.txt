@@ -1,12 +1,9 @@
-# Robots.txt for Urva Gandhi's Portfolio
-# Allow all search engines to crawl the entire site
-
+# *
 User-agent: *
 Allow: /
 
-# Block access to Next.js internal directories
-Disallow: /_next/webpack-hmr
-Disallow: /_next/static/webpack/
+# Host
+Host: https://urvagandhi-portfolio.vercel.app
 
-# Sitemap location
+# Sitemaps
 Sitemap: https://urvagandhi-portfolio.vercel.app/sitemap.xml

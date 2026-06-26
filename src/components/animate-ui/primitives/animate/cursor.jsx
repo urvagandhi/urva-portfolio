@@ -138,6 +138,7 @@ function Cursor({
   ref,
   asChild = false,
   style,
+  transition = { stiffness: 400, damping: 30, bounce: 0 },
   ...props
 }) {
   const { cursorPos, active, containerRef, cursorRef, global } = useCursor();
@@ -145,6 +146,9 @@ function Cursor({
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+
+  const springX = useSpring(x, transition);
+  const springY = useSpring(y, transition);
 
   React.useEffect(() => {
     const target = global
@@ -184,8 +188,8 @@ function Cursor({
             pointerEvents: 'none',
             zIndex: 9999,
             position: global ? 'fixed' : 'absolute',
-            top: y,
-            left: x,
+            top: springY,
+            left: springX,
             ...style,
           }}
           initial={{ scale: 0, opacity: 0 }}
