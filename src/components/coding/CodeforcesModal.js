@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,12 +15,23 @@ export const CodeforcesModal = ({ show, onClose, data }) => {
   const { canPortal } = useModalControls(show, onClose);
   const [cfActiveTab, setCfActiveTab] = useState("overview");
   const [hoveredCfContest, setHoveredCfContest] = useState(null);
+  const [showScrollArrow, setShowScrollArrow] = useState(false);
+  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
-    if (show) {
-      setCfActiveTab("overview");
-    }
-  }, [show]);
+    const timer = setTimeout(() => {
+      if (show && scrollContainerRef.current) {
+        const { scrollHeight, clientHeight, scrollTop } = scrollContainerRef.current;
+        setShowScrollArrow(scrollHeight - scrollTop - clientHeight > 30);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [show, cfActiveTab, data]);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setShowScrollArrow(scrollHeight - scrollTop - clientHeight > 30);
+  };
 
   if (!canPortal) return null;
 
@@ -133,7 +144,7 @@ export const CodeforcesModal = ({ show, onClose, data }) => {
                       onClick={() => setCfActiveTab(tab.id)}
                       className={`relative pb-3 px-4 text-sm font-bold flex items-center gap-2 transition-colors duration-200 whitespace-nowrap ${
                         isActive
-                          ? "text-green-500"
+                          ? "text-green-600 dark:text-green-400"
                           : "text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light"
                       }`}
                     >
@@ -153,8 +164,13 @@ export const CodeforcesModal = ({ show, onClose, data }) => {
               </div>
             </div>
 
-            {/* Scrollable Body Content */}
-            <div className="p-8 flex-1 overflow-y-auto max-h-[50vh] min-h-0 bg-light dark:bg-[#0d1117]/95">
+            {/* Scrollable Body Content Wrapper */}
+            <div className="relative flex-1 flex flex-col min-h-0">
+              <div
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="p-8 flex-1 overflow-y-auto max-h-[50vh] min-h-0 no-scrollbar bg-light dark:bg-[#0d1117]/95"
+              >
               {cfLoading ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
                   <Loader2 className="w-10 h-10 animate-spin text-green-500" />
@@ -663,6 +679,37 @@ export const CodeforcesModal = ({ show, onClose, data }) => {
                   )}
                 </>
               )}
+              </div>
+
+              <AnimatePresence>
+                {showScrollArrow && !cfLoading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute bottom-4 left-0 right-0 z-20 pointer-events-none flex flex-col items-center justify-center text-green-500 animate-bounce"
+                  >
+                    <span className="text-[10px] font-extrabold tracking-wider bg-light/95 dark:bg-dark/95 px-2.5 py-1 rounded-full border border-solid border-green-500/30 shadow-md backdrop-blur-sm">
+                      Scroll Down
+                    </span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="drop-shadow-md"
+                    >
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Footer */}
@@ -673,7 +720,7 @@ export const CodeforcesModal = ({ show, onClose, data }) => {
               <Link
                 href="https://codeforces.com/profile/Urva_Gandhi"
                 target="_blank"
-                className="rounded-xl bg-dark px-6 py-2.5 text-center text-sm font-bold text-light dark:bg-green-500 dark:text-dark dark:hover:bg-green-500/80 transition-all duration-300"
+                className="rounded-xl bg-green-600 hover:bg-green-700 text-center text-sm font-bold text-white dark:text-black dark:bg-green-400 dark:hover:bg-green-300 transition-all duration-300 px-6 py-2.5"
               >
                 Visit Official Profile
               </Link>

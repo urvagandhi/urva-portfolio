@@ -78,6 +78,7 @@ export default async function handler(req, res) {
               displayName
               icon
               hoverText
+              creationDate
             }
             activeBadge {
               id

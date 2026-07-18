@@ -40,65 +40,133 @@ export default async function handler(req, res) {
 
     const html = await profileResponse.text();
 
-    // Look for userData script / JSON data in the page
-    const key = '"userData"';
-    let idx = html.indexOf(key);
+    // Look for userData and mentor script / JSON data in the page
+    let idx = html.indexOf('"mentor"');
     if (idx === -1) {
-      idx = html.indexOf('\\"userData\\"');
+      idx = html.indexOf('\\"mentor\\"');
     }
 
-    if (idx === -1) {
-      return res.status(404).json({ error: "GeeksforGeeks user data not found on the profile page" });
-    }
+    let userDataObj = null;
+    let mentorDataObj = null;
 
-    // Extract the JSON object by matching brace counts
-    let sub = html.substring(idx);
-    let colonIdx = sub.indexOf(':');
-    let braceStart = sub.indexOf('{', colonIdx);
+    if (idx !== -1) {
+      // Extract the parent object which contains both mentor and userData
+      // The parent object starts with { right before "mentor"
+      let startSearch = Math.max(0, idx - 30);
+      let sub = html.substring(startSearch);
+      let braceStart = sub.indexOf('{');
+      if (braceStart !== -1) {
+        let bracesCount = 0;
+        let endedIdx = -1;
+        let inString = false;
+        let isEscaped = false;
 
-    if (braceStart === -1) {
-      return res.status(500).json({ error: "Failed to locate JSON start brace for GeeksforGeeks user data" });
-    }
+        for (let i = braceStart; i < sub.length; i++) {
+          let char = sub[i];
+          if (char === '\\' && !isEscaped) {
+            isEscaped = true;
+            continue;
+          }
+          if (char === '"' && !isEscaped) {
+            inString = !inString;
+          }
+          if (!inString) {
+            if (char === '{') {
+              bracesCount++;
+            } else if (char === '}') {
+              bracesCount--;
+              if (bracesCount === 0) {
+                endedIdx = i;
+                break;
+              }
+            }
+          }
+          isEscaped = false;
+        }
 
-    let bracesCount = 0;
-    let endedIdx = -1;
-    let inString = false;
-    let isEscaped = false;
-
-    for (let i = braceStart; i < sub.length; i++) {
-      let char = sub[i];
-      if (char === '\\' && !isEscaped) {
-        isEscaped = true;
-        continue;
-      }
-      if (char === '"' && !isEscaped) {
-        inString = !inString;
-      }
-      if (!inString) {
-        if (char === '{') {
-          bracesCount++;
-        } else if (char === '}') {
-          bracesCount--;
-          if (bracesCount === 0) {
-            endedIdx = i;
-            break;
+        if (endedIdx !== -1) {
+          const jsonStr = sub.substring(braceStart, endedIdx + 1);
+          let finalJsonStr = jsonStr;
+          if (jsonStr.includes('\\"')) {
+            finalJsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+          }
+          try {
+            const parsed = JSON.parse(finalJsonStr);
+            if (parsed && parsed.userData && parsed.userData.data) {
+              userDataObj = parsed.userData;
+              mentorDataObj = parsed.mentor;
+            }
+          } catch (e) {
+            console.error("Failed to parse mentor parent JSON:", e);
           }
         }
       }
-      isEscaped = false;
     }
 
-    if (endedIdx === -1) {
-      return res.status(500).json({ error: "Failed to extract complete JSON block for GeeksforGeeks user data" });
-    }
+    // Fallback parser: if mentor-based parsing failed or was not found
+    if (!userDataObj) {
+      const key = '"userData"';
+      let uIdx = html.indexOf(key);
+      if (uIdx === -1) {
+        uIdx = html.indexOf('\\"userData\\"');
+      }
 
-    const jsonStr = sub.substring(braceStart, endedIdx + 1);
-    let finalJsonStr = jsonStr;
-    if (jsonStr.includes('\\"')) {
-      finalJsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-    }
+      if (uIdx === -1) {
+        return res.status(404).json({ error: "GeeksforGeeks user data not found on the profile page" });
+      }
 
-    const userDataObj = JSON.parse(finalJsonStr);
+      let sub = html.substring(uIdx);
+      let colonIdx = sub.indexOf(':');
+      let braceStart = sub.indexOf('{', colonIdx);
+
+      if (braceStart === -1) {
+        return res.status(500).json({ error: "Failed to locate JSON start brace for GeeksforGeeks user data" });
+      }
+
+      let bracesCount = 0;
+      let endedIdx = -1;
+      let inString = false;
+      let isEscaped = false;
+
+      for (let i = braceStart; i < sub.length; i++) {
+        let char = sub[i];
+        if (char === '\\' && !isEscaped) {
+          isEscaped = true;
+          continue;
+        }
+        if (char === '"' && !isEscaped) {
+          inString = !inString;
+        }
+        if (!inString) {
+          if (char === '{') {
+            bracesCount++;
+          } else if (char === '}') {
+            bracesCount--;
+            if (bracesCount === 0) {
+              endedIdx = i;
+              break;
+            }
+          }
+        }
+        isEscaped = false;
+      }
+
+      if (endedIdx === -1) {
+        return res.status(500).json({ error: "Failed to extract complete JSON block for GeeksforGeeks user data" });
+      }
+
+      const jsonStr = sub.substring(braceStart, endedIdx + 1);
+      let finalJsonStr = jsonStr;
+      if (jsonStr.includes('\\"')) {
+        finalJsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+      }
+
+      try {
+        userDataObj = JSON.parse(finalJsonStr);
+      } catch (e) {
+        console.error("Failed to parse fallback userData JSON:", e);
+      }
+    }
 
     if (!userDataObj || !userDataObj.data) {
       return res.status(404).json({ error: "Invalid GeeksforGeeks user data format" });
@@ -107,6 +175,7 @@ export default async function handler(req, res) {
     // Return the response matching the common coding profile format
     return res.status(200).json({
       info: userDataObj.data,
+      mentor: mentorDataObj,
       username: username
     });
 

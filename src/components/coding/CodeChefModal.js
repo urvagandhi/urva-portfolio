@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,16 +11,196 @@ import {
   LayoutDashboard, Code2, Target, Loader2, Terminal
 } from "lucide-react";
 
+const getCcRatingStyle = (starsStr) => {
+  const starsNum = parseInt(starsStr) || 1;
+  switch (starsNum) {
+    case 1:
+      return { color: "#666666", name: "1★ Coder", labelBg: "bg-gray-500" };
+    case 2:
+      return { color: "#1e7d22", name: "2★ Coder", labelBg: "bg-emerald-600" };
+    case 3:
+      return { color: "#3366cc", name: "3★ Coder", labelBg: "bg-blue-600" };
+    case 4:
+      return { color: "#684273", name: "4★ Coder", labelBg: "bg-purple-600" };
+    case 5:
+      return { color: "#ffbf00", name: "5★ Coder", labelBg: "bg-amber-500" };
+    case 6:
+      return { color: "#ff7f00", name: "6★ Coder", labelBg: "bg-orange-500" };
+    case 7:
+      return { color: "#d0011b", name: "7★ Coder", labelBg: "bg-red-600" };
+    default:
+      return { color: "#666666", name: `${starsNum}★ Coder`, labelBg: "bg-gray-500" };
+  }
+};
+
+const CodeChefStarBadge = ({ stars }) => {
+  const ratingStyle = getCcRatingStyle(stars);
+  
+  return (
+    <svg
+      width="100%"
+      height="100%"
+      viewBox="0 0 200 200"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="filter drop-shadow-md hover:drop-shadow-lg transition-all duration-300 select-none"
+    >
+      <defs>
+        {/* Outer Ring Gold Gradient */}
+        <linearGradient id="cc-gold-outer" x1="100" y1="10" x2="100" y2="190" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#e5ba73" />
+          <stop offset="50%" stopColor="#c59242" />
+          <stop offset="100%" stopColor="#a3742c" />
+        </linearGradient>
+
+        {/* Inner Circle Gold Gradient */}
+        <linearGradient id="cc-gold-inner" x1="100" y1="38" x2="100" y2="162" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#f7e6c4" />
+          <stop offset="100%" stopColor="#e7c68b" />
+        </linearGradient>
+
+        {/* Trophy Metallic Gold Gradient */}
+        <linearGradient id="cc-trophy-gold" x1="100" y1="75" x2="100" y2="145" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#d4a34f" />
+          <stop offset="100%" stopColor="#b27f2f" />
+        </linearGradient>
+        
+        {/* Drop shadow filter for inner circle */}
+        <filter id="cc-inner-shadow" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="3" stdDeviation="3" floodOpacity="0.15" />
+        </filter>
+      </defs>
+
+      {/* Outer Coin / Rim */}
+      <circle cx="100" cy="100" r="90" fill="url(#cc-gold-outer)" stroke="#8b5d1a" strokeWidth="1.5" />
+      
+      {/* Outer Rim Accent Lines for 3D effect */}
+      <circle cx="100" cy="100" r="82" fill="none" stroke="#fbe4b5" strokeWidth="1" strokeOpacity="0.5" />
+      <circle cx="100" cy="100" r="88" fill="none" stroke="#71480f" strokeWidth="1" strokeOpacity="0.3" />
+
+      {/* Shine Reflection Arc */}
+      <path
+        d="M 42 35 A 72 72 0 0 0 24 95"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="6"
+        strokeLinecap="round"
+        opacity="0.35"
+      />
+
+      {/* Inner Gold Disc */}
+      <circle
+        cx="100"
+        cy="100"
+        r="64"
+        fill="url(#cc-gold-inner)"
+        stroke="#bd9552"
+        strokeWidth="1.5"
+        filter="url(#cc-inner-shadow)"
+      />
+      <circle cx="100" cy="100" r="59" fill="none" stroke="#71480f" strokeWidth="0.8" strokeOpacity="0.15" />
+
+      {/* Trophy Artwork */}
+      {/* Handles */}
+      <path
+        d="M 72 82 C 55 82 55 106 72 106 L 72 100 C 62 100 62 88 72 88 Z"
+        fill="url(#cc-trophy-gold)"
+        stroke="#8b5d1a"
+        strokeWidth="0.5"
+      />
+      <path
+        d="M 128 82 C 145 82 145 106 128 106 L 128 100 C 138 100 138 88 128 88 Z"
+        fill="url(#cc-trophy-gold)"
+        stroke="#8b5d1a"
+        strokeWidth="0.5"
+      />
+
+      {/* Bowl */}
+      <path
+        d="M 72 75 L 128 75 C 128 102 116 117 106 117 L 94 117 C 84 117 72 102 72 75 Z"
+        fill="url(#cc-trophy-gold)"
+        stroke="#8b5d1a"
+        strokeWidth="0.7"
+      />
+      
+      {/* Stem */}
+      <rect
+        x="94"
+        y="114"
+        width="12"
+        height="18"
+        fill="url(#cc-trophy-gold)"
+        stroke="#8b5d1a"
+        strokeWidth="0.7"
+      />
+
+      {/* Base */}
+      <path
+        d="M 80 130 L 120 130 C 120 130 122 138 116 138 L 84 138 C 78 138 80 130 80 130 Z"
+        fill="url(#cc-trophy-gold)"
+        stroke="#8b5d1a"
+        strokeWidth="0.7"
+      />
+
+      {/* Star on the Trophy Cup */}
+      <polygon
+        points="100,82 104,91 113,92 106,98 109,107 100,102 91,107 94,98 87,92 96,91"
+        fill="#fcfcfc"
+        stroke="#bd9552"
+        strokeWidth="0.3"
+      />
+
+      {/* Stars Level Banner at the bottom */}
+      <g transform="translate(0, 4)">
+        <rect
+          x="62"
+          y="142"
+          width="76"
+          height="22"
+          rx="11"
+          fill={ratingStyle.color}
+          stroke="#ffffff"
+          strokeWidth="1.8"
+          style={{ filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.15))" }}
+        />
+        <text
+          x="100"
+          y="157"
+          textAnchor="middle"
+          fill="#ffffff"
+          fontSize="11"
+          fontWeight="bold"
+          fontFamily="system-ui, -apple-system, sans-serif"
+          letterSpacing="0.5"
+        >
+          {stars}
+        </text>
+      </g>
+    </svg>
+  );
+};
+
 export const CodeChefModal = ({ show, onClose, data }) => {
   const { canPortal } = useModalControls(show, onClose);
   const [ccActiveTab, setCcActiveTab] = useState("overview");
   const [hoveredCcContest, setHoveredCcContest] = useState(null);
+  const [showScrollArrow, setShowScrollArrow] = useState(false);
+  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
-    if (show) {
-      setCcActiveTab("overview");
-    }
-  }, [show]);
+    const timer = setTimeout(() => {
+      if (show && scrollContainerRef.current) {
+        const { scrollHeight, clientHeight, scrollTop } = scrollContainerRef.current;
+        setShowScrollArrow(scrollHeight - scrollTop - clientHeight > 30);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [show, ccActiveTab, data]);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setShowScrollArrow(scrollHeight - scrollTop - clientHeight > 30);
+  };
 
   if (!canPortal) return null;
 
@@ -93,7 +273,7 @@ export const CodeChefModal = ({ show, onClose, data }) => {
                   </div>
 
                   <div className="flex items-center gap-4 mt-2 text-sm text-dark/70 dark:text-light/70 flex-wrap">
-                    <span className="font-semibold text-red-500">@{ccData?.info?.handle || "urva_gandhi"}</span>
+                    <span className="font-semibold text-red-600 dark:text-red-400">@{ccData?.info?.handle || "urva_gandhi"}</span>
                     {ccData?.info?.country && (
                       <span className="flex items-center gap-1">
                         <MapPin className="w-4 h-4 text-red-500" /> {ccData.info.country}
@@ -124,7 +304,7 @@ export const CodeChefModal = ({ show, onClose, data }) => {
                       onClick={() => setCcActiveTab(tab.id)}
                       className={`relative pb-3 px-4 text-sm font-bold flex items-center gap-2 transition-colors duration-200 whitespace-nowrap ${
                         isActive
-                          ? "text-red-500"
+                          ? "text-red-600 dark:text-red-400"
                           : "text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light"
                       }`}
                     >
@@ -144,8 +324,13 @@ export const CodeChefModal = ({ show, onClose, data }) => {
               </div>
             </div>
 
-            {/* Scrollable Content Body */}
-            <div className="flex-1 overflow-y-auto p-8 max-h-[50vh] min-h-[40vh] no-scrollbar bg-light dark:bg-[#0d1117]/95">
+            {/* Scrollable Body Content Wrapper */}
+            <div className="relative flex-1 flex flex-col min-h-0">
+              <div
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto p-8 max-h-[50vh] min-h-[40vh] no-scrollbar bg-light dark:bg-[#0d1117]/95"
+              >
               {ccLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                   <div className="w-10 h-10 border-4 border-solid border-red-500/20 border-t-red-500 rounded-full animate-spin" />
@@ -171,7 +356,9 @@ export const CodeChefModal = ({ show, onClose, data }) => {
                           <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Rating</span>
                         </div>
                         <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
-                          <Award className="w-8 h-8 text-red-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
+                          <div className="w-14 h-14 mb-2 group-hover:scale-110 transition-transform duration-200 flex items-center justify-center">
+                            <CodeChefStarBadge stars={ccStars} />
+                          </div>
                           <span className="text-2xl font-extrabold">{ccStars}</span>
                           <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Stars</span>
                         </div>
@@ -301,8 +488,23 @@ export const CodeChefModal = ({ show, onClose, data }) => {
                       <div className="border border-solid border-dark/10 dark:border-light/10 p-6 rounded-2xl bg-light dark:bg-dark flex flex-col justify-between">
                         <div>
                           <h5 className="text-md font-bold mb-4 border-b border-solid border-dark/10 dark:border-light/10 pb-2">Earned Badges</h5>
+                          
+                          {/* Prominent Star Coder badge */}
+                          <div className="flex items-center gap-6 p-4 mb-6 rounded-2xl bg-red-500/5 border border-solid border-red-500/10 shadow-sm">
+                            <div className="w-20 h-20 flex-shrink-0">
+                              <CodeChefStarBadge stars={ccStars} />
+                            </div>
+                            <div>
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider text-red-500">CodeChef Rank Level</span>
+                              <h6 className="text-base font-extrabold mt-0.5">{getCcRatingStyle(ccStars).name}</h6>
+                              <p className="text-xs text-dark/60 dark:text-light/60 mt-1 leading-snug">
+                                Dynamic rating-tier achievement badge based on active contest ratings.
+                              </p>
+                            </div>
+                          </div>
+
                           {ccData?.badges?.length > 0 ? (
-                            <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                            <div className="space-y-4 max-h-[220px] overflow-y-auto pr-2">
                               {ccData.badges.map((badge, idx) => (
                                 <div key={idx} className="flex gap-4 p-3 rounded-xl hover:bg-dark/5 dark:hover:bg-light/5 transition-all duration-300 items-center">
                                   <div className="w-12 h-12 flex-shrink-0">
@@ -316,7 +518,7 @@ export const CodeChefModal = ({ show, onClose, data }) => {
                               ))}
                             </div>
                           ) : (
-                            <div className="py-12 text-center text-sm font-semibold text-dark/40 dark:text-light/40">No badges earned yet</div>
+                            <div className="py-8 text-center text-sm font-semibold text-dark/40 dark:text-light/40">No other badges earned yet</div>
                           )}
                         </div>
                       </div>
@@ -570,6 +772,37 @@ export const CodeChefModal = ({ show, onClose, data }) => {
                   )}
                 </>
               )}
+              </div>
+
+              <AnimatePresence>
+                {showScrollArrow && !ccLoading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute bottom-4 left-0 right-0 z-20 pointer-events-none flex flex-col items-center justify-center text-red-500 animate-bounce"
+                  >
+                    <span className="text-[10px] font-extrabold tracking-wider bg-light/95 dark:bg-dark/95 px-2.5 py-1 rounded-full border border-solid border-red-500/30 shadow-md backdrop-blur-sm">
+                      Scroll Down
+                    </span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="drop-shadow-md"
+                    >
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Footer */}
@@ -580,7 +813,7 @@ export const CodeChefModal = ({ show, onClose, data }) => {
               <Link
                 href="https://codechef.com/users/urva_gandhi"
                 target="_blank"
-                className="rounded-xl bg-dark px-6 py-2.5 text-center text-sm font-bold text-light dark:bg-red-500 dark:text-dark dark:hover:bg-red-500/80 transition-all duration-300"
+                className="rounded-xl bg-red-600 hover:bg-red-700 text-center text-sm font-bold text-white dark:text-black dark:bg-red-400 dark:hover:bg-red-300 transition-all duration-300 px-6 py-2.5"
               >
                 Visit Official Profile
               </Link>

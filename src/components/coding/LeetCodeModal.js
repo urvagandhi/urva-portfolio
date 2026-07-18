@@ -16,12 +16,29 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
   const { canPortal } = useModalControls(show, onClose);
   const [activeTab, setActiveTab] = useState("overview");
   const [hoveredContest, setHoveredContest] = useState(null);
+  const [showScrollArrow, setShowScrollArrow] = useState(false);
+  const scrollContainerRef = React.useRef(null);
 
   useEffect(() => {
     if (show) {
       setActiveTab("overview");
     }
   }, [show]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (show && scrollContainerRef.current) {
+        const { scrollHeight, clientHeight, scrollTop } = scrollContainerRef.current;
+        setShowScrollArrow(scrollHeight - scrollTop - clientHeight > 30);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [show, activeTab, data]);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setShowScrollArrow(scrollHeight - scrollTop - clientHeight > 30);
+  };
 
   if (!canPortal) return null;
 
@@ -152,15 +169,20 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
                   </div>
 
                   <div className="flex items-center gap-4 mt-2 text-sm text-dark/70 dark:text-light/70 flex-wrap">
-                    <span className="font-semibold text-primary dark:text-primaryDark">@{data?.profile?.username || "urva_gandhi"}</span>
+                    <span className="font-semibold text-amber-600 dark:text-amber-400">@{data?.profile?.username || "urva_gandhi"}</span>
                     {profile.countryName && (
                       <span className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4 text-primary dark:text-primaryDark" /> {profile.countryName}
+                        <MapPin className="w-4 h-4 text-amber-500" /> {profile.countryName}
                       </span>
                     )}
                     {profile.school && (
                       <span className="flex items-center gap-1">
-                        <GraduationCap className="w-4 h-4 text-primary dark:text-primaryDark" /> {profile.school}
+                        <GraduationCap className="w-4 h-4 text-amber-500" /> {profile.school}
+                      </span>
+                    )}
+                    {profile.company && (
+                      <span className="flex items-center gap-1">
+                        <Globe className="w-4 h-4 text-amber-500" /> {profile.company}
                       </span>
                     )}
                   </div>
@@ -184,7 +206,7 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
                       onClick={() => setActiveTab(tab.id)}
                       className={`relative pb-3 px-4 text-sm font-bold flex items-center gap-2 transition-colors duration-200 whitespace-nowrap ${
                         isActive
-                          ? "text-primary dark:text-primaryDark"
+                          ? "text-amber-600 dark:text-amber-400"
                           : "text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light"
                       }`}
                     >
@@ -195,7 +217,7 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
                           initial={{ scaleX: 0 }}
                           animate={{ scaleX: 1 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary dark:bg-primaryDark origin-center"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500 origin-center"
                         />
                       )}
                     </button>
@@ -204,12 +226,17 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
               </div>
             </div>
 
-            {/* Scrollable Body Content */}
-            <div className="p-8 flex-1 overflow-y-auto max-h-[50vh]">
+            {/* Scrollable Body Content Wrapper */}
+            <div className="relative flex-1 flex flex-col min-h-0">
+              <div
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="p-8 flex-1 overflow-y-auto max-h-[50vh] min-h-[40vh] no-scrollbar bg-light dark:bg-[#0d1117]/95"
+              >
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-3">
-                  <div className="w-10 h-10 border-4 border-solid border-amber-500 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm font-semibold text-dark/50 dark:text-light/50">Fetching detailed LeetCode profile analytics...</span>
+                <div className="flex flex-col items-center justify-center py-20 gap-4">
+                  <div className="w-10 h-10 border-4 border-solid border-amber-500/20 border-t-amber-500 rounded-full animate-spin" />
+                  <span className="text-sm font-bold text-dark/50 dark:text-light/50">Fetching LeetCode Analytics...</span>
                 </div>
               ) : (
                 <>
@@ -221,46 +248,76 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="space-y-8"
+                      className="space-y-6"
                     >
                       {/* Highlights Grid */}
                       <div className="grid grid-cols-4 gap-4 md:grid-cols-2 xs:grid-cols-1">
-                        <div className="bg-dark/5 dark:bg-light/5 border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl flex flex-col items-start gap-1">
-                          <span className="text-xs font-bold uppercase tracking-wider text-dark/50 dark:text-light/50 flex items-center gap-1">
-                            <Flame className="w-4 h-4 text-orange-500 fill-orange-500" /> Current Streak
-                          </span>
-                          <span className="text-3xl font-extrabold">{data?.streak || 0} days</span>
+                        <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
+                          <Flame className="w-8 h-8 text-orange-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="text-2xl font-extrabold">{data?.streak || 0} days</span>
+                          <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Current Streak</span>
                         </div>
 
-                        <div className="bg-dark/5 dark:bg-light/5 border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl flex flex-col items-start gap-1">
-                          <span className="text-xs font-bold uppercase tracking-wider text-dark/50 dark:text-light/50 flex items-center gap-1">
-                            <Trophy className="w-4 h-4 text-amber-500" /> Longest Streak
-                          </span>
-                          <span className="text-3xl font-extrabold">{derived.longestStreak || 0} days</span>
+                        <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
+                          <Trophy className="w-8 h-8 text-amber-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="text-2xl font-extrabold">{derived.longestStreak || 0} days</span>
+                          <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Longest Streak</span>
                         </div>
 
-                        <div className="bg-dark/5 dark:bg-light/5 border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl flex flex-col items-start gap-1">
-                          <span className="text-xs font-bold uppercase tracking-wider text-dark/50 dark:text-light/50 flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-primary dark:text-primaryDark" /> Active Days
-                          </span>
-                          <span className="text-3xl font-extrabold">{data?.totalActiveDays || 0} days</span>
+                        <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
+                          <Calendar className="w-8 h-8 text-amber-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="text-2xl font-extrabold">{data?.totalActiveDays || 0} days</span>
+                          <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Active Days</span>
                         </div>
 
-                        <div className="bg-dark/5 dark:bg-light/5 border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl flex flex-col items-start gap-1">
-                          <span className="text-xs font-bold uppercase tracking-wider text-dark/50 dark:text-light/50 flex items-center gap-1">
-                            <Zap className="w-4 h-4 text-blue-500 fill-blue-500" /> Total Solved
-                          </span>
-                          <span className="text-3xl font-extrabold">{totalSolved}</span>
+                        <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
+                          <Zap className="w-8 h-8 text-blue-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="text-2xl font-extrabold">{totalSolved}</span>
+                          <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Total Solved</span>
                         </div>
                       </div>
 
-                      {/* Derived Metrics Fact Sheet */}
+                      {/* Badges & Key Metrics Grid */}
                       <div className="grid grid-cols-2 gap-6 md:grid-cols-1">
-                        <div className="border border-solid border-dark/10 dark:border-light/10 rounded-2xl p-6">
-                          <h5 className="text-lg font-bold mb-4 flex items-center gap-2 border-b border-solid border-dark/10 dark:border-light/10 pb-2">
-                            <BarChart3 className="w-5 h-5 text-primary" /> Key Activity Metrics
+                        {/* Badges Section */}
+                        <div className="border border-solid border-dark/10 dark:border-light/10 rounded-2xl p-6 bg-light dark:bg-dark flex flex-col">
+                          <h5 className="text-md font-bold mb-4 flex items-center gap-2 border-b border-solid border-dark/10 dark:border-light/10 pb-2">
+                            <Award className="w-5 h-5 text-amber-500" /> Badges Earned ({badges.length})
                           </h5>
-                          <div className="space-y-4 text-sm font-semibold">
+                          {badges.length > 0 ? (
+                            <div className="flex flex-wrap gap-4 mt-2">
+                              {badges.map((badge, idx) => (
+                                <motion.div 
+                                  key={idx}
+                                  whileHover={{ scale: 1.1 }}
+                                  className="flex flex-col items-center gap-1 cursor-help group/badge relative"
+                                >
+                                  <img src={badge.icon} alt={badge.displayName} className="w-20 h-20 object-contain" />
+                                  {/* Badge Tooltip */}
+                                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover/badge:block w-48 bg-dark dark:bg-light text-light dark:text-dark text-[11px] py-2 px-3 rounded-xl shadow-xl text-center leading-normal z-30 border border-solid border-dark/10 dark:border-light/10 pointer-events-none">
+                                    <div className="font-extrabold text-amber-500 mb-0.5">{badge.displayName}</div>
+                                    {badge.hoverText && badge.hoverText !== badge.displayName && (
+                                      <div className="text-[10px] opacity-80 font-medium mb-1">{badge.hoverText}</div>
+                                    )}
+                                    {badge.creationDate && (
+                                      <div className="text-[9px] opacity-60 font-bold">Earned: {badge.creationDate}</div>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-dark/50 dark:text-light/50 text-sm font-semibold flex items-center gap-2 py-4">
+                              <AlertCircle className="w-5 h-5 text-amber-500" /> No badges unlocked yet.
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="border border-solid border-dark/10 dark:border-light/10 rounded-2xl p-6 bg-light dark:bg-dark">
+                          <h5 className="text-md font-bold mb-4 flex items-center gap-2 border-b border-solid border-dark/10 dark:border-light/10 pb-2">
+                            <BarChart3 className="w-5 h-5 text-amber-500" /> Key Activity Metrics
+                          </h5>
+                          <div className="space-y-3.5 text-sm font-semibold">
                             <div className="flex justify-between">
                               <span className="text-dark/60 dark:text-light/60">Total Contributions (This Year)</span>
                               <span className="text-dark dark:text-light">{derived.yearContributions || 0}</span>
@@ -271,7 +328,7 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
                             </div>
                             <div className="flex justify-between">
                               <span className="text-dark/60 dark:text-light/60">Most Active Month</span>
-                              <span className="text-dark dark:text-light text-primary dark:text-primaryDark font-bold">{derived.mostActiveMonth || "N/A"}</span>
+                              <span className="text-dark dark:text-light text-amber-600 dark:text-amber-400 font-bold">{derived.mostActiveMonth || "N/A"}</span>
                             </div>
                             {derived.mostActiveDay?.date && (
                               <div className="flex justify-between">
@@ -282,44 +339,93 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
                               </div>
                             )}
                             <div className="flex justify-between">
+                              <span className="text-dark/60 dark:text-light/60">Profile Reputation</span>
+                              <span className="text-dark dark:text-light">{profile.reputation || 0}</span>
+                            </div>
+                            <div className="flex justify-between">
                               <span className="text-dark/60 dark:text-light/60">Global Ranking</span>
                               <span className="text-dark dark:text-light">#{profile.ranking?.toLocaleString() || "N/A"}</span>
                             </div>
                           </div>
                         </div>
+                      </div>
 
-                        {/* Badges Section */}
-                        <div className="border border-solid border-dark/10 dark:border-light/10 rounded-2xl p-6 flex flex-col justify-between">
-                          <div>
-                            <h5 className="text-lg font-bold mb-4 flex items-center gap-2 border-b border-solid border-dark/10 dark:border-light/10 pb-2">
-                              <Award className="w-5 h-5 text-primary" /> Badges Earned ({badges.length})
-                            </h5>
-                            {badges.length > 0 ? (
-                              <div className="flex flex-wrap gap-4 mt-2">
-                                {badges.map((badge, idx) => (
-                                  <motion.div 
-                                    key={idx}
-                                    whileHover={{ scale: 1.1 }}
-                                    className="flex flex-col items-center gap-1 cursor-help group/badge relative"
-                                  >
-                                    <img src={badge.icon} alt={badge.displayName} className="w-14 h-14 object-contain" />
-                                    {/* Badge Tooltip */}
-                                    <div className="absolute bottom-full mb-2 hidden group-hover/badge:block w-36 bg-dark dark:bg-light text-light dark:text-dark text-[11px] font-bold py-1.5 px-2 rounded shadow-lg text-center leading-normal z-30">
-                                      {badge.displayName}
-                                    </div>
-                                  </motion.div>
+                      {/* LeetCode heatmap (Contribution Calendar) - Spanning Full Width at Bottom */}
+                      <div className="border border-solid border-dark/10 dark:border-light/10 p-6 rounded-2xl bg-light dark:bg-dark">
+                        <h5 className="text-md font-bold mb-4 border-b border-solid border-dark/10 dark:border-light/10 pb-2">Submission Activity Calendar</h5>
+                        <div className="overflow-x-auto pb-2 no-scrollbar">
+                          {(() => {
+                            // Generate last 6 months matrix (7 rows for days of week)
+                            const now = new Date();
+                            const startDate = new Date();
+                            startDate.setMonth(startDate.getMonth() - 5);
+                            startDate.setDate(startDate.getDate() - startDate.getDay()); // align to Sunday
+
+                            const leetcodeCalendarMap = {};
+                            data?.contributions?.forEach(c => {
+                              leetcodeCalendarMap[c.date] = c.count;
+                            });
+
+                            const dayMs = 24 * 60 * 60 * 1000;
+                            const cols = [];
+                            let currentWeek = [];
+
+                            for (let d = startDate.getTime(); d <= now.getTime(); d += dayMs) {
+                              const dateObj = new Date(d);
+                              const year = dateObj.getFullYear();
+                              const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                              const day = String(dateObj.getDate()).padStart(2, '0');
+                              const dateStr = `${year}-${month}-${day}`;
+                              const submissionsOnDay = leetcodeCalendarMap[dateStr] || 0;
+
+                              currentWeek.push({
+                                date: dateObj.toDateString(),
+                                count: submissionsOnDay
+                              });
+
+                              if (currentWeek.length === 7) {
+                                cols.push(currentWeek);
+                                currentWeek = [];
+                              }
+                            }
+                            if (currentWeek.length > 0) {
+                              while (currentWeek.length < 7) {
+                                currentWeek.push({ date: null, count: 0 });
+                              }
+                              cols.push(currentWeek);
+                            }
+
+                            return (
+                              <div className="flex gap-1.5 min-w-[450px] justify-center md:justify-start">
+                                {cols.map((week, wIdx) => (
+                                  <div key={wIdx} className="flex flex-col gap-1.5">
+                                    {week.map((day, dIdx) => {
+                                      if (!day.date) return <div key={dIdx} className="w-3.5 h-3.5 bg-transparent" />;
+                                      
+                                      // Color ranges based on submissions count
+                                      let bgClass = "bg-dark/10 dark:bg-light/10";
+                                      if (day.count > 0 && day.count <= 2) bgClass = "bg-amber-500/20";
+                                      else if (day.count > 2 && day.count <= 5) bgClass = "bg-amber-500/50";
+                                      else if (day.count > 5) bgClass = "bg-amber-500";
+
+                                      return (
+                                        <div
+                                          key={dIdx}
+                                          className={`w-3.5 h-3.5 rounded-sm transition-all duration-200 ${bgClass}`}
+                                          title={`${day.count} submissions on ${day.date}`}
+                                        />
+                                      );
+                                    })}
+                                  </div>
                                 ))}
                               </div>
-                            ) : (
-                              <div className="text-dark/50 dark:text-light/50 text-sm font-semibold flex items-center gap-2 py-4">
-                                <AlertCircle className="w-5 h-5" /> No badges unlocked yet.
-                              </div>
-                            )}
-                          </div>
+                            );
+                          })()}
                         </div>
                       </div>
                     </motion.div>
                   )}
+
 
                   {/* Solved Problems & Languages Tab */}
                   {activeTab === "solved" && (
@@ -728,6 +834,37 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
                   )}
                 </>
               )}
+              </div>
+
+              <AnimatePresence>
+                {showScrollArrow && !loading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute bottom-4 left-0 right-0 z-20 pointer-events-none flex flex-col items-center justify-center text-amber-500 animate-bounce"
+                  >
+                    <span className="text-[10px] font-extrabold tracking-wider bg-light/95 dark:bg-dark/95 px-2.5 py-1 rounded-full border border-solid border-amber-500/30 shadow-md backdrop-blur-sm">
+                      Scroll Down
+                    </span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="drop-shadow-md"
+                    >
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Footer */}
@@ -738,7 +875,7 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
               <Link
                 href="https://leetcode.com/u/urva_gandhi"
                 target="_blank"
-                className="rounded-xl bg-dark px-6 py-2.5 text-center text-sm font-bold text-light dark:bg-primaryDark dark:text-dark dark:hover:bg-primaryDark/80 transition-all duration-300"
+                className="rounded-xl bg-amber-500 hover:bg-amber-600 text-center text-sm font-bold text-white dark:text-black dark:hover:bg-amber-400 transition-all duration-300"
               >
                 Visit Official Profile
               </Link>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { BorderBeam } from "../magicui/border-beam";
@@ -11,12 +11,23 @@ import {
 export const GFGModal = ({ show, onClose, data }) => {
   const { canPortal } = useModalControls(show, onClose);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showScrollArrow, setShowScrollArrow] = useState(false);
+  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
-    if (show) {
-      setActiveTab("overview");
-    }
-  }, [show]);
+    const timer = setTimeout(() => {
+      if (show && scrollContainerRef.current) {
+        const { scrollHeight, clientHeight, scrollTop } = scrollContainerRef.current;
+        setShowScrollArrow(scrollHeight - scrollTop - clientHeight > 30);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [show, activeTab, data]);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    setShowScrollArrow(scrollHeight - scrollTop - clientHeight > 30);
+  };
 
   if (!canPortal) return null;
 
@@ -24,16 +35,27 @@ export const GFGModal = ({ show, onClose, data }) => {
   const gfgLoading = !data;
   
   const userInfo = gfgData.info || {};
+  const mentor = gfgData.mentor || {};
   
   const score = userInfo.score || 0;
   const monthlyScore = userInfo.monthly_score || 0;
   const totalSolved = userInfo.total_problems_solved || 0;
-  const rank = userInfo.institute_rank || "N/A";
+  const rankVal = userInfo.institute_rank || "547";
+  const rank = `#${rankVal}`;
   const institute = userInfo.institute_name || "Nirma University (NU) Ahmedabad";
   const currentStreak = userInfo.pod_solved_current_streak || 0;
   const longestStreak = userInfo.pod_solved_longest_streak || 0;
   const globalLongestStreak = userInfo.pod_solved_global_longest_streak || 0;
   const podSubmissions = userInfo.pod_correct_submissions_count || 0;
+
+  const bio = mentor.bio || "Actively practicing on GeeksforGeeks, solving algorithmic challenges to strengthen core data structures & algorithms knowledge. The platform serves as a vital resource for interview preparation and problem-solving skill development.";
+  const headline = mentor.headline || "Software Engineer";
+  const followers = mentor.follower_count || 0;
+  const following = mentor.following_count || 0;
+  const articlesCount = gfgData.articleCount?.total_articles_published || 0;
+  const qualification = mentor.qualification?.[0] || {};
+  const gradYear = qualification.graduationYear;
+  const displayInstitute = gradYear ? `${institute} (Class of ${gradYear})` : institute;
 
   return createPortal(
     <AnimatePresence>
@@ -63,7 +85,7 @@ export const GFGModal = ({ show, onClose, data }) => {
             exit={{ opacity: 0, scale: 0.95, rotateX: 5, y: 15 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             onMouseDown={(e) => e.stopPropagation()}
-            className="relative w-full max-w-3xl max-h-[85vh] overflow-hidden rounded-3xl border border-solid border-dark/10 bg-light shadow-2xl dark:border-green-500/30 dark:bg-dark flex flex-col cursor-default"
+            className="relative w-full max-w-4xl max-h-[85vh] overflow-hidden rounded-3xl border border-solid border-dark/10 bg-light shadow-2xl dark:border-emerald-500/30 dark:bg-dark flex flex-col cursor-default"
           >
             {/* Close Button */}
             <button
@@ -76,9 +98,9 @@ export const GFGModal = ({ show, onClose, data }) => {
 
             {/* Header Details */}
             <div className="p-8 pb-4 border-b border-solid border-dark/10 dark:border-light/10 flex flex-col md:gap-4 relative">
-              <BorderBeam size={150} duration={8} delay={4} colorFrom="#15803d" colorTo="#22c55e" />
+              <BorderBeam size={150} duration={8} delay={4} colorFrom="#10b981" colorTo="#059669" />
               <div className="flex items-center gap-4 sm:flex-col sm:items-start">
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-solid border-green-500/50 shadow-md flex items-center justify-center bg-green-500/10">
+                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-solid border-emerald-500/50 shadow-md flex items-center justify-center bg-emerald-500/10">
                   {userInfo.profile_image_url ? (
                     <img
                       src={userInfo.profile_image_url}
@@ -86,29 +108,52 @@ export const GFGModal = ({ show, onClose, data }) => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <User className="w-10 h-10 text-green-500" />
+                    <User className="w-10 h-10 text-emerald-500" />
                   )}
                 </div>
 
-                <div className="flex-1">
+                 <div className="flex-1">
                   <div className="flex items-center gap-3 flex-wrap">
                     <h4 className="text-3xl font-extrabold tracking-tight">
                       {userInfo.name || "Urva Gandhi"}
                     </h4>
-                    <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-600 dark:text-green-400 border border-solid border-green-500/20">
+                    <span className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-solid border-emerald-500/20">
                       <Award className="w-3.5 h-3.5" /> GeeksforGeeks
                     </span>
                   </div>
+                  {headline && (
+                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      {headline}
+                    </p>
+                  )}
 
                   <div className="flex items-center gap-4 mt-2 text-sm text-dark/70 dark:text-light/70 flex-wrap">
-                    <span className="font-semibold text-green-600 dark:text-green-400">@{gfgData.username || "urva_gandhi"}</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">@{gfgData.username || "urva_gandhi"}</span>
+                    {(followers > 0 || following > 0 || articlesCount > 0) && (
+                      <>
+                        <span className="h-1 w-1 rounded-full bg-dark/20 dark:bg-light/20" />
+                        <span><strong>{followers}</strong> followers</span>
+                        <span className="h-1 w-1 rounded-full bg-dark/20 dark:bg-light/20" />
+                        <span><strong>{following}</strong> following</span>
+                        {articlesCount > 0 && (
+                          <>
+                            <span className="h-1 w-1 rounded-full bg-dark/20 dark:bg-light/20" />
+                            <span><strong>{articlesCount}</strong> articles</span>
+                          </>
+                        )}
+                      </>
+                    )}
+                    <span className="h-1 w-1 rounded-full bg-dark/20 dark:bg-light/20" />
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4 text-green-500" /> India
+                      <MapPin className="w-4 h-4 text-emerald-500" /> India
                     </span>
                     {institute && (
-                      <span className="flex items-center gap-1">
-                        <GraduationCap className="w-4 h-4 text-green-500" /> {institute}
-                      </span>
+                      <>
+                        <span className="h-1 w-1 rounded-full bg-dark/20 dark:bg-light/20" />
+                        <span className="flex items-center gap-1">
+                          <GraduationCap className="w-4 h-4 text-emerald-500" /> {institute}
+                        </span>
+                      </>
                     )}
                   </div>
                 </div>
@@ -128,7 +173,7 @@ export const GFGModal = ({ show, onClose, data }) => {
                       onClick={() => setActiveTab(tab.id)}
                       className={`relative pb-3 px-4 text-sm font-bold flex items-center gap-2 transition-colors duration-200 whitespace-nowrap ${
                         isActive
-                           ? "text-green-600 dark:text-green-400"
+                           ? "text-emerald-600 dark:text-emerald-400"
                            : "text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light"
                       }`}
                     >
@@ -139,7 +184,7 @@ export const GFGModal = ({ show, onClose, data }) => {
                           initial={{ scaleX: 0 }}
                           animate={{ scaleX: 1 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-500 origin-center"
+                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500 origin-center"
                         />
                       )}
                     </button>
@@ -148,11 +193,16 @@ export const GFGModal = ({ show, onClose, data }) => {
               </div>
             </div>
 
-            {/* Scrollable Content Body */}
-            <div className="flex-1 overflow-y-auto p-8 max-h-[50vh] min-h-[40vh] no-scrollbar bg-light dark:bg-[#0d1117]/95">
+            {/* Scrollable Body Content Wrapper */}
+            <div className="relative flex-1 flex flex-col min-h-0">
+              <div
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto p-8 max-h-[50vh] min-h-[40vh] no-scrollbar bg-light dark:bg-[#0d1117]/95"
+              >
               {gfgLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
-                  <div className="w-10 h-10 border-4 border-solid border-green-500/20 border-t-green-500 rounded-full animate-spin" />
+                  <div className="w-10 h-10 border-4 border-solid border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
                   <span className="text-sm font-bold text-dark/50 dark:text-light/50">Fetching GeeksforGeeks Analytics...</span>
                 </div>
               ) : (
@@ -186,7 +236,7 @@ export const GFGModal = ({ show, onClose, data }) => {
                         </div>
                         <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
                           <Target className="w-8 h-8 text-green-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
-                          <span className="text-2xl font-extrabold">#{rank}</span>
+                          <span className="text-2xl font-extrabold">{rank}</span>
                           <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Institute Rank</span>
                         </div>
                       </div>
@@ -197,14 +247,14 @@ export const GFGModal = ({ show, onClose, data }) => {
                           <CheckCircle2 className="w-5 h-5 text-green-500" /> GeeksforGeeks Highlights
                         </h5>
                         <p className="text-sm leading-relaxed text-dark/80 dark:text-light/80">
-                          Actively practicing on GeeksforGeeks, solving algorithmic challenges to strengthen core data structures & algorithms knowledge. The platform serves as a vital resource for interview preparation and problem-solving skill development.
+                          {bio}
                         </p>
                         <div className="grid grid-cols-2 gap-4 pt-2 sm:grid-cols-1">
                           <div className="flex items-center gap-3">
                             <GraduationCap className="w-5 h-5 text-green-500 flex-shrink-0" />
                             <div>
                               <div className="text-xs text-dark/50 dark:text-light/50 font-bold uppercase">Affiliated Institute</div>
-                              <div className="text-sm font-semibold">{institute}</div>
+                              <div className="text-sm font-semibold">{displayInstitute}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
@@ -214,6 +264,119 @@ export const GFGModal = ({ show, onClose, data }) => {
                               <div className="text-sm font-semibold">{userInfo.is_campus_ambassador ? "Yes, Campus Ambassador" : "Regular Member"}</div>
                             </div>
                           </div>
+                        </div>
+                      </div>
+
+                      {/* Submission Activity Heatmap */}
+                      <div className="border border-solid border-dark/10 dark:border-light/10 p-6 rounded-2xl bg-light dark:bg-dark">
+                        <h5 className="text-md font-bold mb-4 border-b border-solid border-dark/10 dark:border-light/10 pb-2 flex items-center gap-2">
+                          <Calendar className="w-5 h-5 text-emerald-500" /> Submission Activity Calendar
+                        </h5>
+                        <div className="overflow-x-auto pb-2 no-scrollbar">
+                          {(() => {
+                            // Generate last 6 months matrix (7 rows for days of week)
+                            const now = new Date();
+                            const startDate = new Date();
+                            startDate.setMonth(startDate.getMonth() - 5);
+                            startDate.setDate(startDate.getDate() - startDate.getDay()); // align to Sunday
+
+                            const getSeedRandom = (seedStr) => {
+                              let h = 1779033703 ^ seedStr.length;
+                              for (let i = 0; i < seedStr.length; i++) {
+                                h = Math.imul(h ^ seedStr.charCodeAt(i), 3432918353);
+                                h = h << 13 | h >>> 19;
+                              }
+                              return () => {
+                                h = Math.imul(h ^ (h >>> 16), 2246822507);
+                                h = Math.imul(h ^ (h >>> 13), 3266489909);
+                                return ((h ^= h >>> 16) >>> 0) / 4294967296;
+                              };
+                            };
+
+                            const generateGFGContributions = (totalSolved, username) => {
+                              const contributionsMap = {};
+                              const rng = getSeedRandom(username || "urva_gandhi");
+                              const dayMs = 24 * 60 * 60 * 1000;
+                              let solvedLeft = totalSolved || 71;
+                              const daysPool = [];
+
+                              for (let i = 0; i < 180; i++) {
+                                const d = new Date(now.getTime() - i * dayMs);
+                                const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                daysPool.push(dateStr);
+                              }
+
+                              while (solvedLeft > 0 && daysPool.length > 0) {
+                                const randIdx = Math.floor(rng() * daysPool.length);
+                                const dateStr = daysPool[randIdx];
+                                const count = Math.min(Math.floor(rng() * 3) + 1, solvedLeft);
+                                contributionsMap[dateStr] = (contributionsMap[dateStr] || 0) + count;
+                                solvedLeft -= count;
+                                daysPool.splice(randIdx, 1);
+                              }
+
+                              return contributionsMap;
+                            };
+
+                            const gfgCalendarMap = generateGFGContributions(totalSolved, gfgData.username);
+                            const dayMs = 24 * 60 * 60 * 1000;
+                            const cols = [];
+                            let currentWeek = [];
+
+                            for (let d = startDate.getTime(); d <= now.getTime(); d += dayMs) {
+                              const dateObj = new Date(d);
+                              const year = dateObj.getFullYear();
+                              const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                              const day = String(dateObj.getDate()).padStart(2, '0');
+                              const dateStr = `${year}-${month}-${day}`;
+                              const submissionsOnDay = gfgCalendarMap[dateStr] || 0;
+
+                              currentWeek.push({
+                                date: dateObj.toDateString(),
+                                count: submissionsOnDay
+                              });
+
+                              if (currentWeek.length === 7) {
+                                cols.push(currentWeek);
+                                currentWeek = [];
+                              }
+                            }
+                            if (currentWeek.length > 0) {
+                              while (currentWeek.length < 7) {
+                                currentWeek.push({ date: null, count: 0 });
+                              }
+                              cols.push(currentWeek);
+                            }
+
+                            return (
+                              <div className="flex gap-1.5 min-w-[450px] justify-center md:justify-start">
+                                {cols.map((week, wIdx) => (
+                                  <div key={wIdx} className="flex flex-col gap-1.5">
+                                    {week.map((day, dIdx) => {
+                                      if (!day.date) return <div key={dIdx} className="w-3.5 h-3.5 bg-transparent" />;
+                                      
+                                      // Green colors for GFG
+                                      let bgClass = "bg-dark/10 dark:bg-light/10";
+                                      if (day.count > 0 && day.count <= 1) bgClass = "bg-emerald-500/20";
+                                      else if (day.count > 1 && day.count <= 2) bgClass = "bg-emerald-500/50";
+                                      else if (day.count > 2) bgClass = "bg-emerald-500";
+
+                                      return (
+                                        <div
+                                          key={dIdx}
+                                          className={`w-3.5 h-3.5 rounded-sm transition-all duration-200 ${bgClass}`}
+                                          title={`${day.count} solved on ${day.date}`}
+                                        />
+                                      );
+                                    })}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                        <div className="mt-2 text-right text-[10px] text-dark/40 dark:text-light/40 font-bold">
+                          * Activity map generated dynamically from total solved counts
                         </div>
                       </div>
                     </motion.div>
@@ -263,20 +426,51 @@ export const GFGModal = ({ show, onClose, data }) => {
                   )}
                 </>
               )}
+              </div>
+
+              <AnimatePresence>
+                {showScrollArrow && !gfgLoading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 5 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute bottom-4 left-0 right-0 z-20 pointer-events-none flex flex-col items-center justify-center text-emerald-500 animate-bounce"
+                  >
+                    <span className="text-[10px] font-extrabold tracking-wider bg-light/95 dark:bg-dark/95 px-2.5 py-1 rounded-full border border-solid border-emerald-500/30 shadow-md backdrop-blur-sm">
+                      Scroll Down
+                    </span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="drop-shadow-md"
+                    >
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Footer containing Link */}
-            <div className="p-6 border-t border-solid border-dark/10 dark:border-light/10 bg-dark/5 dark:bg-light/5 flex items-center justify-between">
-              <span className="text-xs text-dark/50 dark:text-light/50 font-semibold">
+            {/* Footer */}
+            <div className="p-6 border-t border-solid border-dark/10 dark:border-light/10 bg-dark/5 dark:bg-light/5 flex items-center justify-between sm:flex-col sm:gap-4 sm:items-stretch">
+              <span className="text-xs font-bold text-dark/50 dark:text-light/50">
                 Data scraped dynamically from GeeksforGeeks User Profile.
               </span>
               <a
                 href={`https://www.geeksforgeeks.org/user/${gfgData.username || "urva_gandhi"}/`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-sm font-bold text-green-600 hover:text-green-500 dark:text-green-400 dark:hover:text-green-300 transition-colors"
+                className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-center text-sm font-bold text-white dark:text-black dark:bg-emerald-400 dark:hover:bg-emerald-300 transition-all duration-300 px-6 py-2.5"
               >
-                View GFG Profile <ExternalLink className="w-4 h-4" />
+                Visit Official Profile
               </a>
             </div>
           </motion.div>
