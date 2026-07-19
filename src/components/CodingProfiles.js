@@ -176,7 +176,8 @@ export default function CodingProfiles() {
       link: "https://leetcode.com/u/urva_gandhi",
       colorFrom: "#f59e0b",
       colorTo: "#d97706",
-      onClick: () => setShowModal(true)
+      onClick: () => setShowModal(true),
+      potd: leetcodeData?.potd
     },
     {
       platform: "Codeforces",
@@ -215,7 +216,8 @@ export default function CodingProfiles() {
       link: "https://www.geeksforgeeks.org/user/urva_gandhi/",
       colorFrom: "#10b981",
       colorTo: "#059669",
-      onClick: () => setShowGfgModal(true)
+      onClick: () => setShowGfgModal(true),
+      potd: gfgData?.potd
     },
     {
       platform: "HackerRank",

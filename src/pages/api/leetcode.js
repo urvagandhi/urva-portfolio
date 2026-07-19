@@ -40,92 +40,102 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         query: `
           query leetcodeStats($username: String!) {
-          allQuestionsCount {
-            difficulty
-            count
-          }
-          matchedUser(username: $username) {
-            username
-            profile {
-              realName
-              userAvatar
-              countryName
-              ranking
-              reputation
-              aboutMe
-              company
-              school
-            }
-            submitStatsGlobal {
-              acSubmissionNum {
+            activeDailyCodingChallengeQuestion {
+              date
+              link
+              question {
                 difficulty
-                count
-                submissions
-              }
-              totalSubmissionNum {
-                difficulty
-                count
-                submissions
+                frontendQuestionId: questionFrontendId
+                title
+                titleSlug
               }
             }
-            languageProblemCount {
-              languageName
+            allQuestionsCount {
+              difficulty
+              count
+            }
+            matchedUser(username: $username) {
+              username
+              profile {
+                realName
+                userAvatar
+                countryName
+                ranking
+                reputation
+                aboutMe
+                company
+                school
+              }
+              submitStatsGlobal {
+                acSubmissionNum {
+                  difficulty
+                  count
+                  submissions
+                }
+                totalSubmissionNum {
+                  difficulty
+                  count
+                  submissions
+                }
+              }
+              languageProblemCount {
+                languageName
+                problemsSolved
+              }
+              badges {
+                id
+                name
+                displayName
+                icon
+                hoverText
+                creationDate
+              }
+              activeBadge {
+                id
+                name
+                displayName
+                icon
+              }
+              userCalendar {
+                activeYears
+                streak
+                totalActiveDays
+                submissionCalendar
+              }
+            }
+            userContestRanking(username: $username) {
+              attendedContestsCount
+              rating
+              globalRanking
+              totalParticipants
+              topPercentage
+              badge {
+                name
+              }
+            }
+            userContestRankingHistory(username: $username) {
+              attended
               problemsSolved
+              totalProblems
+              rating
+              ranking
+              contest {
+                title
+                startTime
+              }
             }
-            badges {
-              id
-              name
-              displayName
-              icon
-              hoverText
-              creationDate
-            }
-            activeBadge {
-              id
-              name
-              displayName
-              icon
-            }
-            userCalendar {
-              activeYears
-              streak
-              totalActiveDays
-              submissionCalendar
-            }
-          }
-          userContestRanking(username: $username) {
-            attendedContestsCount
-            rating
-            globalRanking
-            totalParticipants
-            topPercentage
-            badge {
-              name
-            }
-          }
-          userContestRankingHistory(username: $username) {
-            attended
-            problemsSolved
-            totalProblems
-            rating
-            ranking
-            contest {
+            recentSubmissionList(username: $username, limit: 15) {
               title
-              startTime
+              titleSlug
+              timestamp
+              statusDisplay
+              lang
             }
           }
-          recentSubmissionList(username: $username, limit: 15) {
-            title
-            titleSlug
-            timestamp
-            statusDisplay
-            lang
-          }
-        }
-      `,
-      variables,
-    }),
-  });
+        `,
+        variables,
+      }),
+    });
 
     const data = await response.json();
 
@@ -133,7 +143,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: data.errors[0].message });
     }
 
-    const { allQuestionsCount, matchedUser, userContestRanking, recentSubmissionList, userContestRankingHistory } = data.data;
+    const { activeDailyCodingChallengeQuestion, allQuestionsCount, matchedUser, userContestRanking, recentSubmissionList, userContestRankingHistory } = data.data;
     if (!matchedUser) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -146,10 +156,7 @@ export default async function handler(req, res) {
     
     // Format to react-activity-calendar format: [{ date: "YYYY-MM-DD", count: 1, level: 1 }]
     const formattedData = Object.entries(submissions).map(([timestamp, count]) => {
-      const date = new Date(parseInt(timestamp) * 1000);
-      const y = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
+      const dateStr = new Date(parseInt(timestamp) * 1000).toISOString().split('T')[0];
       
       let level = 0;
       if (count > 0) level = 1;
@@ -158,18 +165,19 @@ export default async function handler(req, res) {
       if (count >= 15) level = 4;
 
       return {
-        date: `${y}-${month}-${day}`,
+        date: dateStr,
         count,
         level,
       };
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     // Filter contributions to the requested year if provided
-    const targetYear = year ? parseInt(year) : new Date().getFullYear();
+    const targetYear = year ? parseInt(year) : new Date().getUTCFullYear();
     const contributions = formattedData.filter(d => d.date.startsWith(String(targetYear)));
 
     // Calculate derived metrics
     let longestStreak = 0;
+    let currentStreak = 0;
     let mostActiveDayCount = 0;
     let mostActiveDayDate = null;
     let mostActiveMonth = "N/A";
@@ -203,6 +211,26 @@ export default async function handler(req, res) {
       }
       longestStreak = Math.max(longestStreak, currentRun);
 
+      // Calculate current streak (UTC today/yesterday aligned with LeetCode database timezone)
+      const todayUTC = new Date().toISOString().split('T')[0];
+      const yesterdayVal = new Date();
+      yesterdayVal.setUTCDate(yesterdayVal.getUTCDate() - 1);
+      const yesterdayUTC = yesterdayVal.toISOString().split('T')[0];
+
+      if (activeDates.includes(todayUTC)) {
+        let checkDate = new Date();
+        while (activeDates.includes(checkDate.toISOString().split('T')[0])) {
+          currentStreak++;
+          checkDate.setUTCDate(checkDate.getUTCDate() - 1);
+        }
+      } else if (activeDates.includes(yesterdayUTC)) {
+        let checkDate = yesterdayVal;
+        while (activeDates.includes(checkDate.toISOString().split('T')[0])) {
+          currentStreak++;
+          checkDate.setUTCDate(checkDate.getUTCDate() - 1);
+        }
+      }
+
       // 2. Most active day
       Object.entries(submissions).forEach(([timestamp, count]) => {
         if (count > mostActiveDayCount) {
@@ -216,7 +244,7 @@ export default async function handler(req, res) {
       const monthCounts = Array(12).fill(0);
       Object.entries(submissions).forEach(([timestamp, count]) => {
         const date = new Date(parseInt(timestamp) * 1000);
-        monthCounts[date.getMonth()] += count;
+        monthCounts[date.getUTCMonth()] += count;
       });
       const maxMonthIdx = monthCounts.indexOf(Math.max(...monthCounts));
       if (Math.max(...monthCounts) > 0) {
@@ -226,7 +254,7 @@ export default async function handler(req, res) {
       // 4. Total contributions this year
       Object.entries(submissions).forEach(([timestamp, count]) => {
         const date = new Date(parseInt(timestamp) * 1000);
-        if (date.getFullYear() === targetYear) {
+        if (date.getUTCFullYear() === targetYear) {
           yearContributions += count;
         }
       });
@@ -253,9 +281,9 @@ export default async function handler(req, res) {
     );
 
     res.status(200).json({
-      activeYears: calendar ? calendar.activeYears : [new Date().getFullYear()],
+      activeYears: calendar ? calendar.activeYears : [new Date().getUTCFullYear()],
       totalActiveDays: calendar ? calendar.totalActiveDays : 0,
-      streak: calendar ? calendar.streak : 0,
+      streak: currentStreak,
       contributions,
       // Comprehensive profile metrics
       allQuestions: allQuestionsCount,
@@ -267,6 +295,14 @@ export default async function handler(req, res) {
       contestRanking: userContestRanking,
       contestHistory: contestHistory,
       recentSubmissions: recentSubmissionList,
+      /* POTD temporarily commented out
+      potd: activeDailyCodingChallengeQuestion ? {
+        title: activeDailyCodingChallengeQuestion.question.title,
+        link: `https://leetcode.com${activeDailyCodingChallengeQuestion.link}`,
+        difficulty: activeDailyCodingChallengeQuestion.question.difficulty
+      } : null,
+      */
+      potd: null,
       derivedMetrics: {
         longestStreak,
         mostActiveDay: {

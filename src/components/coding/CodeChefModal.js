@@ -8,7 +8,7 @@ import { formatDate } from "./helpers";
 import { 
   X, Award, Flame, Zap, Globe, GraduationCap, Calendar, 
   BarChart3, Clock, Trophy, MapPin, Info, CheckCircle2, AlertCircle, ExternalLink,
-  LayoutDashboard, Code2, Target, Loader2, Terminal
+  LayoutDashboard, Code2, Target, Loader2, Terminal, Flag
 } from "lucide-react";
 
 const getCcRatingStyle = (starsStr) => {
@@ -349,7 +349,7 @@ export const CodeChefModal = ({ show, onClose, data }) => {
                       className="space-y-6"
                     >
                       {/* Top Stats Counters Row */}
-                      <div className="grid grid-cols-4 gap-4 sm:grid-cols-2">
+                      <div className="grid grid-cols-6 gap-4 lg:grid-cols-3 sm:grid-cols-2">
                         <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
                           <Trophy className="w-8 h-8 text-red-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
                           <span className="text-2xl font-extrabold">{ccData?.info?.rating || "1240"}</span>
@@ -366,6 +366,16 @@ export const CodeChefModal = ({ show, onClose, data }) => {
                           <Zap className="w-8 h-8 text-red-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
                           <span className="text-2xl font-extrabold">{ccSolvedCount}</span>
                           <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Problems Solved</span>
+                        </div>
+                        <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
+                          <Globe className="w-8 h-8 text-red-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="text-2xl font-extrabold">{ccData?.info?.globalRank || "N/A"}</span>
+                          <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Global Rank</span>
+                        </div>
+                        <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
+                          <Flag className="w-8 h-8 text-red-500 mb-2 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="text-2xl font-extrabold">{ccData?.info?.countryRank || "N/A"}</span>
+                          <span className="text-xs font-bold text-dark/50 dark:text-light/50 uppercase tracking-wider mt-1">Country Rank</span>
                         </div>
                         <div className="border border-solid border-dark/10 dark:border-light/10 p-5 rounded-2xl bg-light dark:bg-dark flex flex-col items-center justify-center text-center group hover:scale-[1.02] hover:shadow-lg transition-all duration-300">
                           <Calendar className="w-8 h-8 text-red-500 mb-2 group-hover:scale-110 transition-transform duration-200" />

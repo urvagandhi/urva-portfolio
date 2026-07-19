@@ -5,7 +5,7 @@ import { LinkArrow } from "../Icons";
 import { BorderBeam } from "../magicui/border-beam";
 import { Info } from "lucide-react";
 
-export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratingLabel, subText, badge, badgeColor, link, colorFrom, colorTo, onClick }) => {
+export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratingLabel, subText, badge, badgeColor, link, colorFrom, colorTo, onClick, potd }) => {
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -29,7 +29,7 @@ export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratin
             {badge}
           </span>
         </div>
-
+ 
         <div className="my-4">
           <div className="flex items-baseline gap-2 flex-wrap">
             <div className="text-3xl font-extrabold text-dark dark:text-light flex items-baseline gap-1">
@@ -55,6 +55,32 @@ export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratin
           <p className="text-sm font-medium text-dark/70 dark:text-light/70 mt-1">
             {subText}
           </p>
+          {/* POTD section temporarily commented out
+          {potd && (
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="mt-3.5 flex items-center gap-2 p-2 rounded-xl bg-dark/5 dark:bg-light/5 border border-solid border-dark/10 dark:border-light/10 text-xs hover:border-primary/30 dark:hover:border-primaryDark/30 transition-colors"
+            >
+              <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider ${
+                potd.difficulty?.toLowerCase() === "easy"
+                  ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-solid border-green-500/20"
+                  : potd.difficulty?.toLowerCase() === "medium"
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-solid border-amber-500/20"
+                    : "bg-red-500/10 text-red-600 dark:text-red-400 border border-solid border-red-500/20"
+              }`}>
+                POTD
+              </span>
+              <Link 
+                href={potd.link} 
+                target="_blank" 
+                className="font-bold text-dark/80 dark:text-light/80 hover:text-primary dark:hover:text-primaryDark truncate max-w-[190px]"
+                title={potd.title}
+              >
+                {potd.title}
+              </Link>
+            </div>
+          )}
+          */}
         </div>
       </div>
 

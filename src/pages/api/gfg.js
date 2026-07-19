@@ -28,14 +28,58 @@ export default async function handler(req, res) {
   }
 
   try {
-    const profileResponse = await fetch(`https://www.geeksforgeeks.org/user/${username}/`, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-      }
-    });
+    const [profileResponse, submissionsResponse, potdResponse] = await Promise.all([
+      fetch(`https://www.geeksforgeeks.org/user/${username}/`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+      }).catch(err => {
+        console.error("Profile fetch error:", err);
+        return null;
+      }),
+      fetch(`https://practiceapi.geeksforgeeks.org/api/v1/user/problems/submissions/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        },
+        body: JSON.stringify({ handle: username })
+      }).catch(err => {
+        console.error("Submissions fetch error:", err);
+        return null;
+      }),
+      fetch(`https://practiceapi.geeksforgeeks.org/api/v1/problems-of-day/problem/today/`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+      }).catch(err => {
+        console.error("POTD fetch error:", err);
+        return null;
+      })
+    ]);
 
-    if (!profileResponse.ok) {
-      return res.status(profileResponse.status).json({ error: `GFG profile fetch failed with status: ${profileResponse.status}` });
+    if (!profileResponse || !profileResponse.ok) {
+      const status = profileResponse ? profileResponse.status : 500;
+      return res.status(status).json({ error: `GFG profile fetch failed` });
+    }
+
+    let submissionsData = null;
+    if (submissionsResponse && submissionsResponse.ok) {
+      try {
+        const body = await submissionsResponse.json();
+        submissionsData = body.result;
+      } catch (e) {
+        console.error("Failed to parse GFG submissions JSON:", e);
+      }
+    }
+
+    let potdData = null;
+    if (potdResponse && potdResponse.ok) {
+      try {
+        potdData = await potdResponse.json();
+      } catch (e) {
+        console.error("Failed to parse GFG POTD JSON:", e);
+      }
     }
 
     const html = await profileResponse.text();
@@ -172,11 +216,44 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Invalid GeeksforGeeks user data format" });
     }
 
+    const extractProblemStats = (result) => {
+      const stats = {
+        School: 0,
+        Basic: 0,
+        Easy: 0,
+        Medium: 0,
+        Hard: 0
+      };
+      if (result && typeof result === "object") {
+        for (const key of Object.keys(stats)) {
+          if (result[key] && typeof result[key] === "object") {
+            stats[key] = Object.keys(result[key]).length;
+          }
+        }
+      }
+      return stats;
+    };
+
+    const problemStats = extractProblemStats(submissionsData);
+
+    const mergedInfo = {
+      ...userDataObj.data,
+      ...problemStats
+    };
+
     // Return the response matching the common coding profile format
     return res.status(200).json({
-      info: userDataObj.data,
+      info: mergedInfo,
       mentor: mentorDataObj,
-      username: username
+      username: username,
+      /* POTD temporarily commented out
+      potd: potdData ? {
+        title: potdData.problem_name,
+        link: potdData.problem_url,
+        difficulty: potdData.difficulty
+      } : null
+      */
+      potd: null
     });
 
   } catch (err) {

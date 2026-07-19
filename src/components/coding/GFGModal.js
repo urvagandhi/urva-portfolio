@@ -48,6 +48,21 @@ export const GFGModal = ({ show, onClose, data }) => {
   const globalLongestStreak = userInfo.pod_solved_global_longest_streak || 0;
   const podSubmissions = userInfo.pod_correct_submissions_count || 0;
 
+  const schoolSolved = userInfo.School || 0;
+  const basicSolved = userInfo.Basic || 0;
+  const easySolved = userInfo.Easy || 0;
+  const mediumSolved = userInfo.Medium || 0;
+  const hardSolved = userInfo.Hard || 0;
+
+  const totalCalculated = schoolSolved + basicSolved + easySolved + mediumSolved + hardSolved;
+  const totalDisplay = totalCalculated > 0 ? totalCalculated : totalSolved;
+
+  const schoolPercent = totalDisplay > 0 ? Math.round((schoolSolved / totalDisplay) * 100) : 0;
+  const basicPercent = totalDisplay > 0 ? Math.round((basicSolved / totalDisplay) * 100) : 0;
+  const easyPercent = totalDisplay > 0 ? Math.round((easySolved / totalDisplay) * 100) : 0;
+  const mediumPercent = totalDisplay > 0 ? Math.round((mediumSolved / totalDisplay) * 100) : 0;
+  const hardPercent = totalDisplay > 0 ? Math.round((hardSolved / totalDisplay) * 100) : 0;
+
   const bio = mentor.bio || "Actively practicing on GeeksforGeeks, solving algorithmic challenges to strengthen core data structures & algorithms knowledge. The platform serves as a vital resource for interview preparation and problem-solving skill development.";
   const headline = mentor.headline || "Software Engineer";
   const followers = mentor.follower_count || 0;
@@ -163,6 +178,7 @@ export const GFGModal = ({ show, onClose, data }) => {
               <div className="flex items-center gap-2 mt-6 overflow-x-auto no-scrollbar border-b border-solid border-dark/5 dark:border-light/5">
                 {[
                   { id: "overview", label: "Overview Stats", icon: LayoutDashboard },
+                  { id: "solved", label: "Solved Problems", icon: Code2 },
                   { id: "streaks", label: "POD Activity & Streaks", icon: Flame },
                 ].map((tab) => {
                   const isActive = activeTab === tab.id;
@@ -293,43 +309,64 @@ export const GFGModal = ({ show, onClose, data }) => {
                               };
                             };
 
-                            const generateGFGContributions = (totalSolved, username) => {
-                              const contributionsMap = {};
+                            const generateGFGContributions = (totalSolved, currentStreak, longestStreak, username) => {
+                              const numDays = 180;
+                              const contributions = Array(numDays).fill(0);
+
+                              // 1. Satisfy current streak: index 0 to currentStreak-1 must be active
+                              for (let i = 0; i < Math.min(currentStreak, numDays); i++) {
+                                contributions[i] = 1;
+                              }
+
+                              // 2. Satisfy longest streak
                               const rng = getSeedRandom(username || "urva_gandhi");
-                              const dayMs = 24 * 60 * 60 * 1000;
-                              let solvedLeft = totalSolved || 71;
-                              const daysPool = [];
-
-                              for (let i = 0; i < 180; i++) {
-                                const d = new Date(now.getTime() - i * dayMs);
-                                const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                                daysPool.push(dateStr);
+                              const longestStart = 20 + Math.floor(rng() * 60);
+                              for (let i = longestStart; i < Math.min(longestStart + longestStreak, numDays); i++) {
+                                contributions[i] = Math.max(contributions[i], 1);
                               }
 
-                              while (solvedLeft > 0 && daysPool.length > 0) {
-                                const randIdx = Math.floor(rng() * daysPool.length);
-                                const dateStr = daysPool[randIdx];
-                                const count = Math.min(Math.floor(rng() * 3) + 1, solvedLeft);
-                                contributionsMap[dateStr] = (contributionsMap[dateStr] || 0) + count;
-                                solvedLeft -= count;
-                                daysPool.splice(randIdx, 1);
+                              // Calculate remaining to distribute
+                              const currentSum = contributions.reduce((a, b) => a + b, 0);
+                              let solvedLeft = Math.max(0, totalSolved - currentSum);
+
+                              // 3. Generate stable deterministic weights (stable relative to today)
+                              const dayWeights = [];
+                              for (let i = 0; i < numDays; i++) {
+                                const dayRng = getSeedRandom(`${username || "urva_gandhi"}_day_${i}`);
+                                const decay = Math.exp(-i / 80.0);
+                                let weight = dayRng() * decay;
+                                if (contributions[i] > 0) {
+                                  weight += 0.5; // Grouping boost
+                                }
+                                dayWeights.push({ weight, index: i });
                               }
 
-                              return contributionsMap;
+                              // Sort by weight descending
+                              dayWeights.sort((a, b) => b.weight - a.weight);
+
+                              // Distribute remaining solved problems
+                              let idx = 0;
+                              while (solvedLeft > 0) {
+                                const dayIdx = dayWeights[idx % numDays].index;
+                                if (contributions[dayIdx] < 3) {
+                                  contributions[dayIdx] += 1;
+                                  solvedLeft -= 1;
+                                }
+                                idx += 1;
+                              }
+
+                              return contributions;
                             };
 
-                            const gfgCalendarMap = generateGFGContributions(totalSolved, gfgData.username);
+                            const gfgContributions = generateGFGContributions(totalSolved, currentStreak, longestStreak, gfgData.username);
                             const dayMs = 24 * 60 * 60 * 1000;
                             const cols = [];
                             let currentWeek = [];
 
                             for (let d = startDate.getTime(); d <= now.getTime(); d += dayMs) {
                               const dateObj = new Date(d);
-                              const year = dateObj.getFullYear();
-                              const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                              const day = String(dateObj.getDate()).padStart(2, '0');
-                              const dateStr = `${year}-${month}-${day}`;
-                              const submissionsOnDay = gfgCalendarMap[dateStr] || 0;
+                              const diffDays = Math.floor((now.getTime() - d) / dayMs);
+                              const submissionsOnDay = (diffDays >= 0 && diffDays < 180) ? gfgContributions[diffDays] : 0;
 
                               currentWeek.push({
                                 date: dateObj.toDateString(),
@@ -357,9 +394,9 @@ export const GFGModal = ({ show, onClose, data }) => {
                                       
                                       // Green colors for GFG
                                       let bgClass = "bg-dark/10 dark:bg-light/10";
-                                      if (day.count > 0 && day.count <= 1) bgClass = "bg-emerald-500/20";
-                                      else if (day.count > 1 && day.count <= 2) bgClass = "bg-emerald-500/50";
-                                      else if (day.count > 2) bgClass = "bg-emerald-500";
+                                      if (day.count > 0 && day.count <= 1) bgClass = "bg-emerald-500/45 dark:bg-emerald-400/40";
+                                      else if (day.count > 1 && day.count <= 2) bgClass = "bg-emerald-500/75 dark:bg-emerald-400/70";
+                                      else if (day.count > 2) bgClass = "bg-emerald-500 dark:bg-emerald-400";
 
                                       return (
                                         <div
@@ -377,6 +414,120 @@ export const GFGModal = ({ show, onClose, data }) => {
                         </div>
                         <div className="mt-2 text-right text-[10px] text-dark/40 dark:text-light/40 font-bold">
                           * Activity map generated dynamically from total solved counts
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Solved Problems Tab */}
+                  {activeTab === "solved" && (
+                    <motion.div
+                      key="solved"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-6"
+                    >
+                      <div className="border border-solid border-dark/10 dark:border-light/10 rounded-2xl p-6 bg-light dark:bg-dark">
+                        <h5 className="text-lg font-bold mb-6 flex items-center gap-2 border-b border-solid border-dark/10 dark:border-light/10 pb-2">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Solved by Difficulty
+                        </h5>
+
+                        <div className="space-y-5">
+                          {/* School */}
+                          {schoolSolved > 0 && (
+                            <div>
+                              <div className="flex justify-between text-sm font-bold mb-1">
+                                <span className="text-purple-500">School</span>
+                                <span className="text-dark dark:text-light">
+                                  {schoolSolved} <span className="text-xs text-dark/50 dark:text-light/50">({schoolPercent}% of total solved)</span>
+                                </span>
+                              </div>
+                              <div className="w-full h-3.5 bg-dark/5 dark:bg-light/10 rounded-full overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${schoolPercent}%` }}
+                                  className="h-full bg-purple-500 rounded-full"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Basic */}
+                          {basicSolved > 0 && (
+                            <div>
+                              <div className="flex justify-between text-sm font-bold mb-1">
+                                <span className="text-blue-500">Basic</span>
+                                <span className="text-dark dark:text-light">
+                                  {basicSolved} <span className="text-xs text-dark/50 dark:text-light/50">({basicPercent}% of total solved)</span>
+                                </span>
+                              </div>
+                              <div className="w-full h-3.5 bg-dark/5 dark:bg-light/10 rounded-full overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${basicPercent}%` }}
+                                  className="h-full bg-blue-500 rounded-full"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Easy */}
+                          <div>
+                            <div className="flex justify-between text-sm font-bold mb-1">
+                              <span className="text-emerald-500">Easy</span>
+                              <span className="text-dark dark:text-light">
+                                {easySolved} <span className="text-xs text-dark/50 dark:text-light/50">({easyPercent}% of total solved)</span>
+                              </span>
+                            </div>
+                            <div className="w-full h-3.5 bg-dark/5 dark:bg-light/10 rounded-full overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${easyPercent}%` }}
+                                className="h-full bg-emerald-500 rounded-full"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Medium */}
+                          <div>
+                            <div className="flex justify-between text-sm font-bold mb-1">
+                              <span className="text-amber-500">Medium</span>
+                              <span className="text-dark dark:text-light">
+                                {mediumSolved} <span className="text-xs text-dark/50 dark:text-light/50">({mediumPercent}% of total solved)</span>
+                              </span>
+                            </div>
+                            <div className="w-full h-3.5 bg-dark/5 dark:bg-light/10 rounded-full overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${mediumPercent}%` }}
+                                className="h-full bg-amber-500 rounded-full"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Hard */}
+                          <div>
+                            <div className="flex justify-between text-sm font-bold mb-1">
+                              <span className="text-red-500">Hard</span>
+                              <span className="text-dark dark:text-light">
+                                {hardSolved} <span className="text-xs text-dark/50 dark:text-light/50">({hardPercent}% of total solved)</span>
+                              </span>
+                            </div>
+                            <div className="w-full h-3.5 bg-dark/5 dark:bg-light/10 rounded-full overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${hardPercent}%` }}
+                                className="h-full bg-red-500 rounded-full"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-8 pt-4 border-t border-solid border-dark/5 dark:border-light/5 text-sm font-semibold flex justify-between">
+                          <span className="text-dark/60 dark:text-light/60">Total Solved Problems</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">{totalSolved}</span>
                         </div>
                       </div>
                     </motion.div>
