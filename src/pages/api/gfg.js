@@ -84,19 +84,26 @@ export default async function handler(req, res) {
 
     const html = await profileResponse.text();
 
-    // Look for userData and mentor script / JSON data in the page
+    // Look for indicators of GFG user data (e.g., mentor, articleCount, userData) in the page
     let idx = html.indexOf('"mentor"');
-    if (idx === -1) {
-      idx = html.indexOf('\\"mentor\\"');
-    }
+    if (idx === -1) idx = html.indexOf('\\"mentor\\"');
+    if (idx === -1) idx = html.indexOf('"articleCount"');
+    if (idx === -1) idx = html.indexOf('\\"articleCount\\"');
+    if (idx === -1) idx = html.indexOf('"userData"');
+    if (idx === -1) idx = html.indexOf('\\"userData\\"');
 
     let userDataObj = null;
     let mentorDataObj = null;
+    let parsedParentObj = null;
 
     if (idx !== -1) {
-      // Extract the parent object which contains both mentor and userData
-      // The parent object starts with { right before "mentor"
+      // Find the start of the self.__next_f.push command containing this data block if possible
       let startSearch = Math.max(0, idx - 30);
+      const pushIdx = html.lastIndexOf('self.__next_f.push(', idx);
+      if (pushIdx !== -1 && pushIdx < idx) {
+        startSearch = pushIdx;
+      }
+
       let sub = html.substring(startSearch);
       let braceStart = sub.indexOf('{');
       if (braceStart !== -1) {
@@ -135,10 +142,10 @@ export default async function handler(req, res) {
             finalJsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
           }
           try {
-            const parsed = JSON.parse(finalJsonStr);
-            if (parsed && parsed.userData && parsed.userData.data) {
-              userDataObj = parsed.userData;
-              mentorDataObj = parsed.mentor;
+            parsedParentObj = JSON.parse(finalJsonStr);
+            if (parsedParentObj) {
+              userDataObj = parsedParentObj.userData || null;
+              mentorDataObj = parsedParentObj.mentor || null;
             }
           } catch (e) {
             console.error("Failed to parse mentor parent JSON:", e);
@@ -147,7 +154,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Fallback parser: if mentor-based parsing failed or was not found
+    // Fallback parser: if mentor-based parsing failed or was not found, search specifically for userData
     if (!userDataObj) {
       const key = '"userData"';
       let uIdx = html.indexOf(key);
@@ -212,7 +219,29 @@ export default async function handler(req, res) {
       }
     }
 
-    if (!userDataObj || !userDataObj.data) {
+    // Resolve reference pointer in userData.data if needed
+    let finalUserData = null;
+    if (userDataObj && userDataObj.data) {
+      if (typeof userDataObj.data === "object") {
+        finalUserData = userDataObj.data;
+      } else if (typeof userDataObj.data === "string") {
+        // Next.js RSC reference format like "$6:props:articleCount"
+        const parts = userDataObj.data.split(":");
+        const propName = parts[parts.length - 1];
+        if (parsedParentObj && parsedParentObj[propName]) {
+          finalUserData = parsedParentObj[propName];
+        } else if (parsedParentObj && parsedParentObj.articleCount) {
+          finalUserData = parsedParentObj.articleCount;
+        }
+      }
+    }
+
+    // If finalUserData is still not resolved, check if we parsed the parent object and can get articleCount
+    if (!finalUserData && parsedParentObj && parsedParentObj.articleCount) {
+      finalUserData = parsedParentObj.articleCount;
+    }
+
+    if (!finalUserData) {
       return res.status(404).json({ error: "Invalid GeeksforGeeks user data format" });
     }
 
@@ -237,7 +266,7 @@ export default async function handler(req, res) {
     const problemStats = extractProblemStats(submissionsData);
 
     const mergedInfo = {
-      ...userDataObj.data,
+      ...finalUserData,
       ...problemStats
     };
 
