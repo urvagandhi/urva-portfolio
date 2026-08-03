@@ -3,6 +3,7 @@ import TypewriterText from "@/components/TypewriterText";
 import AnimatedDownloadButton from "@/components/AnimatedDownloadButton";
 import Education from "@/components/Education";
 import Experience from "@/components/Experience";
+import Internship from "@/components/Internship";
 import HireMe from "@/components/HireMe";
 import { GithubIcon, LinkArrow } from "@/components/Icons";
 import Layout from "@/components/Layout";
@@ -415,6 +416,7 @@ export default function Home() {
           </div>
 
           <Skills />
+          <Internship />
           <Experience />
           <Education />
         </Layout>
@@ -445,8 +447,8 @@ export default function Home() {
               <FeaturedProject
                 type="Featured Project - Finance | Ongoing"
                 title="CoinTrack"
-                summary="Unified finance dashboard aggregating portfolio data from multiple stock broker APIs (Zerodha, Angel One, etc.) into a single view. Features P&L tracking, live market data, watchlist, and exportable reports."
-                tech="Spring Boot (Java 21), JWT, MongoDB, Next.js"
+                summary="A unified investment platform that seamlessly aggregates portfolios from multiple brokers (Zerodha, Angel One, Upstox) into a single real-time dashboard. Track alternative assets like Mutual Funds, Gold, and FDs with live market pricing. Engineered for a seamless and secure experience, featuring Google Sign-In and mandatory Two-Factor Authentication (2FA) to keep user data safe."
+                tech="Spring Boot (Java 21), MongoDB, Next.js, JWT/OAuth(Google OAuth 2.0)"
                 img="/images/projects/coinTrack.png"
                 link="https://cointrack-finance.vercel.app/"
                 github="https://github.com/urvagandhi/cointrack"
