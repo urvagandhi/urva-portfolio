@@ -436,7 +436,7 @@ body {
   }
 }
 
-@theme inline {
+@layer utilities {
   @keyframes meteor {
   0% {
     transform: rotate(var(--angle)) translateX(0);

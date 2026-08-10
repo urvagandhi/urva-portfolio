@@ -875,7 +875,7 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
               <Link
                 href="https://leetcode.com/u/urva_gandhi"
                 target="_blank"
-                className="rounded-xl bg-amber-500 hover:bg-amber-600 text-center text-sm font-bold text-white dark:text-black dark:hover:bg-amber-400 transition-all duration-300"
+                className="rounded-xl bg-amber-500 hover:bg-amber-600 text-center text-sm font-bold text-white dark:text-black dark:hover:bg-amber-400 transition-all duration-300 px-6 py-2.5"
               >
                 Visit Official Profile
               </Link>

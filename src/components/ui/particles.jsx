@@ -2,27 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils"
 
-function MousePosition() {
-  const [mousePosition, setMousePosition] = useState({
-    x: 0,
-    y: 0,
-  })
-
-  useEffect(() => {
-    const handleMouseMove = (event) => {
-      setMousePosition({ x: event.clientX, y: event.clientY })
-    }
-
-    window.addEventListener("mousemove", handleMouseMove)
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove)
-    };
-  }, [])
-
-  return mousePosition
-}
-
 function hexToRgb(hex) {
   hex = hex.replace("#", "");
 
@@ -61,7 +40,6 @@ export const Particles = ({
   const canvasContainerRef = useRef(null)
   const context = useRef(null)
   const circles = useRef([])
-  const mousePosition = MousePosition()
   const mouse = useRef({ x: 0, y: 0 })
   const canvasSize = useRef({ w: 0, h: 0 })
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1
@@ -84,7 +62,22 @@ export const Particles = ({
       }, 200)
     }
 
+    const handleMouseMove = (event) => {
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect()
+        const { w, h } = canvasSize.current
+        const x = event.clientX - rect.left - w / 2
+        const y = event.clientY - rect.top - h / 2
+        const inside = x < w / 2 && x > -w / 2 && y < h / 2 && y > -h / 2
+        if (inside) {
+          mouse.current.x = x
+          mouse.current.y = y
+        }
+      }
+    }
+
     window.addEventListener("resize", handleResize)
+    window.addEventListener("mousemove", handleMouseMove)
 
     return () => {
       if (rafID.current != null) {
@@ -94,12 +87,9 @@ export const Particles = ({
         clearTimeout(resizeTimeout.current)
       }
       window.removeEventListener("resize", handleResize)
+      window.removeEventListener("mousemove", handleMouseMove)
     };
   }, [color])
-
-  useEffect(() => {
-    onMouseMove()
-  }, [mousePosition.x, mousePosition.y])
 
   useEffect(() => {
     initCanvas()
@@ -108,20 +98,6 @@ export const Particles = ({
   const initCanvas = () => {
     resizeCanvas()
     drawParticles()
-  }
-
-  const onMouseMove = () => {
-    if (canvasRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect()
-      const { w, h } = canvasSize.current
-      const x = mousePosition.x - rect.left - w / 2
-      const y = mousePosition.y - rect.top - h / 2
-      const inside = x < w / 2 && x > -w / 2 && y < h / 2 && y > -h / 2
-      if (inside) {
-        mouse.current.x = x
-        mouse.current.y = y
-      }
-    }
   }
 
   const resizeCanvas = () => {
@@ -233,12 +209,29 @@ export const Particles = ({
       }
       circle.x += circle.dx + vx
       circle.y += circle.dy + vy
-      circle.translateX +=
-        (mouse.current.x / (staticity / circle.magnetism) - circle.translateX) /
-        ease
-      circle.translateY +=
-        (mouse.current.y / (staticity / circle.magnetism) - circle.translateY) /
-        ease
+
+      const trueMouseX = mouse.current.x + canvasSize.current.w / 2;
+      const trueMouseY = mouse.current.y + canvasSize.current.h / 2;
+      
+      const distX = trueMouseX - circle.x;
+      const distY = trueMouseY - circle.y;
+      const distance = Math.sqrt(distX * distX + distY * distY);
+      
+      const attractionRadius = 250;
+      let pullX = 0;
+      let pullY = 0;
+      
+      if (distance < attractionRadius && distance > 0) {
+        const pullStrength = Math.pow(1 - distance / attractionRadius, 2) * 80 * circle.magnetism;
+        pullX = (distX / distance) * pullStrength;
+        pullY = (distY / distance) * pullStrength;
+      }
+
+      const targetTranslateX = mouse.current.x / (staticity / circle.magnetism) + pullX;
+      const targetTranslateY = mouse.current.y / (staticity / circle.magnetism) + pullY;
+
+      circle.translateX += (targetTranslateX - circle.translateX) / ease
+      circle.translateY += (targetTranslateY - circle.translateY) / ease
 
       drawCircle(circle, true)
 
