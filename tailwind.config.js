@@ -16,16 +16,16 @@ module.exports = {
                 ]
   		},
   		colors: {
-  			dark: '#1b1b1b',
+  			dark: '#0a0a0a',
   			light: '#f5f5f5',
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
   			primaryDark: '#58E6D9',
-  			darkBg: '#0f0f0f',
-  			darkAccent: '#1a1a2e',
-  			darkDeep: '#16213e',
+  			darkBg: '#050505',
+  			darkAccent: '#0d0d14',
+  			darkDeep: '#090d18',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

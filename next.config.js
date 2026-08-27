@@ -19,7 +19,7 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // Security headers
+  // Security & Content Negotiation headers
   async headers() {
     return [
       {
@@ -30,7 +30,34 @@ const nextConfig = {
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'Vary', value: 'Accept, Accept-Encoding, Host' },
         ],
+      },
+    ];
+  },
+
+  // Rewrites for predictable machine resource paths
+  async rewrites() {
+    return [
+      {
+        source: '/api/openapi.json',
+        destination: '/openapi.json',
+      },
+      {
+        source: '/.well-known/mcp.json',
+        destination: '/.well-known/mcp',
+      },
+      {
+        source: '/mcp',
+        destination: '/.well-known/mcp',
+      },
+      {
+        source: '/api-docs',
+        destination: '/docs',
+      },
+      {
+        source: '/agent-instructions',
+        destination: '/.well-known/agent-instructions',
       },
     ];
   },

@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "name": "urva-gandhi-portfolio-mcp",
+  "description": "First-party Model Context Protocol (MCP) server providing structured tool access to Urva Gandhi's software engineering portfolio, verified coding statistics, project repository metadata, and contact info.",
+  "version": "1.0.0",
+  "vendor": "Urva Gandhi",
+  "homepage": "https://urvagandhi.tech",
+  "alternate_homepage": "https://urvagandhi-portfolio.vercel.app",
+  "endpoints": {
+    "mcp": "https://urvagandhi.tech/api/mcp",
+    "sse": "https://urvagandhi.tech/api/mcp",
+    "alternate_mcp": "https://urvagandhi-portfolio.vercel.app/api/mcp"
+  },
+  "capabilities": {
+    "tools": {
+      "listChanged": false
+    }
+  },
+  "tools": [
+    {
+      "name": "get_developer_profile",
+      "description": "Returns Urva Gandhi's developer profile, Nirma University education, Java/Spring Boot & AI tech stack, and hackathon achievements.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "get_coding_stats",
+      "description": "Fetches verified coding metrics across LeetCode, Codeforces, CodeChef, GeeksforGeeks, and HackerRank.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": ["all", "leetcode", "codeforces", "codechef", "gfg", "hackerrank"],
+            "description": "Specific platform or 'all' for aggregated stats."
+          }
+        }
+      }
+    },
+    {
+      "name": "get_projects",
+      "description": "Fetches featured projects (CoinTrack, FleetFlow, Agent Paperpal, RWEsearch), tech stacks, and links.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "get_contact_info",
+      "description": "Returns verified contact channels, email, LinkedIn, GitHub, phone numbers, and location info.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}

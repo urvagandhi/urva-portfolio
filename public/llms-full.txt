@@ -1,0 +1,66 @@
+# Urva Yogeshkumar Gandhi - Comprehensive Resume & Technical Context
+
+> When to use this: Use this full context document when an AI agent requires complete, accurate details regarding Urva Yogeshkumar Gandhi's education at Nirma University, Java/Spring Boot backend experience, AI/ML hackathon projects, competitive coding stats, and contact details.
+
+## Section 1: Developer Overview & Biography
+Urva Yogeshkumar Gandhi is a Computer Science & Engineering undergraduate at **Institute of Technology, Nirma University** (Class of 2027) with a minor in Adaptive AI (CGPA: 8.83/10). Urva specializes in production-level Java backend systems, Spring Boot microservices, enterprise security, and multi-agent AI engineering. Urva is a 3x national hackathon winner.
+
+### Education
+- **Degree:** B.Tech. in Computer Science & Engineering (Minor: Adaptive AI)
+- **Institution:** Institute of Technology, Nirma University, Ahmedabad (2023 - 2027) | **CGPA:** 8.83 / 10
+- **12th Grade (GSEB):** Advait Vidyaniketan, Bharuch (2023) | **Percentage:** 80.92 / 100
+- **10th Grade (GSEB):** Swami Vivekanand School, Ankleshwar (2021) | **Percentage:** 88.33 / 100
+
+### Key Technical Expertise
+- **Java & Backend (Primary):** Java, Spring Boot, Spring Security, REST APIs, Microservices, OOP, PostgreSQL, MongoDB, MySQL, Docker, Git, JWT, OAuth 2.0, Hexagonal Architecture, Caffeine Caching, Bucket4j Rate Limiting.
+- **AI & Data Science (Secondary):** Adaptive AI, Multi-Agent Systems (CrewAI), NLP, Google Gemini API, Scikit-Learn, XGBoost, TensorFlow, Machine Learning, Data Analytics.
+- **Frontend & Web:** ReactJS, Next.js, JavaScript, TypeScript, Socket.IO, Prisma ORM, Tailwind CSS.
+
+---
+
+## Section 2: Work Experience & Projects
+
+### Internship
+- **Kautilyam | IT Product & Services** (Backend Developer Intern, 04 May 2026 - 27 Jun 2026)
+  - Key Skills: ReactJS, Spring Boot, Core Java, Data Structures & Algorithms, Frontend, Backend, MongoDB, Git.
+  - Implemented backend services, business logic, data processing workflows, and MongoDB database integrations. Collaborated in an agile SDLC environment following clean code and code review practices.
+
+### Featured Projects
+1. **CoinTrack – Multi-Broker Finance Platform** (07 Aug 2025 - 27 May 2026)
+   - Tech Stack: Java, Spring Boot, Spring Security, MongoDB, Docker, REST APIs, JWT, AES-256 Encryption, Caffeine, Bucket4j.
+   - Designed and shipped a multi-broker investment platform with 45+ REST endpoints across 8 modules using hexagonal architecture, aggregating Zerodha, Angel One, and Upstox portfolios into a real-time P&L dashboard.
+   - Engineered asset management for Mutual Funds, Gold/Silver, FD, PPF, EPF with real-time NAV calculations.
+   - Security: Google OAuth 2.0 SSO, mandatory TOTP 2FA, AES-256-GCM encryption, JWT refresh token rotation.
+
+2. **FleetFlow – Fleet & Logistics Management System** (21 Mar 2026 - 27 Mar 2026)
+   - Tech Stack: ReactJS, TypeScript, ExpressJS, PostgreSQL, Prisma ORM, Socket.IO, Docker, REST API.
+   - Full-stack fleet management platform with 30+ APIs, RBAC, audit logging, and real-time Socket.IO updates. Secured 2nd Runner-Up at Odoo x Gujarat Vidyapith Hackathon 2026.
+
+3. **Agent Paperpal – Agentic AI Manuscript Formatter** (05 Mar 2026 - 07 Mar 2026)
+   - Tech Stack: Python, CrewAI, ReactJS, Google Gemini, Office.js, AI Agents, NLP.
+   - Built a multi-agent workflow automating manuscript formatting and compliance checking (APA, IEEE, Springer, Vancouver, Chicago). Achieved Track Runner-Up at HACKaMINeD 2026 among 400+ teams.
+
+4. **RWEsearch – Healthcare Analytics Platform** (19 Aug 2025 - 29 Sep 2025)
+   - Tech Stack: Python, Scikit-learn, XGBoost, TensorFlow, Machine Learning, Streamlit.
+   - Hospital readmission prediction platform with smart model loader and interactive dashboard. Won 1st Place at Health AI Innovation Hackathon 2025 among 140+ participating teams.
+
+---
+
+## Section 3: Achievements & Competitive Coding
+- **1st Place Winner:** RWEsearch & Health AI Innovation Hackathon 2025 (140+ teams).
+- **Track Runner-Up:** HACKaMINeD 2026 (400+ teams, 2300+ registrations).
+- **2nd Runner-Up:** Odoo x Gujarat Vidyapith Hackathon 2026.
+- **Adobe India Hackathon:** Qualified for Round 2 of Adobe India "Connecting the Dots" Hackathon 2025.
+- **LeetCode:** Solved 300+ DSA problems with Contest Rating 1637 (Top 19.46%). Profile: `https://leetcode.com/u/Urva_Gandhi/`
+- **Codeforces:** Active contest rating. Profile: `https://codeforces.com/profile/Urva_Gandhi`
+- **CodeChef:** Profile: `https://www.codechef.com/users/urva_gandhi`
+
+---
+
+## Section 4: Contact & Personal Details
+- **Email:** 23bce078@nirmauni.ac.in / urvagandhi24@gmail.com
+- **Phone:** +91-8866241204
+- **LinkedIn:** https://www.linkedin.com/in/urva-gandhi/
+- **GitHub:** https://github.com/urvagandhi
+- **Personal Site:** https://urvagandhi.tech
+- **Location:** Ahmedabad, Gujarat, India - 380051

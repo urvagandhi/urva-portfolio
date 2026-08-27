@@ -1,0 +1,81 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Urva Gandhi Portfolio Developer API",
+    "description": "Public REST APIs and Model Context Protocol (MCP) server endpoints providing real-time coding metrics, project metadata, and developer profile context for Urva Gandhi.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Urva Gandhi",
+      "email": "urvagandhi.work@gmail.com",
+      "url": "https://urvagandhi-portfolio.vercel.app"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://urvagandhi-portfolio.vercel.app",
+      "description": "Production Vercel Deployment"
+    }
+  ],
+  "paths": {
+    "/api/leetcode": {
+      "get": {
+        "summary": "Get LeetCode Statistics",
+        "description": "Fetches verified LeetCode profile statistics, global ranking, total problems solved, and difficulty breakdown.",
+        "responses": {
+          "200": {
+            "description": "Successful LeetCode response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/codeforces": {
+      "get": {
+        "summary": "Get Codeforces Statistics",
+        "description": "Fetches Codeforces contest rating, max rating, and submission metrics.",
+        "responses": {
+          "200": {
+            "description": "Successful Codeforces response"
+          }
+        }
+      }
+    },
+    "/api/codechef": {
+      "get": {
+        "summary": "Get CodeChef Statistics",
+        "description": "Fetches CodeChef rating, global rank, and contest stars.",
+        "responses": {
+          "200": {
+            "description": "Successful CodeChef response"
+          }
+        }
+      }
+    },
+    "/api/mcp": {
+      "get": {
+        "summary": "MCP Server Handshake",
+        "description": "Returns Model Context Protocol server capabilities, transport options, and available tools.",
+        "responses": {
+          "200": {
+            "description": "MCP Manifest response"
+          }
+        }
+      },
+      "post": {
+        "summary": "MCP Tool Call (JSON-RPC 2.0)",
+        "description": "Executes MCP tools (get_developer_profile, get_coding_stats, get_projects, get_contact_info).",
+        "responses": {
+          "200": {
+            "description": "JSON-RPC response payload"
+          }
+        }
+      }
+    }
+  }
+}

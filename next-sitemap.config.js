@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.SITE_URL || 'https://urvagandhi-portfolio.vercel.app',
+  siteUrl: process.env.SITE_URL || 'https://urvagandhi.tech',
   generateRobotsTxt: true,
   generateIndexSitemap: false,
   changefreq: 'weekly',
@@ -12,5 +12,9 @@ module.exports = {
         allow: '/',
       },
     ],
+    additionalSitemaps: [
+      'https://urvagandhi-portfolio.vercel.app/sitemap.xml'
+    ]
   },
 }
+

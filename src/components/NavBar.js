@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/router";
 
 import {
     GithubIcon,
@@ -18,17 +19,32 @@ import ThemeSwitcher from "./ThemeSwitcher";
 import { useModalControls } from "@/components/hooks/useModalControls";
 
 const CustomLink = ({ href, title, className = "" }) => {
+    const router = useRouter();
+
     const handleClick = (e) => {
         e.preventDefault();
-        const element = document.querySelector(href);
-        if (element) {
-            element.scrollIntoView({ behavior: "smooth" });
+        
+        if (router.pathname === "/") {
+            const targetId = href.startsWith("#") ? href : `#${href}`;
+            const element = document.querySelector(targetId);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth" });
+            } else if (href === "#home" || href === "/") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+        } else {
+            if (href === "#home" || href === "/") {
+                router.push("/");
+            } else {
+                const targetHash = href.startsWith("#") ? href : `#${href}`;
+                router.push(`/${targetHash}`);
+            }
         }
     };
 
     return (
         <motion.a
-            href={href}
+            href={router.pathname === "/" ? href : (href === "#home" ? "/" : `/${href.startsWith("#") ? href : `#${href}`}`)}
             onClick={handleClick}
             className={`${className} relative group cursor-pointer text-base font-semibold tracking-wide
                 text-dark/80 dark:text-light/80 hover:text-primary dark:hover:text-primaryDark
@@ -46,13 +62,28 @@ const CustomLink = ({ href, title, className = "" }) => {
 };
 
 const CustomMobileLink = ({ href, title, className = "", toggle }) => {
-    const handleClick = () => {
-        toggle();
-        const element = document.querySelector(href);
-        if (element) {
-            setTimeout(() => {
-                element.scrollIntoView({ behavior: "smooth" });
-            }, 300);
+    const router = useRouter();
+
+    const handleClick = (e) => {
+        if (toggle) toggle();
+        
+        if (router.pathname === "/") {
+            const targetId = href.startsWith("#") ? href : `#${href}`;
+            const element = document.querySelector(targetId);
+            if (element) {
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: "smooth" });
+                }, 300);
+            } else if (href === "#home" || href === "/") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+        } else {
+            if (href === "#home" || href === "/") {
+                router.push("/");
+            } else {
+                const targetHash = href.startsWith("#") ? href : `#${href}`;
+                router.push(`/${targetHash}`);
+            }
         }
     };
 
@@ -96,18 +127,15 @@ const NavBar = () => {
         let lastScrollY = window.scrollY;
         
         const handleScroll = () => {
-            // Cancel any pending RAF
             if (rafId) {
                 cancelAnimationFrame(rafId);
             }
             
-            // Throttle with requestAnimationFrame
             rafId = requestAnimationFrame(() => {
                 const currentScrollY = window.scrollY;
                 const shouldBeScrolled = currentScrollY > 20;
                 const wasScrolled = lastScrollY > 20;
                 
-                // Only update state if threshold crossed
                 if (shouldBeScrolled !== wasScrolled) {
                     setScrolled(shouldBeScrolled);
                 }
@@ -116,7 +144,6 @@ const NavBar = () => {
             });
         };
         
-        // Use passive listener for better scroll performance
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => {
             window.removeEventListener('scroll', handleScroll);

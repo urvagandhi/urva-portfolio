@@ -18,6 +18,7 @@ import { BorderBeam } from "@/components/magicui/border-beam";
 import useThemeSwitcher from "@/components/hooks/useThemeSwitcher";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/router";
 
 // Dynamically import heavy chart components that render below the fold
 const GithubGraph = dynamic(() => import("@/components/GithubGraph"), { 
@@ -61,56 +62,62 @@ const AnimatedNumbers = ({ value }) => {
 
 const FeaturedProject = ({ type, title, summary, img, link, github, tech }) => {
   return (
-    <article className="relative flex w-full items-center justify-between rounded-3xl rounded-br-2xl border border-solid border-dark bg-light p-12 shadow-2xl dark:border-primaryDark/30 dark:bg-dark dark:shadow-dark-glow lg:flex-col lg:p-8 xs:rounded-2xl xs:rounded-br-3xl xs:p-4">
-      <div className="absolute -right-5 -bottom-5 -z-10 h-full w-full rounded-[2.5rem] rounded-br-3xl bg-dark dark:bg-primaryDark/20 md:-right-3 md:-bottom-3 xs:-right-2 xs:-bottom-2 xs:rounded-[1.5rem]" />
-      <BorderBeam size={250} duration={12} delay={9} colorFrom="#58E6D9" colorTo="#8B5CF6" />
+    <article className="relative flex w-full items-center justify-between rounded-3xl border border-dark/10 bg-light/80 p-8 shadow-xl dark:border-light/10 dark:bg-dark/80 backdrop-blur-md lg:flex-col lg:p-6 xs:p-4 transition-all duration-300 hover:shadow-2xl hover:border-primary/30 dark:hover:border-primaryDark/40 group">
+      <BorderBeam size={280} duration={12} delay={9} colorFrom="#58E6D9" colorTo="#8B5CF6" />
       <Link
         href={link}
         target="_blank"
-        className="w-1/2 cursor-pointer overflow-hidden rounded-lg lg:w-full"
+        className="w-1/2 cursor-pointer overflow-hidden rounded-2xl lg:w-full border border-dark/10 dark:border-light/10 shadow-md relative block group/img"
       >
         <FramerImage
           src={img}
           alt={title}
-          className="h-auto w-full"
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.2 }}
+          className="h-auto w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
           width={1280}
           height={720}
           priority
         />
+        <div className="absolute inset-0 bg-dark/30 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <span className="px-4 py-2 text-xs font-bold text-light bg-dark/80 rounded-full border border-light/20 backdrop-blur-sm shadow-lg">
+            View Live Demo ↗
+          </span>
+        </div>
       </Link>
-      <div className="flex w-1/2 flex-col items-start justify-between pl-6 lg:w-full lg:pl-0 lg:pt-6">
-        <span className="text-xl font-medium text-primary dark:text-primaryDark xs:text-base">
-          {type}
-        </span>
-        <Link href={link} target="_blank" className="underline-offset-2 hover:underline">
-          <h2 className="my-2 w-full text-left text-4xl font-bold lg:text-3xl xs:text-2xl dark:text-light">
+
+      <div className="flex w-1/2 flex-col items-start justify-between pl-8 lg:w-full lg:pl-0 lg:pt-6">
+        <div className="flex items-center gap-2">
+          <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary dark:bg-primaryDark/20 dark:text-primaryDark border border-primary/20 dark:border-primaryDark/30">
+            {type}
+          </span>
+        </div>
+        <Link href={link} target="_blank" className="hover:text-primary dark:hover:text-primaryDark transition-colors">
+          <h2 className="my-3 text-left text-3xl font-extrabold lg:text-2xl xs:text-xl text-dark dark:text-light">
             {title}
           </h2>
         </Link>
-        <p className="my-2 rounded-md font-medium text-dark dark:text-light sm:text-sm">
+        <p className="my-2 text-sm leading-relaxed font-medium text-dark/70 dark:text-light/70 sm:text-xs">
           {summary}
         </p>
         {tech && (
-          <div className="my-2 flex flex-wrap gap-2">
+          <div className="my-3 flex flex-wrap gap-2">
             {tech.split(',').map((item, index) => (
-              <span key={index} className="rounded-full bg-dark/5 dark:bg-light/10 px-3 py-1 text-xs font-semibold text-primary dark:text-primaryDark border border-solid border-primary/20 dark:border-primaryDark/20 shadow-sm">
+              <span key={index} className="rounded-lg bg-dark/5 dark:bg-light/10 px-3 py-1 text-xs font-semibold text-dark/80 dark:text-light/80 border border-dark/5 dark:border-light/5 shadow-sm">
                 {item.trim()}
               </span>
             ))}
           </div>
         )}
-        <div className="mt-2 flex items-center">
-          <Link href={github} target="_blank" className="w-10" aria-label={`View ${title} on GitHub`}>
+        <div className="mt-4 flex items-center gap-4">
+          <Link href={github} target="_blank" className="w-8 text-dark dark:text-light hover:scale-110 transition-transform" aria-label={`View ${title} on GitHub`}>
             <GithubIcon />
           </Link>
           <Link
             href={link}
             target="_blank"
-            className="ml-4 rounded-lg bg-dark p-2 px-6 text-lg font-semibold text-light dark:bg-primaryDark dark:text-dark dark:hover:bg-primaryDark/80 transition-all duration-300 sm:px-4 sm:text-base"
+            className="rounded-xl bg-dark px-5 py-2.5 text-sm font-bold text-light dark:bg-primaryDark dark:text-dark hover:opacity-90 transition-all duration-300 shadow-md flex items-center gap-1.5"
           >
-            Visit Project
+            <span>Visit Project</span>
+            <span>↗</span>
           </Link>
         </div>
       </div>
@@ -120,56 +127,63 @@ const FeaturedProject = ({ type, title, summary, img, link, github, tech }) => {
 
 const Project = ({ type, title, summary, img, link, github, tech }) => {
   return (
-    <article className="relative flex w-full flex-col items-center justify-center rounded-2xl rounded-br-2xl border border-solid border-dark bg-light p-6 shadow-2xl dark:border-primaryDark/30 dark:bg-dark dark:shadow-dark-glow xs:p-4">
-      <div className="absolute -right-5 -bottom-5 -z-10 h-full w-full rounded-[2rem] rounded-br-3xl bg-dark dark:bg-primaryDark/20 md:-right-3 md:-bottom-3 xs:-right-2 xs:-bottom-2 xs:rounded-[1.5rem]" />
-      <BorderBeam size={150} duration={10} delay={5} colorFrom="#58E6D9" colorTo="#8B5CF6" />
-      <Link
-        href={link}
-        target="_blank"
-        className="w-full cursor-pointer overflow-hidden rounded-lg"
-      >
-        <FramerImage
-          src={img}
-          alt={title}
-          className="h-auto w-full"
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.2 }}
-          width={1280}
-          height={720}
-        />
-      </Link>
-      <div className="mt-4 flex w-full flex-col items-start justify-between">
-        <span className="text-xl font-medium text-primary dark:text-primaryDark lg:text-lg md:text-base">
-          {type}
-        </span>
-        <Link href={link} target="_blank" className="underline-offset-2 hover:underline">
-          <h2 className="my-2 w-full text-left text-3xl font-bold lg:text-2xl dark:text-light">
-            {title}
-          </h2>
+    <article className="relative flex w-full h-full flex-col justify-between rounded-3xl border border-dark/10 bg-light/80 p-6 shadow-xl dark:border-light/10 dark:bg-dark/80 backdrop-blur-md xs:p-4 transition-all duration-300 hover:shadow-2xl hover:border-primary/30 dark:hover:border-primaryDark/40 group">
+      <BorderBeam size={180} duration={10} delay={5} colorFrom="#58E6D9" colorTo="#8B5CF6" />
+      <div>
+        <Link
+          href={link}
+          target="_blank"
+          className="w-full cursor-pointer overflow-hidden rounded-2xl block border border-dark/10 dark:border-light/10 shadow-md relative group/img"
+        >
+          <FramerImage
+            src={img}
+            alt={title}
+            className="h-auto w-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+            width={1280}
+            height={720}
+          />
+          <div className="absolute inset-0 bg-dark/30 opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <span className="px-3.5 py-1.5 text-xs font-bold text-light bg-dark/80 rounded-full border border-light/20 backdrop-blur-sm shadow-lg">
+              View Live Demo ↗
+            </span>
+          </div>
         </Link>
-        {summary && (
-          <p className="my-2 rounded-md font-medium text-dark dark:text-light sm:text-sm text-sm">
-            {summary}
-          </p>
-        )}
+        <div className="mt-4 flex w-full flex-col items-start">
+          <span className="inline-block rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-primary dark:bg-primaryDark/20 dark:text-primaryDark border border-primary/20 dark:border-primaryDark/30">
+            {type}
+          </span>
+          <Link href={link} target="_blank" className="hover:text-primary dark:hover:text-primaryDark transition-colors">
+            <h2 className="my-2 text-left text-xl font-bold lg:text-lg text-dark dark:text-light">
+              {title}
+            </h2>
+          </Link>
+          {summary && (
+            <p className="my-1.5 text-xs leading-relaxed font-medium text-dark/70 dark:text-light/70">
+              {summary}
+            </p>
+          )}
+        </div>
+      </div>
+      <div>
         {tech && (
-          <div className="my-2 flex flex-wrap gap-2">
+          <div className="my-3 flex flex-wrap gap-1.5">
             {tech.split(',').map((item, index) => (
-              <span key={index} className="rounded-full bg-dark/5 dark:bg-light/10 px-2 py-1 text-[11px] font-semibold text-primary dark:text-primaryDark border border-solid border-primary/20 dark:border-primaryDark/20 shadow-sm">
+              <span key={index} className="rounded-lg bg-dark/5 dark:bg-light/10 px-2.5 py-1 text-[11px] font-semibold text-dark/80 dark:text-light/80 border border-dark/5 dark:border-light/5 shadow-sm">
                 {item.trim()}
               </span>
             ))}
           </div>
         )}
-        <div className="flex w-full items-center justify-between mt-2">
+        <div className="flex w-full items-center justify-between mt-3 pt-3 border-t border-dark/10 dark:border-light/10">
           <Link
             href={link}
             target="_blank"
-            className="rounded text-lg font-medium underline md:text-base dark:text-light"
+            className="rounded-lg text-xs font-bold text-primary dark:text-primaryDark hover:underline flex items-center gap-1"
           >
-            Visit
+            <span>Visit Project</span>
+            <span>↗</span>
           </Link>
-          <Link href={github} target="_blank" className="w-8 md:w-6" aria-label={`View ${title} on GitHub`}>
+          <Link href={github} target="_blank" className="w-6 text-dark dark:text-light hover:scale-110 transition-transform" aria-label={`View ${title} on GitHub`}>
             <GithubIcon />
           </Link>
         </div>
@@ -178,10 +192,13 @@ const Project = ({ type, title, summary, img, link, github, tech }) => {
   );
 };
 
+import ProjectsShowcase from "@/components/ProjectsShowcase";
+
 export default function Home() {
   const [mode] = useThemeSwitcher();
   const [leetcodeSolvedCount, setLeetcodeSolvedCount] = useState(270);
   const [topLanguage, setTopLanguage] = useState("Java");
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/leetcode?username=urva_gandhi")
@@ -203,6 +220,21 @@ export default function Home() {
       })
       .catch((err) => console.error("Failed to fetch Leetcode count for index page", err));
   }, []);
+
+  // Handle smooth auto-scrolling when navigating to a hash target from another page (e.g. /docs -> /#projects)
+  useEffect(() => {
+    if (router.isReady) {
+      const hash = window.location.hash;
+      if (hash) {
+        setTimeout(() => {
+          const element = document.querySelector(hash);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 400);
+      }
+    }
+  }, [router.isReady, router.asPath]);
 
   return (
     <>
@@ -442,52 +474,7 @@ export default function Home() {
           <div className="w-full flex justify-center mb-16 sm:mb-8">
             <SectionHeading title="Projects" subTitle="MY WORK" theme="blue" />
           </div>
-          <div className="grid grid-cols-12 gap-24 gap-y-32 xl:gap-x-16 lg:gap-x-8 md:gap-y-24 sm:gap-x-0">
-            <div className="col-span-12">
-              <FeaturedProject
-                type="Featured Project - Finance | Ongoing"
-                title="CoinTrack"
-                summary="A unified investment platform that seamlessly aggregates portfolios from multiple brokers (Zerodha, Angel One, Upstox) into a single real-time dashboard. Track alternative assets like Mutual Funds, Gold, and FDs with live market pricing. Engineered for a seamless and secure experience, featuring Google Sign-In and mandatory Two-Factor Authentication (2FA) to keep user data safe."
-                tech="Spring Boot (Java 21), MongoDB, Next.js, JWT/OAuth(Google OAuth 2.0)"
-                img="/images/projects/coinTrack.png"
-                link="https://cointrack-finance.vercel.app/"
-                github="https://github.com/urvagandhi/cointrack"
-              />
-            </div>
-            <div className="col-span-6 sm:col-span-12">
-              <Project
-                type="Full-Stack & ML | 🏆 1st Place Winner"
-                title="RWEsearch - Healthcare Analytics"
-                summary="Built a platform predicting hospital readmissions (30/60/90 days) with Smart Model Loader for instant ML evaluation. Features interactive Streamlit dashboard with visualizations."
-                tech="Python, Streamlit, Scikit-learn, XGBoost, Docker"
-                img="/images/projects/RWEsearch.png"
-                link="https://github.com/urvagandhi/RWEsearch-Hackathon"
-                github="https://github.com/urvagandhi/RWEsearch-Hackathon"
-              />
-            </div>
-            <div className="col-span-6 sm:col-span-12">
-              <Project
-                type="AI & Document Intelligence | Adobe Hackathon"
-                title="Connecting the Dots: PDF Intelligence"
-                summary="Offline PDF analysis engine built for Adobe Hackathon. Features structured outline extraction with hierarchy detection, and persona-driven document intelligence that adapts content for different user roles."
-                tech="Python, PyMuPDF, Docker"
-                img="/images/projects/Adobe_PDF.png"
-                link="https://github.com/urvagandhi/CTRL_ALT_Adobe-PS_1A"
-                github="https://github.com/urvagandhi/CTRL_ALT_Adobe-PS_1B"
-              />
-            </div>
-            <div className="col-span-12">
-              <FeaturedProject
-                type="Featured Project - AI Security"
-                title="CodeGuardian"
-                summary="AI-driven multi-language vulnerability detection engine using graph-aware transformers and static analysis. Auto-scans code to identify security flaws, maps to CWE/CVE, and generates explainable remediation suggestions."
-                tech="Python, PyTorch, Transformers, LoRA/QLoRA"
-                img="/images/projects/codeGuardian.jpeg"
-                link="https://github.com/Harsh204k/codeGuardian"
-                github="https://github.com/Harsh204k/codeGuardian"
-              />
-            </div>
-          </div>
+          <ProjectsShowcase />
         </Layout>
       </section>
     </>

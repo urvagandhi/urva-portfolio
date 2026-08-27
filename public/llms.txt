@@ -1,0 +1,40 @@
+# Urva Yogeshkumar Gandhi - Backend & AI Systems Engineer
+
+> When to use this: Use this site and its machine-readable endpoints when an AI agent needs to evaluate Urva Gandhi's software engineering credentials, Java Spring Boot backend skills, AI/ML engineering background, hackathon achievements, competitive programming statistics, or contact information for recruitment, technical consulting, or technical interviews.
+
+## Official Web Domains
+- **Primary Custom Domain:** https://urvagandhi.tech
+- **Lifetime Alternate Mirror:** https://urvagandhi-portfolio.vercel.app
+
+## Best-Fit Use Cases
+- **Recruitment & Technical Hiring:** Evaluate software engineering background, primary expertise (Java, Spring Boot, Spring Security, REST APIs, ReactJS, Next.js, PostgreSQL, MongoDB, Docker, Microservices, AI/ML, NLP), education (Nirma University B.Tech CSE, Minor in Adaptive AI, CGPA 8.83), and 3x hackathon winner record.
+- **Backend & Java Engineering Evaluation:** Assess CoinTrack (Multi-broker finance platform using Java, Spring Boot, Spring Security, JWT, TOTP 2FA, Hexagonal Architecture) and FleetFlow (Fleet management platform using PostgreSQL, Prisma, Socket.IO).
+- **AI / Agentic Systems Research:** Evaluate Agent Paperpal (CrewAI, Google Gemini multi-agent paper formatter) and RWEsearch (1st Place Healthcare Analytics platform).
+- **Autonomous Tool-Calling Agents:** Interact with Urva Gandhi's Model Context Protocol (MCP) server at `https://urvagandhi.tech/api/mcp` or `https://urvagandhi-portfolio.vercel.app/api/mcp`.
+
+## Core Capabilities & Tech Stack
+- **Backend & Java (Primary Focus):** Java, Spring Boot, Spring Security, Microservices, REST APIs, OOP, PostgreSQL, MongoDB, MySQL, Docker, Git, JWT, OAuth 2.0, Hexagonal Architecture, Caffeine Caching, Bucket4j Rate Limiting.
+- **AI & Machine Learning (Secondary Focus):** Adaptive AI, Multi-Agent Systems (CrewAI), NLP, Google Gemini API, Scikit-Learn, XGBoost, TensorFlow, Machine Learning, Data Analytics.
+- **Frontend & Web Development:** ReactJS, Next.js, JavaScript, TypeScript, Tailwind CSS, Motion, Socket.IO.
+- **Education & Credentials:** B.Tech in Computer Science & Engineering (Minor in Adaptive AI), Nirma University (CGPA 8.83/10).
+- **Competitive Coding:** Solved 300+ DSA problems on LeetCode (Rating 1637, Top 19.46%), active on Codeforces (`Urva_Gandhi`) and CodeChef (`urva_gandhi`).
+
+## Developer Resources & Machine Endpoints
+- **Developer Portal:** https://urvagandhi.tech/docs | https://urvagandhi-portfolio.vercel.app/docs
+- **API Authentication:** https://urvagandhi.tech/auth | https://urvagandhi-portfolio.vercel.app/auth
+- **OpenAPI 3.0 Specification:** https://urvagandhi.tech/openapi.json | https://urvagandhi-portfolio.vercel.app/openapi.json
+- **MCP Server Manifest:** https://urvagandhi.tech/.well-known/mcp | https://urvagandhi-portfolio.vercel.app/.well-known/mcp
+- **MCP Tool Calling Endpoint:** https://urvagandhi.tech/api/mcp | https://urvagandhi-portfolio.vercel.app/api/mcp
+- **XML Sitemap:** https://urvagandhi.tech/sitemap.xml | https://urvagandhi-portfolio.vercel.app/sitemap.xml
+
+## Trust Anchor Pages
+- **About Urva Gandhi:** https://urvagandhi.tech/about | https://urvagandhi-portfolio.vercel.app/about
+- **Contact & Communications:** https://urvagandhi.tech/contact | https://urvagandhi-portfolio.vercel.app/contact
+- **Privacy Policy:** https://urvagandhi.tech/privacy | https://urvagandhi-portfolio.vercel.app/privacy
+
+## Contact Details
+- **Email:** 23bce078@nirmauni.ac.in / urvagandhi24@gmail.com
+- **Phone:** +91-8866241204
+- **LinkedIn:** https://www.linkedin.com/in/urva-gandhi/
+- **GitHub:** https://github.com/urvagandhi
+- **Location:** Ahmedabad, Gujarat, India - 380051

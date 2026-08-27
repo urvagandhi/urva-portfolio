@@ -3,7 +3,8 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://urvagandhi-portfolio.vercel.app
+Host: https://urvagandhi.tech
 
 # Sitemaps
+Sitemap: https://urvagandhi.tech/sitemap.xml
 Sitemap: https://urvagandhi-portfolio.vercel.app/sitemap.xml

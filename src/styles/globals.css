@@ -13,7 +13,7 @@ body {
 /* Dark mode gradient background */
 .dark body,
 .dark {
-  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+  background: linear-gradient(135deg, #050505 0%, #0a0a14 50%, #080d1a 100%);
   background-attachment: fixed;
 }
 
