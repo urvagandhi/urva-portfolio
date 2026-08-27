@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { useContactModal } from "@/context/ContactModalContext";
 
 const CircularText = ({ className }) => (
     <svg
@@ -23,17 +23,19 @@ const CircularText = ({ className }) => (
 );
 
 const HireMe = () => {
+    const { openContactModal } = useContactModal();
+
     return (
         <div className="fixed left-4 bottom-4 flex flex-col items-center justify-center overflow-hidden z-20 md:right-4 md:left-auto md:bottom-4 md:top-auto md:fixed sm:right-2">
             <div className="w-48 h-auto flex items-center justify-center relative md:w-24">
                 <CircularText className="fill-dark dark:fill-light animate-spin-slow w-full h-auto" />
-                <Link
-                    href="mailto:urvagandhi24@gmail.com"
-                    className="flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-dark text-light shadow-md border border-solid border-dark w-20 h-20 rounded-full font-semibold hover:bg-light hover:text-dark dark:bg-light dark:text-dark dark:hover:bg-dark dark:hover:text-light dark:hover:border-light md:w-12 md:h-12 md:text-[10px]"
-                    aria-label="Send me an email to hire me"
+                <button
+                    onClick={openContactModal}
+                    className="flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-dark text-light shadow-md border border-solid border-dark w-20 h-20 rounded-full font-semibold hover:bg-light hover:text-dark dark:bg-light dark:text-dark dark:hover:bg-dark dark:hover:text-light dark:hover:border-light md:w-12 md:h-12 md:text-[10px] cursor-pointer transition-transform hover:scale-105"
+                    aria-label="Open contact modal to hire me"
                 >
                     Hire Me
-                </Link>
+                </button>
             </div>
         </div>
     );

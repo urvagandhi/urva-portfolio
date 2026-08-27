@@ -20,9 +20,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { useContactModal } from "@/context/ContactModalContext";
+
 export default function Contact() {
   const [copiedPersonal, setCopiedPersonal] = useState(false);
   const [copiedCollege, setCopiedCollege] = useState(false);
+  const { openContactModal } = useContactModal();
 
   const copyToClipboard = (text, type) => {
     navigator.clipboard.writeText(text);
@@ -141,13 +144,13 @@ export default function Contact() {
                   </div>
                 </div>
 
-                <Link 
-                  href="mailto:urvagandhi24@gmail.com" 
-                  className="w-full text-center py-3.5 rounded-2xl bg-dark text-light dark:bg-light dark:text-dark font-bold hover:opacity-90 transition-all duration-300 shadow-md flex items-center justify-center gap-2"
+                <button 
+                  onClick={openContactModal} 
+                  className="w-full text-center py-3.5 rounded-2xl bg-dark text-light dark:bg-light dark:text-dark font-bold hover:opacity-90 transition-all duration-300 shadow-md flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Mail className="w-4 h-4" />
-                  <span>Send Direct Email</span>
-                </Link>
+                  <span>Send Inquiry / Hire Me</span>
+                </button>
               </div>
 
               {/* Card 2: Phone & Social Networks */}

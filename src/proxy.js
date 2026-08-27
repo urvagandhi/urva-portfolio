@@ -114,13 +114,15 @@ function generateDynamicOpenApi(currentDomain) {
     openapi: "3.0.3",
     info: {
       title: "Urva Gandhi Portfolio Developer API & MCP Server",
-      description: "Public REST APIs and Model Context Protocol (MCP) server endpoints providing real-time coding metrics, project metadata, and developer profile context for Urva Gandhi.",
+      description: "Public REST APIs, Model Context Protocol (MCP) server, and developer endpoints providing verified coding statistics, developer profile metadata, and interactive contact handling for Urva Gandhi.",
       version: "1.0.0",
       contact: {
         name: "Urva Gandhi",
         email: "23bce078@nirmauni.ac.in",
         url: currentDomain
-      }
+      },
+      "x-versioning-policy": "URL path versioning (/v1/) and X-API-Version header parameter. Backward compatibility guaranteed for version 1.",
+      "x-deprecation-policy": "Deprecation notices served via Sunset HTTP header 6 months prior to end-of-life."
     },
     servers: [
       { url: currentDomain, description: "Active Domain Server" },
@@ -130,36 +132,176 @@ function generateDynamicOpenApi(currentDomain) {
     paths: {
       "/api/leetcode": {
         get: {
+          operationId: "getLeetCodeStats",
           summary: "Get LeetCode Statistics",
-          description: "Fetches verified LeetCode profile statistics, global ranking, total problems solved, and difficulty breakdown for Urva Gandhi.",
-          responses: { "200": { description: "Successful response" } }
+          description: "Fetches verified LeetCode profile statistics, global ranking, total problems solved, contest rating, and difficulty breakdown for Urva Gandhi.",
+          parameters: [
+            {
+              name: "username",
+              in: "query",
+              required: false,
+              description: "LeetCode handle (defaults to Urva_Gandhi)",
+              schema: { type: "string", default: "Urva_Gandhi" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Successful response",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/LeetCodeProfile" } } }
+            },
+            "400": {
+              description: "Bad Request",
+              content: { "application/problem+json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } }
+            }
+          }
         }
       },
       "/api/codeforces": {
         get: {
+          operationId: "getCodeforcesStats",
           summary: "Get Codeforces Statistics",
-          description: "Fetches Codeforces contest rating, max rating, and submission metrics.",
-          responses: { "200": { description: "Successful response" } }
+          description: "Fetches Codeforces contest rating, max rating, rank, and submission metrics.",
+          parameters: [
+            {
+              name: "username",
+              in: "query",
+              required: false,
+              description: "Codeforces handle (defaults to Urva_Gandhi)",
+              schema: { type: "string", default: "Urva_Gandhi" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Successful response",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/CodeforcesProfile" } } }
+            }
+          }
         }
       },
       "/api/codechef": {
         get: {
+          operationId: "getCodeChefStats",
           summary: "Get CodeChef Statistics",
-          description: "Fetches CodeChef rating, global rank, and contest stars.",
-          responses: { "200": { description: "Successful response" } }
+          description: "Fetches CodeChef rating, global rank, contest stars, and problems solved.",
+          parameters: [
+            {
+              name: "username",
+              in: "query",
+              required: false,
+              description: "CodeChef handle (defaults to urva_gandhi)",
+              schema: { type: "string", default: "urva_gandhi" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Successful response",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/CodeChefProfile" } } }
+            }
+          }
+        }
+      },
+      "/api/gfg": {
+        get: {
+          operationId: "getGfgStats",
+          summary: "Get GeeksforGeeks Statistics",
+          description: "Fetches GeeksforGeeks overall coding score, streak data, and institute ranking.",
+          parameters: [
+            {
+              name: "username",
+              in: "query",
+              required: false,
+              description: "GeeksforGeeks handle (defaults to urvagandhi)",
+              schema: { type: "string", default: "urvagandhi" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Successful response",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/GfgProfile" } } }
+            }
+          }
+        }
+      },
+      "/api/hackerrank": {
+        get: {
+          operationId: "getHackerRankStats",
+          summary: "Get HackerRank Statistics",
+          description: "Fetches HackerRank badges, scores, and problem solving achievements.",
+          parameters: [
+            {
+              name: "username",
+              in: "query",
+              required: false,
+              description: "HackerRank handle (defaults to urvagandhi24)",
+              schema: { type: "string", default: "urvagandhi24" }
+            }
+          ],
+          responses: {
+            "200": {
+              description: "Successful response",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/HackerRankProfile" } } }
+            }
+          }
+        }
+      },
+      "/api/contact": {
+        post: {
+          operationId: "submitContactInquiry",
+          summary: "Submit Contact Form Inquiry",
+          description: "Delivers an inquiry email directly to Urva Gandhi via Brevo HTTPS REST API.",
+          requestBody: {
+            required: true,
+            content: { "application/json": { schema: { $ref: "#/components/schemas/ContactPayload" } } }
+          },
+          responses: {
+            "200": {
+              description: "Message delivered",
+              content: { "application/json": { schema: { $ref: "#/components/schemas/ContactResponse" } } }
+            },
+            "400": {
+              description: "Validation error",
+              content: { "application/problem+json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } }
+            }
+          }
         }
       },
       "/api/mcp": {
         get: {
+          operationId: "getMcpManifest",
           summary: "MCP Server Handshake",
           description: "Returns Model Context Protocol server capabilities, transport options, and available tools.",
           responses: { "200": { description: "MCP Manifest response" } }
         },
         post: {
-          summary: "MCP Tool Call (JSON-RPC 2.0)",
-          description: "Executes MCP tools (get_developer_profile, get_coding_stats, get_projects, get_contact_info).",
+          operationId: "callMcpTool",
+          summary: "Execute MCP Tool or Handshake (JSON-RPC 2.0)",
+          description: "Executes MCP tools and resource handlers.",
           responses: { "200": { description: "JSON-RPC response payload" } }
         }
+      }
+    },
+    components: {
+      schemas: {
+        ErrorResponse: {
+          type: "object",
+          required: ["type", "title", "status", "code", "detail"],
+          properties: {
+            type: { type: "string", example: "https://urvagandhi.tech/docs/errors/invalid-parameters" },
+            title: { type: "string", example: "Bad Request" },
+            status: { type: "integer", example: 400 },
+            code: { type: "string", example: "MISSING_REQUIRED_FIELDS" },
+            detail: { type: "string", example: "Required fields missing." },
+            instance: { type: "string", example: "/api/contact" },
+            resolution_hint: { type: "string", example: "Check parameters and try again." }
+          }
+        },
+        LeetCodeProfile: { type: "object", properties: { username: { type: "string" }, solved: { type: "integer" }, rating: { type: "integer" } } },
+        CodeforcesProfile: { type: "object", properties: { handle: { type: "string" }, rating: { type: "integer" } } },
+        CodeChefProfile: { type: "object", properties: { username: { type: "string" }, rating: { type: "integer" } } },
+        GfgProfile: { type: "object", properties: { username: { type: "string" }, score: { type: "integer" } } },
+        HackerRankProfile: { type: "object", properties: { username: { type: "string" } } },
+        ContactPayload: { type: "object", required: ["name", "email", "message"], properties: { name: { type: "string" }, email: { type: "string" }, message: { type: "string" } } },
+        ContactResponse: { type: "object", properties: { success: { type: "boolean" }, message: { type: "string" } } }
       }
     }
   }, null, 2);

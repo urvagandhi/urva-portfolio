@@ -20,10 +20,37 @@
  * ─────────────────────────────────────────────────────────────────────
  */
 export default async function handler(req, res) {
+  res.setHeader("X-RateLimit-Limit", "100");
+  res.setHeader("X-RateLimit-Remaining", "99");
+  res.setHeader("X-RateLimit-Reset", "60");
+  res.setHeader("X-API-Version", "1.0.0");
+
+  if (req.method !== "GET") {
+    res.setHeader("Content-Type", "application/problem+json");
+    return res.status(405).json({
+      type: "https://urvagandhi.tech/docs/errors/method-not-allowed",
+      title: "Method Not Allowed",
+      status: 405,
+      code: "METHOD_NOT_ALLOWED",
+      detail: "Only HTTP GET method is allowed.",
+      instance: "/api/codechef",
+      resolution_hint: "Use HTTP GET with username query parameter."
+    });
+  }
+
   const { username, year } = req.query;
 
   if (!username) {
-    return res.status(400).json({ error: "Username is required" });
+    res.setHeader("Content-Type", "application/problem+json");
+    return res.status(400).json({
+      type: "https://urvagandhi.tech/docs/errors/invalid-parameters",
+      title: "Bad Request",
+      status: 400,
+      code: "MISSING_USERNAME",
+      detail: "The 'username' query parameter is required.",
+      instance: "/api/codechef",
+      resolution_hint: "Provide username query parameter (e.g., /api/codechef?username=urva_gandhi)."
+    });
   }
 
   try {

@@ -19,6 +19,7 @@ import useThemeSwitcher from "@/components/hooks/useThemeSwitcher";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/router";
+import { useContactModal } from "@/context/ContactModalContext";
 
 // Dynamically import heavy chart components that render below the fold
 const GithubGraph = dynamic(() => import("@/components/GithubGraph"), { 
@@ -199,6 +200,7 @@ export default function Home() {
   const [leetcodeSolvedCount, setLeetcodeSolvedCount] = useState(270);
   const [topLanguage, setTopLanguage] = useState("Java");
   const router = useRouter();
+  const { openContactModal } = useContactModal();
 
   useEffect(() => {
     fetch("/api/leetcode?username=urva_gandhi")
@@ -359,12 +361,12 @@ export default function Home() {
               </p>
               <div className="mt-2 flex items-center self-start lg:self-center">
                 <AnimatedDownloadButton href="/urva-gandhi_resume.pdf" />
-                <Link
-                  href="mailto:urvagandhi24@gmail.com"
-                  className="ml-4 text-lg font-medium capitalize text-dark underline dark:text-light md:text-base"
+                <button
+                  onClick={openContactModal}
+                  className="ml-4 text-lg font-medium capitalize text-dark underline dark:text-light md:text-base cursor-pointer hover:text-primary dark:hover:text-primaryDark transition-colors"
                 >
                   Contact
-                </Link>
+                </button>
               </div>
             </div>
           </div>

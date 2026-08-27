@@ -27,59 +27,39 @@ export default function CodingProfiles() {
 
   useEffect(() => {
     fetch("/api/leetcode?username=urva_gandhi")
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!data.error) {
-          setLeetcodeData(data);
-        }
+        if (data && !data.error) setLeetcodeData(data);
       })
-      .catch((err) => {
-        console.error("Failed to fetch LeetCode dynamic statistics", err);
-      });
+      .catch(() => {});
 
     fetch("/api/codeforces?username=Urva_Gandhi")
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!data.error) {
-          setCfData(data);
-        }
+        if (data && !data.error) setCfData(data);
       })
-      .catch((err) => {
-        console.error("Failed to fetch Codeforces statistics", err);
-      });
+      .catch(() => {});
 
     fetch("/api/codechef?username=urva_gandhi")
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!data.error) {
-          setCcData(data);
-        }
+        if (data && !data.error) setCcData(data);
       })
-      .catch((err) => {
-        console.error("Failed to fetch CodeChef statistics", err);
-      });
+      .catch(() => {});
 
     fetch("/api/gfg?username=urva_gandhi")
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!data.error) {
-          setGfgData(data);
-        }
+        if (data && !data.error) setGfgData(data);
       })
-      .catch((err) => {
-        console.error("Failed to fetch GeeksforGeeks statistics", err);
-      });
+      .catch(() => {});
 
     fetch("/api/hackerrank?username=urvagandhi24")
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!data.error) {
-          setHrData(data);
-        }
+        if (data && !data.error) setHrData(data);
       })
-      .catch((err) => {
-        console.error("Failed to fetch HackerRank statistics", err);
-      });
+      .catch(() => {});
   }, []);
 
   // LeetCode Card dynamic helper values (with fallbacks)

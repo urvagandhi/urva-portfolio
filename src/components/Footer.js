@@ -1,7 +1,10 @@
 import Link from "next/link";
 import Layout from "./Layout";
+import { useContactModal } from "@/context/ContactModalContext";
 
 const Footer = () => {
+  const { openContactModal } = useContactModal();
+
   return (
     <footer className="w-full border-t border-solid border-dark/10 dark:border-light/10 bg-light/90 dark:bg-dark/90 backdrop-blur-md font-medium text-sm text-dark dark:text-light transition-colors">
       <Layout className="py-6 flex flex-col items-center justify-center gap-4 text-center">
@@ -12,7 +15,7 @@ const Footer = () => {
           </Link>
           <span className="text-dark/20 dark:text-light/20">•</span>
           <Link href="/contact" className="hover:text-primary dark:hover:text-primaryDark transition-colors">
-            Contact
+            Contact &amp; Hire
           </Link>
           <span className="text-dark/20 dark:text-light/20">•</span>
           <Link href="/privacy" className="hover:text-primary dark:hover:text-primaryDark transition-colors">

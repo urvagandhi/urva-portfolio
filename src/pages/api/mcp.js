@@ -4,16 +4,21 @@ const PRIMARY_DOMAIN = 'https://urvagandhi.tech';
 const LIFETIME_DOMAIN = 'https://urvagandhi-portfolio.vercel.app';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Mcp-Version');
-  res.setHeader('Mcp-Version', '1.0');
-  res.setHeader('Link', `<${activeDomain}/api/mcp>; rel="mcp-server"`);
-  res.setHeader('Vary', 'Accept, Accept-Encoding, Host');
-
   const host = req.headers.host || 'urvagandhi.tech';
   const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
   const activeDomain = `${proto}://${host}`;
+
+  // Standard RFC Rate Limit Headers & Agentic Discovery Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Mcp-Version, X-API-Version');
+  res.setHeader('Mcp-Version', '1.0');
+  res.setHeader('X-API-Version', '1.0.0');
+  res.setHeader('X-RateLimit-Limit', '100');
+  res.setHeader('X-RateLimit-Remaining', '99');
+  res.setHeader('X-RateLimit-Reset', '60');
+  res.setHeader('Link', `<${activeDomain}/api/mcp>; rel="mcp-server"`);
+  res.setHeader('Vary', 'Accept, Accept-Encoding, Host');
 
   const dynamicManifest = {
     ...mcpManifest,
@@ -45,6 +50,37 @@ export default async function handler(req, res) {
     const body = req.body || {};
     const { jsonrpc, id, method, params } = body;
 
+    const profileData = {
+      name: "Urva Yogeshkumar Gandhi",
+      title: "Software & AI Systems Engineer",
+      domains: { active: activeDomain, primary: PRIMARY_DOMAIN, lifetime: LIFETIME_DOMAIN },
+      university: "Institute of Technology, Nirma University",
+      degree: "B.Tech Computer Science & Engineering (Minor: Adaptive AI)",
+      cgpa: "8.83 / 10",
+      primarySkills: [
+        "Java", "Spring Boot", "Spring Security", "REST APIs", "ReactJS", "Next.js",
+        "JavaScript", "TypeScript", "Python", "C++", "PostgreSQL", "MongoDB", "MySQL",
+        "Docker", "Git", "Data Structures & Algorithms", "Full Stack Development",
+        "Backend Development", "Software Engineering", "Machine Learning",
+        "Artificial Intelligence", "NLP", "Microservices", "OOP", "JWT", "OAuth 2.0"
+      ],
+      hackathons: [
+        "1st Place – Health AI Innovation Hackathon 2025 (140+ teams)",
+        "Track Runner-Up – HACKaMINeD 2026 (400+ teams)",
+        "2nd Runner-Up – Odoo x Gujarat Vidyapith Hackathon 2026"
+      ],
+      location: "S-308, Venus Parkland, Near Vejalpur Police Chowki, Vejalpur, Ahmedabad, Gujarat, India - 380051",
+      emails: ["23bce078@nirmauni.ac.in", "urvagandhi24@gmail.com"],
+      phone: "+91-8866241204",
+      github: "https://github.com/urvagandhi",
+      linkedin: "https://www.linkedin.com/in/urva-gandhi/"
+    };
+
+    const llmsSummaryText = `# Urva Yogeshkumar Gandhi - Developer & Agent Context
+Final year CSE undergraduate at Nirma University (CGPA 8.83/10, Minor in Adaptive AI).
+Backend Engineer specializing in Java, Spring Boot, Microservices, REST APIs, and AI Agentic systems.
+Primary Web Domain: ${PRIMARY_DOMAIN} | Alternate Mirror: ${LIFETIME_DOMAIN}`;
+
     // Handle MCP JSON-RPC 2.0 requests
     if (jsonrpc === '2.0' || method) {
       if (method === 'initialize') {
@@ -54,7 +90,8 @@ export default async function handler(req, res) {
           result: {
             protocolVersion: '2024-11-05',
             capabilities: {
-              tools: { listChanged: false }
+              tools: { listChanged: false },
+              resources: { subscribe: false, listChanged: false }
             },
             serverInfo: {
               name: 'urva-gandhi-portfolio-mcp',
@@ -82,6 +119,66 @@ export default async function handler(req, res) {
         });
       }
 
+      if (method === 'resources/list') {
+        return res.status(200).json({
+          jsonrpc: '2.0',
+          id: id || 1,
+          result: {
+            resources: [
+              {
+                uri: 'portfolio://developer-profile',
+                name: 'Urva Gandhi Developer Profile & Credentials',
+                description: 'Complete developer profile, Nirma University education, Java/Spring Boot & AI tech stack, and hackathon achievements.',
+                mimeType: 'application/json'
+              },
+              {
+                uri: 'portfolio://llms-summary',
+                name: 'LLM Agent Portfolio Summary',
+                description: 'Machine-readable summary of Urva Gandhi for AI agents.',
+                mimeType: 'text/markdown'
+              }
+            ]
+          }
+        });
+      }
+
+      if (method === 'resources/read') {
+        const uri = params?.uri;
+        let contentText = '';
+        let mimeType = 'text/plain';
+
+        if (uri === 'portfolio://developer-profile') {
+          contentText = JSON.stringify(profileData, null, 2);
+          mimeType = 'application/json';
+        } else if (uri === 'portfolio://llms-summary') {
+          contentText = llmsSummaryText;
+          mimeType = 'text/markdown';
+        } else {
+          return res.status(200).json({
+            jsonrpc: '2.0',
+            id: id || 1,
+            error: {
+              code: -32602,
+              message: `Resource not found: ${uri}`
+            }
+          });
+        }
+
+        return res.status(200).json({
+          jsonrpc: '2.0',
+          id: id || 1,
+          result: {
+            contents: [
+              {
+                uri: uri,
+                mimeType: mimeType,
+                text: contentText
+              }
+            ]
+          }
+        });
+      }
+
       if (method === 'tools/call') {
         const name = params?.name;
         const args = params?.arguments || {};
@@ -89,35 +186,7 @@ export default async function handler(req, res) {
         let toolResult = null;
 
         if (name === 'get_developer_profile') {
-          toolResult = {
-            name: "Urva Yogeshkumar Gandhi",
-            title: "Software & AI Systems Engineer",
-            domains: {
-              active: activeDomain,
-              primary: PRIMARY_DOMAIN,
-              lifetime: LIFETIME_DOMAIN
-            },
-            university: "Institute of Technology, Nirma University",
-            degree: "B.Tech Computer Science & Engineering (Minor: Adaptive AI)",
-            cgpa: "8.83 / 10",
-            primarySkills: [
-              "Java", "Spring Boot", "Spring Security", "REST APIs", "ReactJS", "Next.js",
-              "JavaScript", "TypeScript", "Python", "C++", "PostgreSQL", "MongoDB", "MySQL",
-              "Docker", "Git", "Data Structures & Algorithms", "Full Stack Development",
-              "Backend Development", "Software Engineering", "Machine Learning",
-              "Artificial Intelligence", "NLP", "Microservices", "OOP", "JWT", "OAuth 2.0"
-            ],
-            hackathons: [
-              "1st Place – Health AI Innovation Hackathon 2025 (140+ teams)",
-              "Track Runner-Up – HACKaMINeD 2026 (400+ teams)",
-              "2nd Runner-Up – Odoo x Gujarat Vidyapith Hackathon 2026"
-            ],
-            location: "Ahmedabad, Gujarat, India - 380051",
-            emails: ["23bce078@nirmauni.ac.in", "urvagandhi24@gmail.com"],
-            phone: "+91-8866241204",
-            github: "https://github.com/urvagandhi",
-            linkedin: "https://www.linkedin.com/in/urva-gandhi/"
-          };
+          toolResult = profileData;
         } else if (name === 'get_coding_stats') {
           toolResult = {
             platform: args.platform || 'all',
@@ -168,7 +237,7 @@ export default async function handler(req, res) {
               lifetime: LIFETIME_DOMAIN
             },
             emails: ["23bce078@nirmauni.ac.in", "urvagandhi24@gmail.com"],
-            phoneNumbers: ["+91-8866241204", "+91-7203030498", "+91-9723839757"],
+            phoneNumbers: ["+91-8866241204", "+91-7203030498"],
             github: "https://github.com/urvagandhi",
             linkedin: "https://www.linkedin.com/in/urva-gandhi/",
             website: activeDomain,
@@ -204,6 +273,15 @@ export default async function handler(req, res) {
     return res.status(200).json(dynamicManifest);
   }
 
-  return res.status(405).json({ error: 'Method not allowed' });
+  // Structured RFC 9457 Error Response
+  res.setHeader('Content-Type', 'application/problem+json');
+  return res.status(405).json({
+    type: `${activeDomain}/docs/errors/method-not-allowed`,
+    title: 'Method Not Allowed',
+    status: 405,
+    code: 'METHOD_NOT_ALLOWED',
+    detail: 'Only GET and POST methods are supported on the MCP endpoint.',
+    instance: '/api/mcp',
+    resolution_hint: 'Send an HTTP GET to fetch the MCP manifest, or an HTTP POST with JSON-RPC 2.0 payload to invoke MCP capabilities.'
+  });
 }
-
