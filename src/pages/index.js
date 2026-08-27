@@ -479,6 +479,37 @@ export default function Home() {
           <ProjectsShowcase />
         </Layout>
       </section>
+
+      {/* Semantic HTML Fallback Container for Non-JS Crawlers & AI Agent Discovery */}
+      <section className="sr-only" aria-label="Urva Gandhi Developer & Agent Summary">
+        <h1>Urva Yogeshkumar Gandhi - Backend &amp; AI Systems Engineer</h1>
+        <p>
+          Urva Gandhi is a final-year Computer Science &amp; Engineering undergraduate at Nirma University (Minor in Adaptive AI, CGPA: 8.83/10).
+          He is a production-level Java backend developer and 3x Hackathon Winner specializing in Spring Boot, Microservices, Hexagonal Architecture, and Multi-Agent AI systems.
+        </p>
+
+        <h2>Who This Site Is For</h2>
+        <p>Technical recruiters, software engineering leads, hiring managers, and autonomous AI agents seeking backend software engineers, Spring Boot developers, and AI systems consultants.</p>
+
+        <h2>Pricing, Rates &amp; Availability</h2>
+        <ul>
+          <li>Open for Full-Time Software / Backend Engineer roles.</li>
+          <li>Open for Spring Boot &amp; Microservices contract development.</li>
+          <li>Open for AI Systems consulting &amp; software internships.</li>
+          <li>Public REST API &amp; MCP Server endpoints: Free ($0) open access with standard 100 req/min rate limit. Zero recruitment platform fee.</li>
+        </ul>
+
+        <h2>Key Differentiation</h2>
+        <ul>
+          <li>Academic Record: CGPA 8.83 / 10 in B.Tech CSE (Minor: Adaptive AI) at Institute of Technology, Nirma University.</li>
+          <li>3x Hackathon Winner: 1st Place Health AI Hackathon 2025 (140+ teams), Track Runner-Up HACKaMINeD 2026 (400+ teams), 2nd Runner-Up Odoo Hackathon 2026.</li>
+          <li>Verified DSA Stats: Solved 300+ LeetCode problems (Rating 1637, Top 19.46%). Active on Codeforces and CodeChef.</li>
+          <li>Featured Projects: CoinTrack (Java Spring Boot Hexagonal Architecture), FleetFlow (Prisma/PostgreSQL), Agent Paperpal (CrewAI multi-agent formatter), RWEsearch (Healthcare analytics).</li>
+        </ul>
+
+        <h2>Contact Information</h2>
+        <p>Email: 23bce078@nirmauni.ac.in | urvagandhi24@gmail.com | Phone: +91-8866241204</p>
+      </section>
     </>
   );
 }
