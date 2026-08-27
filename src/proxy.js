@@ -657,10 +657,46 @@ The requested path \`${pathname}\` does not exist on Urva Gandhi's Portfolio.
     }
   }
 
-  // Pass through regular HTML requests, ensuring Vary: Accept, Accept-Encoding, Host is set
+  const isApiRoute = pathname.startsWith('/api/') || pathname.startsWith('/v1/') || pathname.startsWith('/api/v1/');
+  const knownApiRoutes = [
+    '/api/leetcode', '/api/codeforces', '/api/codechef', '/api/gfg', '/api/hackerrank', '/api/contact', '/api/mcp', '/api/openapi.json',
+    '/v1/leetcode', '/v1/codeforces', '/v1/codechef', '/v1/gfg', '/v1/hackerrank', '/v1/contact', '/v1/mcp',
+    '/api/v1/leetcode', '/api/v1/codeforces', '/api/v1/codechef', '/api/v1/gfg', '/api/v1/hackerrank', '/api/v1/contact', '/api/v1/mcp'
+  ];
+
+  if (isApiRoute && !knownApiRoutes.includes(pathname)) {
+    const errorJson = JSON.stringify({
+      type: `${currentDomain}/docs/errors/not-found`,
+      title: "Not Found",
+      status: 404,
+      code: "API_ENDPOINT_NOT_FOUND",
+      detail: `The API endpoint '${pathname}' does not exist on Urva Gandhi's Portfolio platform.`,
+      instance: pathname,
+      resolution_hint: `Consult the OpenAPI spec at ${currentDomain}/openapi.json or LLM index at ${currentDomain}/llms.txt for valid endpoint paths.`
+    }, null, 2);
+
+    return new NextResponse(errorJson, {
+      status: 404,
+      headers: {
+        'Content-Type': 'application/problem+json; charset=utf-8',
+        'X-API-Version': '1.0.0',
+        'X-RateLimit-Limit': '100',
+        'X-RateLimit-Remaining': '99',
+        'X-RateLimit-Reset': '60',
+        'Sunset': 'Wed, 31 Dec 2026 23:59:59 GMT'
+      }
+    });
+  }
+
+  // Pass through regular HTML requests, ensuring Vary, RateLimit, and Sunset headers are set
   const response = NextResponse.next();
   response.headers.set('Vary', 'Accept, Accept-Encoding, Host');
   response.headers.set('Link', `<${currentDomain}/llms.txt>; rel="llms-txt", <${currentDomain}/.well-known/mcp>; rel="mcp"`);
+  response.headers.set('X-API-Version', '1.0.0');
+  response.headers.set('X-RateLimit-Limit', '100');
+  response.headers.set('X-RateLimit-Remaining', '99');
+  response.headers.set('X-RateLimit-Reset', '60');
+  response.headers.set('Sunset', 'Wed, 31 Dec 2026 23:59:59 GMT');
   return response;
 }
 

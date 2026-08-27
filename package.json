@@ -2,6 +2,10 @@
   "name": "urva-portfolio",
   "version": "1.0.0",
   "private": true,
+  "bin": {
+    "urva": "./bin/cli.js",
+    "urvagandhi": "./bin/cli.js"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
