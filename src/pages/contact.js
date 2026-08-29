@@ -1,23 +1,23 @@
-import AnimatedText from "@/components/AnimatedText";
-import Layout from "@/components/Layout";
-import TransitionEffect from "@/components/TransitionEffect";
+import AnimatedText from "@/components/shared/AnimatedText.js";
+import Layout from "@/components/layout/Layout.js";
+import TransitionEffect from "@/components/layout/TransitionEffect.js";
 import Head from "next/head";
 import Link from "next/link";
-import SectionHeading from "@/components/SectionHeading";
-import { BorderBeam } from "@/components/magicui/border-beam";
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Briefcase, 
-  GraduationCap, 
-  Github, 
-  Linkedin, 
+import SectionHeading from "@/components/shared/SectionHeading.js";
+import { BorderBeam } from "@/vendor/magicui/border-beam";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  Github,
+  Linkedin,
   ExternalLink,
   Copy,
   Check,
   UserCheck,
-  Zap
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -30,7 +30,7 @@ export default function Contact() {
 
   const copyToClipboard = (text, type) => {
     navigator.clipboard.writeText(text);
-    if (type === 'personal') {
+    if (type === "personal") {
       setCopiedPersonal(true);
       setTimeout(() => setCopiedPersonal(false), 2000);
     } else {
@@ -42,41 +42,61 @@ export default function Contact() {
   return (
     <>
       <Head>
-        <title>Contact Urva Yogeshkumar Gandhi | Software &amp; AI Engineer</title>
-        <meta 
-          name="description" 
-          content="Contact details for Urva Yogeshkumar Gandhi (B.Tech Computer Science & Engineering, Nirma University). Personal Email: urvagandhi24@gmail.com, College Email: 23bce078@nirmauni.ac.in. Phone: +91-8866241204." 
+        <title>
+          Contact Urva Yogeshkumar Gandhi | Software &amp; AI Engineer
+        </title>
+        <meta
+          name="description"
+          content="Contact details for Urva Yogeshkumar Gandhi (B.Tech Computer Science & Engineering, Nirma University). Personal Email: urvagandhi24@gmail.com, College Email: 23bce078@nirmauni.ac.in. Phone: +91-8866241204."
         />
       </Head>
       <TransitionEffect />
       <main className="flex w-full flex-col items-center justify-center text-dark dark:text-light pt-24 pb-16">
         <Layout className="pt-16">
           <div className="w-full flex justify-center mb-12 sm:mb-8">
-            <SectionHeading title="Contact Me" subTitle="GET IN TOUCH" theme="emerald" />
+            <SectionHeading
+              title="Contact Me"
+              subTitle="GET IN TOUCH"
+              theme="emerald"
+            />
           </div>
 
-          <AnimatedText 
-            text="Let's Connect &amp; Build Something Great!" 
-            className="mb-8 lg:!text-5xl sm:!text-4xl xs:!text-2xl text-center max-w-4xl mx-auto" 
+          <AnimatedText
+            text="Let's Connect &amp; Build Something Great!"
+            className="mb-8 lg:!text-5xl sm:!text-4xl xs:!text-2xl text-center max-w-4xl mx-auto"
           />
 
           <div className="max-w-4xl mx-auto w-full">
             <p className="text-lg text-dark/75 dark:text-light/75 text-center mb-12 max-w-2xl mx-auto leading-relaxed">
-              If you are a recruiter, engineering manager, or collaborator looking for strong <strong>Java / Spring Boot backend development</strong>, microservices, or <strong>AI systems engineering</strong> skills, reach out directly below.
+              If you are a recruiter, engineering manager, or collaborator
+              looking for strong{" "}
+              <strong>Java / Spring Boot backend development</strong>,
+              microservices, or <strong>AI systems engineering</strong> skills,
+              reach out directly below.
             </p>
 
             <div className="grid grid-cols-2 lg:grid-cols-1 gap-8 mb-12">
               {/* Card 1: Direct Email Addresses */}
               <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-col justify-between overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/40 dark:hover:border-primaryDark/40">
-                <BorderBeam size={220} duration={12} delay={0} colorFrom="#58E6D9" colorTo="#8B5CF6" />
+                <BorderBeam
+                  size={220}
+                  duration={12}
+                  delay={0}
+                  colorFrom="#58E6D9"
+                  colorTo="#8B5CF6"
+                />
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-3 rounded-2xl bg-primary/10 dark:bg-primaryDark/20 text-primary dark:text-primaryDark border border-primary/20">
                       <Mail className="w-6 h-6" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-dark dark:text-light">Email Channels</h2>
-                      <p className="text-xs text-dark/60 dark:text-light/60">Primary channels for recruitment &amp; proposals</p>
+                      <h2 className="text-2xl font-bold text-dark dark:text-light">
+                        Email Channels
+                      </h2>
+                      <p className="text-xs text-dark/60 dark:text-light/60">
+                        Primary channels for recruitment &amp; proposals
+                      </p>
                     </div>
                   </div>
 
@@ -95,15 +115,24 @@ export default function Contact() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
-                          onClick={() => copyToClipboard('urvagandhi24@gmail.com', 'personal')}
+                          onClick={() =>
+                            copyToClipboard(
+                              "urvagandhi24@gmail.com",
+                              "personal",
+                            )
+                          }
                           className="p-2 rounded-xl bg-dark/10 dark:bg-light/10 text-dark dark:text-light hover:bg-primary hover:text-light dark:hover:bg-primaryDark dark:hover:text-dark transition-colors"
                           title="Copy Email"
                           aria-label="Copy Personal Email"
                         >
-                          {copiedPersonal ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                          {copiedPersonal ? (
+                            <Check className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
                         </button>
-                        <Link 
-                          href="mailto:urvagandhi24@gmail.com" 
+                        <Link
+                          href="mailto:urvagandhi24@gmail.com"
                           className="p-2 rounded-xl bg-dark text-light dark:bg-light dark:text-dark hover:opacity-90 transition-opacity"
                           title="Send Email"
                         >
@@ -117,7 +146,8 @@ export default function Contact() {
                       <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                            <GraduationCap className="w-3 h-3 inline" /> Nirma University Email
+                            <GraduationCap className="w-3 h-3 inline" /> Nirma
+                            University Email
                           </span>
                         </div>
                         <span className="font-mono text-sm font-bold text-dark dark:text-light truncate">
@@ -126,15 +156,24 @@ export default function Contact() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <button
-                          onClick={() => copyToClipboard('23bce078@nirmauni.ac.in', 'college')}
+                          onClick={() =>
+                            copyToClipboard(
+                              "23bce078@nirmauni.ac.in",
+                              "college",
+                            )
+                          }
                           className="p-2 rounded-xl bg-dark/10 dark:bg-light/10 text-dark dark:text-light hover:bg-primary hover:text-light dark:hover:bg-primaryDark dark:hover:text-dark transition-colors"
                           title="Copy Email"
                           aria-label="Copy College Email"
                         >
-                          {copiedCollege ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                          {copiedCollege ? (
+                            <Check className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
                         </button>
-                        <Link 
-                          href="mailto:23bce078@nirmauni.ac.in" 
+                        <Link
+                          href="mailto:23bce078@nirmauni.ac.in"
                           className="p-2 rounded-xl bg-dark text-light dark:bg-light dark:text-dark hover:opacity-90 transition-opacity"
                           title="Send Email"
                         >
@@ -145,8 +184,8 @@ export default function Contact() {
                   </div>
                 </div>
 
-                <button 
-                  onClick={openContactModal} 
+                <button
+                  onClick={openContactModal}
                   className="w-full text-center py-3.5 rounded-2xl bg-dark text-light dark:bg-light dark:text-dark font-bold hover:opacity-90 transition-all duration-300 shadow-md flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Mail className="w-4 h-4" />
@@ -156,15 +195,25 @@ export default function Contact() {
 
               {/* Card 2: Phone & Social Networks */}
               <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-col justify-between overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/40 dark:hover:border-primaryDark/40">
-                <BorderBeam size={220} duration={12} delay={6} colorFrom="#8B5CF6" colorTo="#58E6D9" />
+                <BorderBeam
+                  size={220}
+                  duration={12}
+                  delay={6}
+                  colorFrom="#8B5CF6"
+                  colorTo="#58E6D9"
+                />
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-3 rounded-2xl bg-primary/10 dark:bg-primaryDark/20 text-primary dark:text-primaryDark border border-primary/20">
                       <Phone className="w-6 h-6" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-dark dark:text-light">Phone &amp; Networks</h2>
-                      <p className="text-xs text-dark/60 dark:text-light/60">Phone numbers &amp; developer profiles</p>
+                      <h2 className="text-2xl font-bold text-dark dark:text-light">
+                        Phone &amp; Networks
+                      </h2>
+                      <p className="text-xs text-dark/60 dark:text-light/60">
+                        Phone numbers &amp; developer profiles
+                      </p>
                     </div>
                   </div>
 
@@ -180,32 +229,40 @@ export default function Contact() {
                     </div>
 
                     {/* GitHub Link */}
-                    <Link 
-                      href="https://github.com/urvagandhi" 
-                      target="_blank" 
+                    <Link
+                      href="https://github.com/urvagandhi"
+                      target="_blank"
                       className="p-4 rounded-2xl bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 flex items-center justify-between hover:border-primary/40 transition-colors group"
                     >
                       <div className="flex items-center gap-3">
                         <Github className="w-5 h-5 text-dark dark:text-light group-hover:text-primary dark:group-hover:text-primaryDark transition-colors flex-shrink-0" />
                         <div className="flex flex-col">
-                          <span className="text-xs font-semibold text-dark/60 dark:text-light/60">GitHub Profile</span>
-                          <span className="font-mono text-sm font-bold text-dark dark:text-light">github.com/urvagandhi</span>
+                          <span className="text-xs font-semibold text-dark/60 dark:text-light/60">
+                            GitHub Profile
+                          </span>
+                          <span className="font-mono text-sm font-bold text-dark dark:text-light">
+                            github.com/urvagandhi
+                          </span>
                         </div>
                       </div>
                       <ExternalLink className="w-4 h-4 text-dark/50 dark:text-light/50 group-hover:text-primary dark:group-hover:text-primaryDark transition-colors" />
                     </Link>
 
                     {/* LinkedIn Link */}
-                    <Link 
-                      href="https://www.linkedin.com/in/urva-gandhi/" 
-                      target="_blank" 
+                    <Link
+                      href="https://www.linkedin.com/in/urva-gandhi/"
+                      target="_blank"
                       className="p-4 rounded-2xl bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 flex items-center justify-between hover:border-primary/40 transition-colors group"
                     >
                       <div className="flex items-center gap-3">
                         <Linkedin className="w-5 h-5 text-[#0A66C2] flex-shrink-0" />
                         <div className="flex flex-col">
-                          <span className="text-xs font-semibold text-dark/60 dark:text-light/60">LinkedIn Profile</span>
-                          <span className="font-mono text-sm font-bold text-dark dark:text-light">linkedin.com/in/urva-gandhi</span>
+                          <span className="text-xs font-semibold text-dark/60 dark:text-light/60">
+                            LinkedIn Profile
+                          </span>
+                          <span className="font-mono text-sm font-bold text-dark dark:text-light">
+                            linkedin.com/in/urva-gandhi
+                          </span>
                         </div>
                       </div>
                       <ExternalLink className="w-4 h-4 text-dark/50 dark:text-light/50 group-hover:text-primary dark:group-hover:text-primaryDark transition-colors" />
@@ -216,7 +273,10 @@ export default function Contact() {
                 <div className="pt-2">
                   <div className="p-3 rounded-2xl bg-primary/10 dark:bg-primaryDark/10 text-xs text-center font-medium text-dark/80 dark:text-light/80 border border-primary/20 flex items-center justify-center gap-1.5">
                     <Zap className="w-3.5 h-3.5 text-primary dark:text-primaryDark flex-shrink-0" />
-                    <span>Available for Full-Time Backend / Software Engineering Roles &amp; Internships</span>
+                    <span>
+                      Available for Full-Time Backend / Software Engineering
+                      Roles &amp; Internships
+                    </span>
                   </div>
                 </div>
               </div>
@@ -230,9 +290,12 @@ export default function Contact() {
                     <MapPin className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-dark dark:text-light mb-1">Current Address</h3>
+                    <h3 className="font-bold text-lg text-dark dark:text-light mb-1">
+                      Current Address
+                    </h3>
                     <p className="text-sm text-dark/75 dark:text-light/75 leading-relaxed">
-                      S-308, Venus Parkland, Near Vejalpur Police Chowki, Vejalpur, Ahmedabad, Gujarat, India - 380051
+                      S-308, Venus Parkland, Near Vejalpur Police Chowki,
+                      Vejalpur, Ahmedabad, Gujarat, India - 380051
                     </p>
                   </div>
                 </div>
@@ -242,15 +305,17 @@ export default function Contact() {
                     <Briefcase className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg text-dark dark:text-light mb-1">Preferred Roles</h3>
+                    <h3 className="font-bold text-lg text-dark dark:text-light mb-1">
+                      Preferred Roles
+                    </h3>
                     <p className="text-sm text-dark/75 dark:text-light/75 leading-relaxed">
-                      Java Backend Engineer, Spring Boot Developer, Full-Stack Engineer, AI/ML Systems Engineer
+                      Java Backend Engineer, Spring Boot Developer, Full-Stack
+                      Engineer, AI/ML Systems Engineer
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-
           </div>
         </Layout>
       </main>

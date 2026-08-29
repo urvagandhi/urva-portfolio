@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       code: "METHOD_NOT_ALLOWED",
       detail: "Only HTTP GET method is allowed.",
       instance: "/api/codeforces",
-      resolution_hint: "Use HTTP GET with username query parameter."
+      resolution_hint: "Use HTTP GET with username query parameter.",
     });
   }
 
@@ -45,15 +45,21 @@ export default async function handler(req, res) {
     const [infoRes, ratingRes, statusRes] = await Promise.all([
       fetch(`https://codeforces.com/api/user.info?handles=${handle}`),
       fetch(`https://codeforces.com/api/user.rating?handle=${handle}`),
-      fetch(`https://codeforces.com/api/user.status?handle=${handle}`)
+      fetch(`https://codeforces.com/api/user.status?handle=${handle}`),
     ]);
 
     const infoData = await infoRes.json();
     const ratingData = await ratingRes.json();
     const statusData = await statusRes.json();
 
-    if (infoData.status !== "OK" || ratingData.status !== "OK" || statusData.status !== "OK") {
-      return res.status(500).json({ error: "Failed to fetch data from Codeforces API" });
+    if (
+      infoData.status !== "OK" ||
+      ratingData.status !== "OK" ||
+      statusData.status !== "OK"
+    ) {
+      return res
+        .status(500)
+        .json({ error: "Failed to fetch data from Codeforces API" });
     }
 
     const info = infoData.result[0];
@@ -67,11 +73,13 @@ export default async function handler(req, res) {
     const tagCount = {};
     const langCount = {};
     let totalAccepted = 0;
-    
-    // Sort submissions ascending by time
-    const sortedSubmissions = [...submissions].sort((a, b) => a.creationTimeSeconds - b.creationTimeSeconds);
 
-    submissions.forEach(sub => {
+    // Sort submissions ascending by time
+    const sortedSubmissions = [...submissions].sort(
+      (a, b) => a.creationTimeSeconds - b.creationTimeSeconds,
+    );
+
+    submissions.forEach((sub) => {
       const isOK = sub.verdict === "OK";
       const lang = sub.programmingLanguage || "Unknown";
       langCount[lang] = (langCount[lang] || 0) + 1;
@@ -81,11 +89,12 @@ export default async function handler(req, res) {
         const probId = `${sub.problem.contestId}-${sub.problem.index}`;
         if (!solvedProblems.has(probId)) {
           solvedProblems.add(probId);
-          
+
           // Difficulty
           const rating = sub.problem.rating;
           if (rating) {
-            solvedDifficultyCount[rating] = (solvedDifficultyCount[rating] || 0) + 1;
+            solvedDifficultyCount[rating] =
+              (solvedDifficultyCount[rating] || 0) + 1;
             if (rating > highestProblemRating) {
               highestProblemRating = rating;
             }
@@ -93,9 +102,12 @@ export default async function handler(req, res) {
 
           // Tags
           const tags = sub.problem.tags || [];
-          tags.forEach(tag => {
+          tags.forEach((tag) => {
             // Capitalize tags for presentation
-            const capitalizedTag = tag.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+            const capitalizedTag = tag
+              .split(" ")
+              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(" ");
             tagCount[capitalizedTag] = (tagCount[capitalizedTag] || 0) + 1;
           });
         }
@@ -106,12 +118,16 @@ export default async function handler(req, res) {
 
     // Streaks and Active Days
     const activeDates = new Set();
-    submissions.forEach(sub => {
-      const dateStr = new Date(sub.creationTimeSeconds * 1000).toISOString().split("T")[0];
+    submissions.forEach((sub) => {
+      const dateStr = new Date(sub.creationTimeSeconds * 1000)
+        .toISOString()
+        .split("T")[0];
       activeDates.add(dateStr);
     });
 
-    const sortedDates = [...activeDates].sort((a, b) => new Date(a) - new Date(b));
+    const sortedDates = [...activeDates].sort(
+      (a, b) => new Date(a) - new Date(b),
+    );
     const activeDays = sortedDates.length;
 
     let currentStreak = 0;
@@ -161,7 +177,10 @@ export default async function handler(req, res) {
     }
 
     const totalSubmissions = submissions.length;
-    const acceptanceRate = totalSubmissions > 0 ? ((totalAccepted / totalSubmissions) * 100).toFixed(1) : "0";
+    const acceptanceRate =
+      totalSubmissions > 0
+        ? ((totalAccepted / totalSubmissions) * 100).toFixed(1)
+        : "0";
 
     // Favorite Tag
     let favoriteTag = "Greedy";
@@ -190,15 +209,17 @@ export default async function handler(req, res) {
     let ratingGain = 0;
 
     if (contestCount > 0) {
-      bestContestRank = Math.min(...ratingHistory.map(h => h.rank));
+      bestContestRank = Math.min(...ratingHistory.map((h) => h.rank));
       totalContestRank = ratingHistory.reduce((sum, h) => sum + h.rank, 0);
-      ratingGain = ratingHistory[contestCount - 1].newRating - ratingHistory[0].oldRating;
+      ratingGain =
+        ratingHistory[contestCount - 1].newRating - ratingHistory[0].oldRating;
     }
-    const averageContestRank = contestCount > 0 ? Math.round(totalContestRank / contestCount) : 0;
+    const averageContestRank =
+      contestCount > 0 ? Math.round(totalContestRank / contestCount) : 0;
 
     // Format Contribution Calendar
     const calendarData = {};
-    submissions.forEach(sub => {
+    submissions.forEach((sub) => {
       const date = new Date(sub.creationTimeSeconds * 1000);
       date.setUTCHours(0, 0, 0, 0);
       const dayTimestamp = Math.floor(date.getTime() / 1000);
@@ -206,7 +227,7 @@ export default async function handler(req, res) {
     });
 
     // Extract recent submissions (limit 15)
-    const recentSubmissions = submissions.slice(0, 15).map(sub => ({
+    const recentSubmissions = submissions.slice(0, 15).map((sub) => ({
       id: sub.id,
       title: sub.problem.name,
       contestId: sub.problem.contestId,
@@ -214,24 +235,28 @@ export default async function handler(req, res) {
       timestamp: sub.creationTimeSeconds,
       statusDisplay: sub.verdict === "OK" ? "Accepted" : sub.verdict,
       lang: sub.programmingLanguage,
-      rating: sub.problem.rating
+      rating: sub.problem.rating,
     }));
 
     // Group difficulty distribution
-    const difficultyDistribution = Object.entries(solvedDifficultyCount).map(([r, count]) => ({
-      rating: parseInt(r),
-      count
-    })).sort((a, b) => a.rating - b.rating);
+    const difficultyDistribution = Object.entries(solvedDifficultyCount)
+      .map(([r, count]) => ({
+        rating: parseInt(r),
+        count,
+      }))
+      .sort((a, b) => a.rating - b.rating);
 
     // Group Language distribution
-    const languageDistribution = Object.entries(langCount).map(([lang, count]) => ({
-      languageName: lang,
-      problemsSolved: count
-    })).sort((a, b) => b.problemsSolved - a.problemsSolved);
+    const languageDistribution = Object.entries(langCount)
+      .map(([lang, count]) => ({
+        languageName: lang,
+        problemsSolved: count,
+      }))
+      .sort((a, b) => b.problemsSolved - a.problemsSolved);
 
     res.setHeader(
       "Cache-Control",
-      "public, s-maxage=300, stale-while-revalidate=300"
+      "public, s-maxage=300, stale-while-revalidate=300",
     );
 
     res.status(200).json({
@@ -246,7 +271,7 @@ export default async function handler(req, res) {
         country: info.country || "India",
         organization: info.organization || "Nirma University",
         contribution: info.contribution || 0,
-        friendOfCount: info.friendOfCount || 0
+        friendOfCount: info.friendOfCount || 0,
       },
       derivedMetrics: {
         totalSolved,
@@ -261,13 +286,13 @@ export default async function handler(req, res) {
         acceptanceRate,
         favoriteTag,
         primaryLanguage,
-        totalSubmissions
+        totalSubmissions,
       },
       difficultyDistribution,
       languageDistribution,
       recentSubmissions,
       contestHistory: ratingHistory,
-      calendar: calendarData
+      calendar: calendarData,
     });
   } catch (error) {
     console.error("Codeforces API error:", error);

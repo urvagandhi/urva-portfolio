@@ -386,16 +386,25 @@
         "properties": {
           "name": { "type": "string", "example": "Jane Doe" },
           "email": { "type": "string", "example": "jane@example.com" },
-          "subject": { "type": "string", "example": "Engineering Role Inquiry" },
+          "subject": {
+            "type": "string",
+            "example": "Engineering Role Inquiry"
+          },
           "company": { "type": "string", "example": "Acme Corp" },
-          "message": { "type": "string", "example": "We would love to discuss backend engineering opportunities with you." }
+          "message": {
+            "type": "string",
+            "example": "We would love to discuss backend engineering opportunities with you."
+          }
         }
       },
       "ContactResponse": {
         "type": "object",
         "properties": {
           "success": { "type": "boolean", "example": true },
-          "message": { "type": "string", "example": "Your message has been delivered to urvagandhi24@gmail.com!" }
+          "message": {
+            "type": "string",
+            "example": "Your message has been delivered to urvagandhi24@gmail.com!"
+          }
         }
       },
       "McpManifest": {

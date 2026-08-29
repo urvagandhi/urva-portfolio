@@ -13,7 +13,8 @@ export default async function handler(req, res) {
       code: "METHOD_NOT_ALLOWED",
       detail: "Only HTTP POST method is allowed for contact form submissions.",
       instance: "/api/contact",
-      resolution_hint: "Submit a JSON payload via HTTP POST containing name, email, and message."
+      resolution_hint:
+        "Submit a JSON payload via HTTP POST containing name, email, and message.",
     });
   }
 
@@ -29,7 +30,8 @@ export default async function handler(req, res) {
       code: "MISSING_REQUIRED_FIELDS",
       detail: "Name, email, and message fields are required.",
       instance: "/api/contact",
-      resolution_hint: "Ensure request body includes name, email, and message fields."
+      resolution_hint:
+        "Ensure request body includes name, email, and message fields.",
     });
   }
 
@@ -302,8 +304,10 @@ export default async function handler(req, res) {
   `;
 
   // Read environment variables ONLY (Zero hardcoded secrets in source files)
-  const brevoApiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
-  const targetEmail = process.env.CONTACT_RECEIVER_EMAIL || "urvagandhi24@gmail.com";
+  const brevoApiKey =
+    process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY;
+  const targetEmail =
+    process.env.CONTACT_RECEIVER_EMAIL || "urvagandhi24@gmail.com";
   const senderEmail = process.env.BREVO_SENDER_EMAIL || "study.urva@gmail.com";
 
   // Fast-path 1: Direct Brevo REST API over HTTPS (Sub-200ms execution time!)
@@ -312,7 +316,7 @@ export default async function handler(req, res) {
       const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "Content-Type": "application/json",
           "api-key": brevoApiKey,
         },
@@ -341,7 +345,8 @@ export default async function handler(req, res) {
 
   // Fast-path 2: Standard SMTP Fallback (if configured)
   const smtpHost = process.env.SMTP_HOST || process.env.EMAIL_HOST;
-  const smtpUser = process.env.SMTP_USER || process.env.EMAIL_USER || senderEmail;
+  const smtpUser =
+    process.env.SMTP_USER || process.env.EMAIL_USER || senderEmail;
   const smtpPass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
 
   if (smtpHost && smtpUser && smtpPass) {

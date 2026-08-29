@@ -23,8 +23,8 @@ body {
   display: none;
 }
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 /* Custom Scrollbar - Light Mode */
@@ -134,12 +134,16 @@ body {
   -ms-transform: translateX(26px) rotate(360deg);
   transform: translateX(26px) rotate(360deg);
   background-color: white;
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s;
+  transition:
+    transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.4s;
 }
 
 .theme-switch-wrapper .moon-dot {
   opacity: 0;
-  transition: opacity 0.4s, fill 0.4s;
+  transition:
+    opacity 0.4s,
+    fill 0.4s;
   fill: gray;
 }
 
@@ -370,7 +374,8 @@ body {
 
 /* Custom Floating Dots Animation */
 @keyframes float-dot {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -439,23 +444,27 @@ body {
 
 @layer utilities {
   @keyframes meteor {
-  0% {
-    transform: rotate(var(--angle)) translateX(0);
-    opacity: 1;
+    0% {
+      transform: rotate(var(--angle)) translateX(0);
+      opacity: 1;
     }
-  70% {
-    opacity: 1;
+    70% {
+      opacity: 1;
     }
-  100% {
-    transform: rotate(var(--angle)) translateX(-500px);
-    opacity: 0;
+    100% {
+      transform: rotate(var(--angle)) translateX(-500px);
+      opacity: 0;
     }
   }
 
   /* Logo: slow rotating conic ring */
   @keyframes spin-slow {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
   .animate-spin-slow {
     animation: spin-slow 6s linear infinite;
@@ -463,10 +472,20 @@ body {
 
   /* Logo: small-scale meteor / shooting star */
   @keyframes logo-meteor {
-    0% { transform: rotate(var(--angle)) translateX(0); opacity: 0; }
-    8%  { opacity: 1; }
-    60% { opacity: 1; }
-    100% { transform: rotate(var(--angle)) translateX(-90px); opacity: 0; }
+    0% {
+      transform: rotate(var(--angle)) translateX(0);
+      opacity: 0;
+    }
+    8% {
+      opacity: 1;
+    }
+    60% {
+      opacity: 1;
+    }
+    100% {
+      transform: rotate(var(--angle)) translateX(-90px);
+      opacity: 0;
+    }
   }
   .animate-logo-meteor {
     animation: logo-meteor 3.2s linear infinite;

@@ -13,7 +13,9 @@ export const ContactModalProvider = ({ children }) => {
   const closeContactModal = () => setIsOpen(false);
 
   return (
-    <ContactModalContext.Provider value={{ isOpen, openContactModal, closeContactModal }}>
+    <ContactModalContext.Provider
+      value={{ isOpen, openContactModal, closeContactModal }}
+    >
       {children}
     </ContactModalContext.Provider>
   );

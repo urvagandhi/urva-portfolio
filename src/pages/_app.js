@@ -1,8 +1,8 @@
 import React from "react";
-import Footer from "@/components/Footer";
-import NavBar from "@/components/NavBar";
-import Loader from "@/components/Loader";
-import ContactModal from "@/components/ContactModal";
+import Footer from "@/components/layout/Footer.js";
+import NavBar from "@/components/layout/NavBar.js";
+import Loader from "@/components/layout/Loader.js";
+import ContactModal from "@/components/feedback/ContactModal.js";
 import { ContactModalProvider } from "@/context/ContactModalContext";
 import "@/styles/globals.css";
 import { AnimatePresence, motion, useScroll } from "framer-motion";
@@ -13,12 +13,18 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import dynamic from "next/dynamic";
 
-const Particles = dynamic(() => import("@/components/ui/particles").then(mod => mod.Particles), {
-  ssr: false,
-});
-const CustomCursor = dynamic(() => import("@/components/CustomCursor"), {
-  ssr: false,
-});
+const Particles = dynamic(
+  () => import("@/vendor/ui/particles").then((mod) => mod.Particles),
+  {
+    ssr: false,
+  },
+);
+const CustomCursor = dynamic(
+  () => import("@/components/layout/CustomCursor.js"),
+  {
+    ssr: false,
+  },
+);
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -47,7 +53,9 @@ export default function App({ Component, pageProps }) {
     if (document.readyState === "complete") {
       setTimeout(dismiss, 1500);
     } else {
-      window.addEventListener("load", () => setTimeout(dismiss, 1500), { once: true });
+      window.addEventListener("load", () => setTimeout(dismiss, 1500), {
+        once: true,
+      });
     }
 
     return () => window.removeEventListener("themeChange", handleThemeChange);
@@ -58,10 +66,17 @@ export default function App({ Component, pageProps }) {
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Main Tab Favicon */}
-        <link rel="icon" type="image/png" href="/images/profile/urva-circular.png" />
+        <link
+          rel="icon"
+          type="image/png"
+          href="/images/profile/urva-circular.png"
+        />
 
         <title>Urva Gandhi | Software Developer Portfolio</title>
-        <meta name="description" content="Urva Gandhi — Full-stack developer, ML enthusiast, and hackathon winner. Explore projects, skills, and experience." />
+        <meta
+          name="description"
+          content="Urva Gandhi — Full-stack developer, ML enthusiast, and hackathon winner. Explore projects, skills, and experience."
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -71,69 +86,71 @@ export default function App({ Component, pageProps }) {
                 {
                   "@type": "Person",
                   "@id": "https://urvagandhi.tech/#person",
-                  "name": "Urva Yogeshkumar Gandhi",
-                  "alternateName": "Urva Gandhi",
-                  "jobTitle": "Software & AI Systems Engineer",
-                  "worksFor": {
+                  name: "Urva Yogeshkumar Gandhi",
+                  alternateName: "Urva Gandhi",
+                  jobTitle: "Software & AI Systems Engineer",
+                  worksFor: {
                     "@type": "Organization",
-                    "name": "Kautilyam",
-                    "url": "https://kautilyam.com"
+                    name: "Kautilyam",
+                    url: "https://kautilyam.com",
                   },
-                  "alumniOf": [
+                  alumniOf: [
                     {
                       "@type": "EducationalOrganization",
-                      "name": "Department of Computer Science & Engineering, Nirma University",
-                      "url": "https://cse.nirmauni.ac.in"
+                      name: "Department of Computer Science & Engineering, Nirma University",
+                      url: "https://cse.nirmauni.ac.in",
                     },
                     {
                       "@type": "EducationalOrganization",
-                      "name": "Institute of Technology, Nirma University",
-                      "url": "https://technology.nirmauni.ac.in"
-                    }
+                      name: "Institute of Technology, Nirma University",
+                      url: "https://technology.nirmauni.ac.in",
+                    },
                   ],
-                  "url": "https://urvagandhi.tech",
-                  "email": "23bce078@nirmauni.ac.in",
-                  "telephone": "+91-8866241204",
-                  "sameAs": [
+                  url: "https://urvagandhi.tech",
+                  email: "23bce078@nirmauni.ac.in",
+                  telephone: "+91-8866241204",
+                  sameAs: [
                     "https://github.com/urvagandhi",
                     "https://www.linkedin.com/in/urva-gandhi/",
                     "https://leetcode.com/u/Urva_Gandhi/",
                     "https://codeforces.com/profile/Urva_Gandhi",
-                    "https://www.codechef.com/users/urva_gandhi"
+                    "https://www.codechef.com/users/urva_gandhi",
                   ],
-                  "address": {
+                  address: {
                     "@type": "PostalAddress",
-                    "streetAddress": "S-308, Venus Parkland, Near Vejalpur Police Chowki, Vejalpur",
-                    "addressLocality": "Ahmedabad",
-                    "addressRegion": "Gujarat",
-                    "postalCode": "380051",
-                    "addressCountry": "IN"
-                  }
+                    streetAddress:
+                      "S-308, Venus Parkland, Near Vejalpur Police Chowki, Vejalpur",
+                    addressLocality: "Ahmedabad",
+                    addressRegion: "Gujarat",
+                    postalCode: "380051",
+                    addressCountry: "IN",
+                  },
                 },
                 {
                   "@type": "Organization",
                   "@id": "https://urvagandhi.tech/#organization",
-                  "name": "Urva Gandhi Portfolio & Developer Platform",
-                  "url": "https://urvagandhi.tech",
-                  "logo": "https://urvagandhi.tech/images/profile/urva-circular.png",
-                  "contactPoint": {
+                  name: "Urva Gandhi Portfolio & Developer Platform",
+                  url: "https://urvagandhi.tech",
+                  logo: "https://urvagandhi.tech/images/profile/urva-circular.png",
+                  contactPoint: {
                     "@type": "ContactPoint",
-                    "telephone": "+91-8866241204",
-                    "email": "urvagandhi24@gmail.com",
-                    "contactType": "developer inquiry",
-                    "availableLanguage": ["English", "Gujarati", "Hindi"]
+                    telephone: "+91-8866241204",
+                    email: "urvagandhi24@gmail.com",
+                    contactType: "developer inquiry",
+                    availableLanguage: ["English", "Gujarati", "Hindi"],
                   },
-                  "address": {
+                  address: {
                     "@type": "PostalAddress",
-                    "streetAddress": "S-308, Venus Parkland, Near Vejalpur Police Chowki, Vejalpur",
-                    "addressLocality": "Ahmedabad",
-                    "addressRegion": "Gujarat",
-                    "postalCode": "380051",
-                    "addressCountry": "IN"
-                  }
-                }
-              ]
-            })
+                    streetAddress:
+                      "S-308, Venus Parkland, Near Vejalpur Police Chowki, Vejalpur",
+                    addressLocality: "Ahmedabad",
+                    addressRegion: "Gujarat",
+                    postalCode: "380051",
+                    addressCountry: "IN",
+                  },
+                },
+              ],
+            }),
           }}
         />
       </Head>
@@ -172,9 +189,7 @@ export default function App({ Component, pageProps }) {
           style={{ scaleX: scrollYProgress }}
         />
         {/* Global custom cursor */}
-        {mounted && !loading && (
-          <CustomCursor />
-        )}
+        {mounted && !loading && <CustomCursor />}
 
         <NavBar />
         <AnimatePresence initial={false} mode="wait">

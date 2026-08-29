@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       code: "METHOD_NOT_ALLOWED",
       detail: "Only HTTP GET method is allowed.",
       instance: "/api/hackerrank",
-      resolution_hint: "Use HTTP GET with username query parameter."
+      resolution_hint: "Use HTTP GET with username query parameter.",
     });
   }
 
@@ -42,30 +42,29 @@ export default async function handler(req, res) {
         `https://www.hackerrank.com/rest/contests/master/hackers/${user}/profile`,
         {
           headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          }
-        }
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          },
+        },
       ),
-      fetch(
-        `https://www.hackerrank.com/rest/hackers/${user}/badges`,
-        {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          }
-        }
-      ),
-      fetch(
-        `https://www.hackerrank.com/rest/hackers/${user}/scores_elo`,
-        {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-          }
-        }
-      )
+      fetch(`https://www.hackerrank.com/rest/hackers/${user}/badges`, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      }),
+      fetch(`https://www.hackerrank.com/rest/hackers/${user}/scores_elo`, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      }),
     ]);
 
     if (!profileRes.ok) {
-      return res.status(profileRes.status).json({ error: `HackerRank profile fetch failed with status: ${profileRes.status}` });
+      return res.status(profileRes.status).json({
+        error: `HackerRank profile fetch failed with status: ${profileRes.status}`,
+      });
     }
 
     const profileJson = await profileRes.json();
@@ -79,7 +78,7 @@ export default async function handler(req, res) {
     // Cache responses
     res.setHeader(
       "Cache-Control",
-      "public, s-maxage=300, stale-while-revalidate=300"
+      "public, s-maxage=300, stale-while-revalidate=300",
     );
 
     res.status(200).json({
@@ -110,8 +109,8 @@ export default async function handler(req, res) {
 
       // Only skills with actual practice activity (filter out zero-score entries)
       skills: scoresRaw
-        .filter(skill => (skill.practice?.score ?? 0) > 0)
-        .map(skill => ({
+        .filter((skill) => (skill.practice?.score ?? 0) > 0)
+        .map((skill) => ({
           name: skill.name,
           slug: skill.slug,
           score: skill.practice.score,
@@ -124,7 +123,7 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error("HackerRank API Error:", err);
     res.status(500).json({
-      error: "Failed to fetch HackerRank data"
+      error: "Failed to fetch HackerRank data",
     });
   }
 }

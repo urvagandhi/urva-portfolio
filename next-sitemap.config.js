@@ -1,20 +1,17 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.SITE_URL || 'https://urvagandhi.tech',
+  siteUrl: process.env.SITE_URL || "https://urvagandhi.tech",
   generateRobotsTxt: true,
   generateIndexSitemap: false,
-  changefreq: 'weekly',
+  changefreq: "weekly",
   priority: 1,
   robotsTxtOptions: {
     policies: [
       {
-        userAgent: '*',
-        allow: '/',
+        userAgent: "*",
+        allow: "/",
       },
     ],
-    additionalSitemaps: [
-      'https://urvagandhi-portfolio.vercel.app/sitemap.xml'
-    ]
+    additionalSitemaps: ["https://urvagandhi-portfolio.vercel.app/sitemap.xml"],
   },
-}
-
+};

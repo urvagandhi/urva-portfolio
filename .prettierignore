@@ -1,0 +1,16 @@
+# Ignore build output and dependencies
+.next/
+node_modules/
+out/
+build/
+coverage/
+package-lock.json
+
+# Binary and media assets
+public/images/
+public/resumes/
+public/favicon.ico
+*.pdf
+*.png
+*.jpeg
+*.jpg

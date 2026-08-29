@@ -33,7 +33,14 @@
         "properties": {
           "platform": {
             "type": "string",
-            "enum": ["all", "leetcode", "codeforces", "codechef", "gfg", "hackerrank"],
+            "enum": [
+              "all",
+              "leetcode",
+              "codeforces",
+              "codechef",
+              "gfg",
+              "hackerrank"
+            ],
             "description": "Specific platform or 'all' for aggregated stats."
           }
         }

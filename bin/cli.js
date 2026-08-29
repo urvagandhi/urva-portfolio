@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const https = require('https');
+const https = require("https");
 
-const PRIMARY_DOMAIN = 'https://urvagandhi.tech';
+const PRIMARY_DOMAIN = "https://urvagandhi.tech";
 
 console.log(`
 ================================================================
@@ -19,25 +19,32 @@ console.log(`
 ================================================================
 `);
 
-const command = process.argv[2] || 'help';
+const command = process.argv[2] || "help";
 
-if (command === 'stats') {
-  console.log('Fetching coding statistics...');
-  https.get(`${PRIMARY_DOMAIN}/api/leetcode?username=Urva_Gandhi`, (res) => {
-    let data = '';
-    res.on('data', (chunk) => { data += chunk; });
-    res.on('end', () => {
-      try {
-        const parsed = JSON.parse(data);
-        console.log('\nLeetCode Verified Stats:', JSON.stringify(parsed, null, 2));
-      } catch (e) {
-        console.log('Raw output:', data);
-      }
+if (command === "stats") {
+  console.log("Fetching coding statistics...");
+  https
+    .get(`${PRIMARY_DOMAIN}/api/leetcode?username=Urva_Gandhi`, (res) => {
+      let data = "";
+      res.on("data", (chunk) => {
+        data += chunk;
+      });
+      res.on("end", () => {
+        try {
+          const parsed = JSON.parse(data);
+          console.log(
+            "\nLeetCode Verified Stats:",
+            JSON.stringify(parsed, null, 2),
+          );
+        } catch (e) {
+          console.log("Raw output:", data);
+        }
+      });
+    })
+    .on("error", (err) => {
+      console.error("Error fetching stats:", err.message);
     });
-  }).on('error', (err) => {
-    console.error('Error fetching stats:', err.message);
-  });
-} else if (command === 'mcp') {
+} else if (command === "mcp") {
   console.log(`MCP Server Endpoint: ${PRIMARY_DOMAIN}/api/mcp`);
   console.log(`MCP Manifest:        ${PRIMARY_DOMAIN}/.well-known/mcp`);
 } else {

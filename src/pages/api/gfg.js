@@ -35,7 +35,7 @@ export default async function handler(req, res) {
       code: "METHOD_NOT_ALLOWED",
       detail: "Only HTTP GET method is allowed.",
       instance: "/api/gfg",
-      resolution_hint: "Use HTTP GET with username query parameter."
+      resolution_hint: "Use HTTP GET with username query parameter.",
     });
   }
 
@@ -47,35 +47,45 @@ export default async function handler(req, res) {
   }
 
   try {
-    const [profileResponse, submissionsResponse, potdResponse] = await Promise.all([
-      fetch(`https://www.geeksforgeeks.org/user/${username}/`, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-      }).catch(err => {
-        console.error("Profile fetch error:", err);
-        return null;
-      }),
-      fetch(`https://practiceapi.geeksforgeeks.org/api/v1/user/problems/submissions/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        },
-        body: JSON.stringify({ handle: username })
-      }).catch(err => {
-        console.error("Submissions fetch error:", err);
-        return null;
-      }),
-      fetch(`https://practiceapi.geeksforgeeks.org/api/v1/problems-of-day/problem/today/`, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-      }).catch(err => {
-        console.error("POTD fetch error:", err);
-        return null;
-      })
-    ]);
+    const [profileResponse, submissionsResponse, potdResponse] =
+      await Promise.all([
+        fetch(`https://www.geeksforgeeks.org/user/${username}/`, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          },
+        }).catch((err) => {
+          console.error("Profile fetch error:", err);
+          return null;
+        }),
+        fetch(
+          `https://practiceapi.geeksforgeeks.org/api/v1/user/problems/submissions/`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            },
+            body: JSON.stringify({ handle: username }),
+          },
+        ).catch((err) => {
+          console.error("Submissions fetch error:", err);
+          return null;
+        }),
+        fetch(
+          `https://practiceapi.geeksforgeeks.org/api/v1/problems-of-day/problem/today/`,
+          {
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            },
+          },
+        ).catch((err) => {
+          console.error("POTD fetch error:", err);
+          return null;
+        }),
+      ]);
 
     if (!profileResponse || !profileResponse.ok) {
       const status = profileResponse ? profileResponse.status : 500;
@@ -118,13 +128,13 @@ export default async function handler(req, res) {
     if (idx !== -1) {
       // Find the start of the self.__next_f.push command containing this data block if possible
       let startSearch = Math.max(0, idx - 30);
-      const pushIdx = html.lastIndexOf('self.__next_f.push(', idx);
+      const pushIdx = html.lastIndexOf("self.__next_f.push(", idx);
       if (pushIdx !== -1 && pushIdx < idx) {
         startSearch = pushIdx;
       }
 
       let sub = html.substring(startSearch);
-      let braceStart = sub.indexOf('{');
+      let braceStart = sub.indexOf("{");
       if (braceStart !== -1) {
         let bracesCount = 0;
         let endedIdx = -1;
@@ -133,7 +143,7 @@ export default async function handler(req, res) {
 
         for (let i = braceStart; i < sub.length; i++) {
           let char = sub[i];
-          if (char === '\\' && !isEscaped) {
+          if (char === "\\" && !isEscaped) {
             isEscaped = true;
             continue;
           }
@@ -141,9 +151,9 @@ export default async function handler(req, res) {
             inString = !inString;
           }
           if (!inString) {
-            if (char === '{') {
+            if (char === "{") {
               bracesCount++;
-            } else if (char === '}') {
+            } else if (char === "}") {
               bracesCount--;
               if (bracesCount === 0) {
                 endedIdx = i;
@@ -158,7 +168,7 @@ export default async function handler(req, res) {
           const jsonStr = sub.substring(braceStart, endedIdx + 1);
           let finalJsonStr = jsonStr;
           if (jsonStr.includes('\\"')) {
-            finalJsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+            finalJsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
           }
           try {
             parsedParentObj = JSON.parse(finalJsonStr);
@@ -182,15 +192,20 @@ export default async function handler(req, res) {
       }
 
       if (uIdx === -1) {
-        return res.status(404).json({ error: "GeeksforGeeks user data not found on the profile page" });
+        return res.status(404).json({
+          error: "GeeksforGeeks user data not found on the profile page",
+        });
       }
 
       let sub = html.substring(uIdx);
-      let colonIdx = sub.indexOf(':');
-      let braceStart = sub.indexOf('{', colonIdx);
+      let colonIdx = sub.indexOf(":");
+      let braceStart = sub.indexOf("{", colonIdx);
 
       if (braceStart === -1) {
-        return res.status(500).json({ error: "Failed to locate JSON start brace for GeeksforGeeks user data" });
+        return res.status(500).json({
+          error:
+            "Failed to locate JSON start brace for GeeksforGeeks user data",
+        });
       }
 
       let bracesCount = 0;
@@ -200,7 +215,7 @@ export default async function handler(req, res) {
 
       for (let i = braceStart; i < sub.length; i++) {
         let char = sub[i];
-        if (char === '\\' && !isEscaped) {
+        if (char === "\\" && !isEscaped) {
           isEscaped = true;
           continue;
         }
@@ -208,9 +223,9 @@ export default async function handler(req, res) {
           inString = !inString;
         }
         if (!inString) {
-          if (char === '{') {
+          if (char === "{") {
             bracesCount++;
-          } else if (char === '}') {
+          } else if (char === "}") {
             bracesCount--;
             if (bracesCount === 0) {
               endedIdx = i;
@@ -222,13 +237,16 @@ export default async function handler(req, res) {
       }
 
       if (endedIdx === -1) {
-        return res.status(500).json({ error: "Failed to extract complete JSON block for GeeksforGeeks user data" });
+        return res.status(500).json({
+          error:
+            "Failed to extract complete JSON block for GeeksforGeeks user data",
+        });
       }
 
       const jsonStr = sub.substring(braceStart, endedIdx + 1);
       let finalJsonStr = jsonStr;
       if (jsonStr.includes('\\"')) {
-        finalJsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+        finalJsonStr = jsonStr.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
       }
 
       try {
@@ -261,7 +279,9 @@ export default async function handler(req, res) {
     }
 
     if (!finalUserData) {
-      return res.status(404).json({ error: "Invalid GeeksforGeeks user data format" });
+      return res
+        .status(404)
+        .json({ error: "Invalid GeeksforGeeks user data format" });
     }
 
     const extractProblemStats = (result) => {
@@ -270,7 +290,7 @@ export default async function handler(req, res) {
         Basic: 0,
         Easy: 0,
         Medium: 0,
-        Hard: 0
+        Hard: 0,
       };
       if (result && typeof result === "object") {
         for (const key of Object.keys(stats)) {
@@ -286,7 +306,7 @@ export default async function handler(req, res) {
 
     const mergedInfo = {
       ...finalUserData,
-      ...problemStats
+      ...problemStats,
     };
 
     // Return the response matching the common coding profile format
@@ -301,9 +321,8 @@ export default async function handler(req, res) {
         difficulty: potdData.difficulty
       } : null
       */
-      potd: null
+      potd: null,
     });
-
   } catch (err) {
     console.error("GeeksforGeeks API Error:", err);
     return res.status(500).json({ error: err.message });

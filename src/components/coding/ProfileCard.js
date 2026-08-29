@@ -1,11 +1,25 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { LinkArrow } from "../Icons";
-import { BorderBeam } from "../magicui/border-beam";
+import { LinkArrow } from "../shared/Icons.js";
+import { BorderBeam } from "@/vendor/magicui/border-beam";
 import { Info } from "lucide-react";
 
-export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratingLabel, subText, badge, badgeColor, link, colorFrom, colorTo, onClick, potd }) => {
+export const ProfileCard = ({
+  platform,
+  icon: Icon,
+  rating,
+  highestRating,
+  ratingLabel,
+  subText,
+  badge,
+  badgeColor,
+  link,
+  colorFrom,
+  colorTo,
+  onClick,
+  potd,
+}) => {
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -15,39 +29,53 @@ export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratin
         onClick ? "cursor-pointer" : ""
       }`}
     >
-      <BorderBeam size={120} duration={8} delay={3} colorFrom={colorFrom} colorTo={colorTo} />
-      
+      <BorderBeam
+        size={120}
+        duration={8}
+        delay={3}
+        colorFrom={colorFrom}
+        colorTo={colorTo}
+      />
+
       <div>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 flex items-center justify-center dark:text-light">
               <Icon className="w-full h-full" />
             </div>
-            <h4 className="text-xl xs:text-lg font-bold text-dark dark:text-light">{platform}</h4>
+            <h4 className="text-xl xs:text-lg font-bold text-dark dark:text-light">
+              {platform}
+            </h4>
           </div>
-          <span className={`px-3 xs:px-2 py-1 xs:py-0.5 rounded-full text-xs font-semibold border border-solid ${badgeColor}`}>
+          <span
+            className={`px-3 xs:px-2 py-1 xs:py-0.5 rounded-full text-xs font-semibold border border-solid ${badgeColor}`}
+          >
             {badge}
           </span>
         </div>
- 
+
         <div className="my-4">
           <div className="flex items-baseline gap-2 flex-wrap">
             <div className="text-3xl xs:text-2xl font-extrabold text-dark dark:text-light flex items-baseline gap-1">
               {rating}
-              <span className="text-sm font-medium text-dark/60 dark:text-light/60">{ratingLabel || "rating"}</span>
+              <span className="text-sm font-medium text-dark/60 dark:text-light/60">
+                {ratingLabel || "rating"}
+              </span>
             </div>
             {highestRating && (
-              <span className={`text-xs font-extrabold px-2 py-0.5 rounded-md border border-solid shadow-sm ${
-                platform === "LeetCode" 
-                  ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" 
-                  : platform === "Codeforces"
-                    ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
-                    : platform === "CodeChef"
-                      ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
-                      : platform === "GeeksforGeeks"
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                        : "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
-              }`}>
+              <span
+                className={`text-xs font-extrabold px-2 py-0.5 rounded-md border border-solid shadow-sm ${
+                  platform === "LeetCode"
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                    : platform === "Codeforces"
+                      ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
+                      : platform === "CodeChef"
+                        ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+                        : platform === "GeeksforGeeks"
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                          : "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
+                }`}
+              >
                 Highest: {highestRating}
               </span>
             )}
@@ -99,7 +127,7 @@ export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratin
             <LinkArrow className="w-4 ml-1" />
           </Link>
         )}
-        
+
         {onClick && (
           <Link
             href={link}

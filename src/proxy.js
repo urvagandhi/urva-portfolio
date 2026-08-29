@@ -1,26 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-const PRIMARY_DOMAIN = 'https://urvagandhi.tech';
-const LIFETIME_DOMAIN = 'https://urvagandhi-portfolio.vercel.app';
+const PRIMARY_DOMAIN = "https://urvagandhi.tech";
+const LIFETIME_DOMAIN = "https://urvagandhi-portfolio.vercel.app";
 
 function getDynamicDomain(req) {
-  const host = req.headers.get('host') || 'urvagandhi.tech';
-  const proto = req.headers.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https');
+  const host = req.headers.get("host") || "urvagandhi.tech";
+  const proto =
+    req.headers.get("x-forwarded-proto") ||
+    (host.includes("localhost") ? "http" : "https");
   return `${proto}://${host}`;
 }
 
 function generateDynamicSitemap(currentDomain) {
-  const pages = ['', '/about', '/auth', '/contact', '/docs', '/privacy'];
+  const pages = ["", "/about", "/auth", "/contact", "/docs", "/privacy"];
   const lastmod = new Date().toISOString();
 
-  const urlElements = pages.map(path => `  <url>
+  const urlElements = pages
+    .map(
+      (path) => `  <url>
     <loc>${currentDomain}${path}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="x-default" href="${PRIMARY_DOMAIN}${path}" />
     <xhtml:link rel="alternate" hreflang="en" href="${LIFETIME_DOMAIN}${path}" />
-  </url>`).join('\n');
+  </url>`,
+    )
+    .join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
@@ -41,270 +47,385 @@ Sitemap: ${LIFETIME_DOMAIN}/sitemap.xml
 }
 
 function generateDynamicMcpManifest(currentDomain) {
-  return JSON.stringify({
-    schema_version: "1.0",
-    name: "urva-gandhi-portfolio-mcp",
-    description: "First-party Model Context Protocol (MCP) server providing structured tool access to Urva Gandhi's software engineering portfolio, verified coding statistics, project repository metadata, and contact info.",
-    version: "1.0.0",
-    vendor: "Urva Gandhi",
-    homepage: currentDomain,
-    primary_homepage: PRIMARY_DOMAIN,
-    alternate_homepage: LIFETIME_DOMAIN,
-    endpoints: {
-      mcp: `${currentDomain}/api/mcp`,
-      sse: `${currentDomain}/api/mcp`,
-      primary_mcp: `${PRIMARY_DOMAIN}/api/mcp`,
-      lifetime_mcp: `${LIFETIME_DOMAIN}/api/mcp`
+  return JSON.stringify(
+    {
+      schema_version: "1.0",
+      name: "urva-gandhi-portfolio-mcp",
+      description:
+        "First-party Model Context Protocol (MCP) server providing structured tool access to Urva Gandhi's software engineering portfolio, verified coding statistics, project repository metadata, and contact info.",
+      version: "1.0.0",
+      vendor: "Urva Gandhi",
+      homepage: currentDomain,
+      primary_homepage: PRIMARY_DOMAIN,
+      alternate_homepage: LIFETIME_DOMAIN,
+      endpoints: {
+        mcp: `${currentDomain}/api/mcp`,
+        sse: `${currentDomain}/api/mcp`,
+        primary_mcp: `${PRIMARY_DOMAIN}/api/mcp`,
+        lifetime_mcp: `${LIFETIME_DOMAIN}/api/mcp`,
+      },
+      servers: [
+        {
+          url: `${currentDomain}/api/mcp`,
+          description: "Active Environment Server Endpoint",
+        },
+        {
+          url: `${PRIMARY_DOMAIN}/api/mcp`,
+          description: "Primary Custom Domain Endpoint",
+        },
+        {
+          url: `${LIFETIME_DOMAIN}/api/mcp`,
+          description: "Lifetime Vercel Mirror Endpoint",
+        },
+      ],
+      capabilities: {
+        tools: {
+          listChanged: false,
+        },
+      },
+      tools: [
+        {
+          name: "get_developer_profile",
+          description:
+            "Returns Urva Gandhi's developer profile, Nirma University education, Java/Spring Boot & AI tech stack, and hackathon achievements.",
+          inputSchema: { type: "object", properties: {} },
+        },
+        {
+          name: "get_coding_stats",
+          description:
+            "Fetches verified coding metrics across LeetCode, Codeforces, CodeChef, GeeksforGeeks, and HackerRank.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              platform: {
+                type: "string",
+                enum: [
+                  "all",
+                  "leetcode",
+                  "codeforces",
+                  "codechef",
+                  "gfg",
+                  "hackerrank",
+                ],
+                description: "Specific platform or 'all' for aggregated stats.",
+              },
+            },
+          },
+        },
+        {
+          name: "get_projects",
+          description:
+            "Fetches featured projects (CoinTrack, FleetFlow, Agent Paperpal, RWEsearch), tech stacks, and links.",
+          inputSchema: { type: "object", properties: {} },
+        },
+        {
+          name: "get_contact_info",
+          description:
+            "Returns verified contact channels, email, LinkedIn, GitHub, phone numbers, and location info.",
+          inputSchema: { type: "object", properties: {} },
+        },
+      ],
     },
-    servers: [
-      {
-        url: `${currentDomain}/api/mcp`,
-        description: "Active Environment Server Endpoint"
-      },
-      {
-        url: `${PRIMARY_DOMAIN}/api/mcp`,
-        description: "Primary Custom Domain Endpoint"
-      },
-      {
-        url: `${LIFETIME_DOMAIN}/api/mcp`,
-        description: "Lifetime Vercel Mirror Endpoint"
-      }
-    ],
-    capabilities: {
-      tools: {
-        listChanged: false
-      }
-    },
-    tools: [
-      {
-        name: "get_developer_profile",
-        description: "Returns Urva Gandhi's developer profile, Nirma University education, Java/Spring Boot & AI tech stack, and hackathon achievements.",
-        inputSchema: { type: "object", properties: {} }
-      },
-      {
-        name: "get_coding_stats",
-        description: "Fetches verified coding metrics across LeetCode, Codeforces, CodeChef, GeeksforGeeks, and HackerRank.",
-        inputSchema: {
-          type: "object",
-          properties: {
-            platform: {
-              type: "string",
-              enum: ["all", "leetcode", "codeforces", "codechef", "gfg", "hackerrank"],
-              description: "Specific platform or 'all' for aggregated stats."
-            }
-          }
-        }
-      },
-      {
-        name: "get_projects",
-        description: "Fetches featured projects (CoinTrack, FleetFlow, Agent Paperpal, RWEsearch), tech stacks, and links.",
-        inputSchema: { type: "object", properties: {} }
-      },
-      {
-        name: "get_contact_info",
-        description: "Returns verified contact channels, email, LinkedIn, GitHub, phone numbers, and location info.",
-        inputSchema: { type: "object", properties: {} }
-      }
-    ]
-  }, null, 2);
+    null,
+    2,
+  );
 }
 
 function generateDynamicOpenApi(currentDomain) {
-  return JSON.stringify({
-    openapi: "3.0.3",
-    info: {
-      title: "Urva Gandhi Portfolio Developer API & MCP Server",
-      description: "Public REST APIs, Model Context Protocol (MCP) server, and developer endpoints providing verified coding statistics, developer profile metadata, and interactive contact handling for Urva Gandhi.",
-      version: "1.0.0",
-      contact: {
-        name: "Urva Gandhi",
-        email: "23bce078@nirmauni.ac.in",
-        url: currentDomain
+  return JSON.stringify(
+    {
+      openapi: "3.0.3",
+      info: {
+        title: "Urva Gandhi Portfolio Developer API & MCP Server",
+        description:
+          "Public REST APIs, Model Context Protocol (MCP) server, and developer endpoints providing verified coding statistics, developer profile metadata, and interactive contact handling for Urva Gandhi.",
+        version: "1.0.0",
+        contact: {
+          name: "Urva Gandhi",
+          email: "23bce078@nirmauni.ac.in",
+          url: currentDomain,
+        },
+        "x-versioning-policy":
+          "URL path versioning (/v1/) and X-API-Version header parameter. Backward compatibility guaranteed for version 1.",
+        "x-deprecation-policy":
+          "Deprecation notices served via Sunset HTTP header 6 months prior to end-of-life.",
       },
-      "x-versioning-policy": "URL path versioning (/v1/) and X-API-Version header parameter. Backward compatibility guaranteed for version 1.",
-      "x-deprecation-policy": "Deprecation notices served via Sunset HTTP header 6 months prior to end-of-life."
-    },
-    servers: [
-      { url: currentDomain, description: "Active Domain Server" },
-      { url: PRIMARY_DOMAIN, description: "Primary Custom Domain" },
-      { url: LIFETIME_DOMAIN, description: "Lifetime Vercel Domain" }
-    ],
-    paths: {
-      "/api/leetcode": {
-        get: {
-          operationId: "getLeetCodeStats",
-          summary: "Get LeetCode Statistics",
-          description: "Fetches verified LeetCode profile statistics, global ranking, total problems solved, contest rating, and difficulty breakdown for Urva Gandhi.",
-          parameters: [
-            {
-              name: "username",
-              in: "query",
-              required: false,
-              description: "LeetCode handle (defaults to Urva_Gandhi)",
-              schema: { type: "string", default: "Urva_Gandhi" }
-            }
-          ],
-          responses: {
-            "200": {
-              description: "Successful response",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/LeetCodeProfile" } } }
+      servers: [
+        { url: currentDomain, description: "Active Domain Server" },
+        { url: PRIMARY_DOMAIN, description: "Primary Custom Domain" },
+        { url: LIFETIME_DOMAIN, description: "Lifetime Vercel Domain" },
+      ],
+      paths: {
+        "/api/leetcode": {
+          get: {
+            operationId: "getLeetCodeStats",
+            summary: "Get LeetCode Statistics",
+            description:
+              "Fetches verified LeetCode profile statistics, global ranking, total problems solved, contest rating, and difficulty breakdown for Urva Gandhi.",
+            parameters: [
+              {
+                name: "username",
+                in: "query",
+                required: false,
+                description: "LeetCode handle (defaults to Urva_Gandhi)",
+                schema: { type: "string", default: "Urva_Gandhi" },
+              },
+            ],
+            responses: {
+              200: {
+                description: "Successful response",
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/LeetCodeProfile" },
+                  },
+                },
+              },
+              400: {
+                description: "Bad Request",
+                content: {
+                  "application/problem+json": {
+                    schema: { $ref: "#/components/schemas/ErrorResponse" },
+                  },
+                },
+              },
             },
-            "400": {
-              description: "Bad Request",
-              content: { "application/problem+json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } }
-            }
-          }
-        }
-      },
-      "/api/codeforces": {
-        get: {
-          operationId: "getCodeforcesStats",
-          summary: "Get Codeforces Statistics",
-          description: "Fetches Codeforces contest rating, max rating, rank, and submission metrics.",
-          parameters: [
-            {
-              name: "username",
-              in: "query",
-              required: false,
-              description: "Codeforces handle (defaults to Urva_Gandhi)",
-              schema: { type: "string", default: "Urva_Gandhi" }
-            }
-          ],
-          responses: {
-            "200": {
-              description: "Successful response",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/CodeforcesProfile" } } }
-            }
-          }
-        }
-      },
-      "/api/codechef": {
-        get: {
-          operationId: "getCodeChefStats",
-          summary: "Get CodeChef Statistics",
-          description: "Fetches CodeChef rating, global rank, contest stars, and problems solved.",
-          parameters: [
-            {
-              name: "username",
-              in: "query",
-              required: false,
-              description: "CodeChef handle (defaults to urva_gandhi)",
-              schema: { type: "string", default: "urva_gandhi" }
-            }
-          ],
-          responses: {
-            "200": {
-              description: "Successful response",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/CodeChefProfile" } } }
-            }
-          }
-        }
-      },
-      "/api/gfg": {
-        get: {
-          operationId: "getGfgStats",
-          summary: "Get GeeksforGeeks Statistics",
-          description: "Fetches GeeksforGeeks overall coding score, streak data, and institute ranking.",
-          parameters: [
-            {
-              name: "username",
-              in: "query",
-              required: false,
-              description: "GeeksforGeeks handle (defaults to urvagandhi)",
-              schema: { type: "string", default: "urvagandhi" }
-            }
-          ],
-          responses: {
-            "200": {
-              description: "Successful response",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/GfgProfile" } } }
-            }
-          }
-        }
-      },
-      "/api/hackerrank": {
-        get: {
-          operationId: "getHackerRankStats",
-          summary: "Get HackerRank Statistics",
-          description: "Fetches HackerRank badges, scores, and problem solving achievements.",
-          parameters: [
-            {
-              name: "username",
-              in: "query",
-              required: false,
-              description: "HackerRank handle (defaults to urvagandhi24)",
-              schema: { type: "string", default: "urvagandhi24" }
-            }
-          ],
-          responses: {
-            "200": {
-              description: "Successful response",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/HackerRankProfile" } } }
-            }
-          }
-        }
-      },
-      "/api/contact": {
-        post: {
-          operationId: "submitContactInquiry",
-          summary: "Submit Contact Form Inquiry",
-          description: "Delivers an inquiry email directly to Urva Gandhi via Brevo HTTPS REST API.",
-          requestBody: {
-            required: true,
-            content: { "application/json": { schema: { $ref: "#/components/schemas/ContactPayload" } } }
           },
-          responses: {
-            "200": {
-              description: "Message delivered",
-              content: { "application/json": { schema: { $ref: "#/components/schemas/ContactResponse" } } }
+        },
+        "/api/codeforces": {
+          get: {
+            operationId: "getCodeforcesStats",
+            summary: "Get Codeforces Statistics",
+            description:
+              "Fetches Codeforces contest rating, max rating, rank, and submission metrics.",
+            parameters: [
+              {
+                name: "username",
+                in: "query",
+                required: false,
+                description: "Codeforces handle (defaults to Urva_Gandhi)",
+                schema: { type: "string", default: "Urva_Gandhi" },
+              },
+            ],
+            responses: {
+              200: {
+                description: "Successful response",
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/CodeforcesProfile" },
+                  },
+                },
+              },
             },
-            "400": {
-              description: "Validation error",
-              content: { "application/problem+json": { schema: { $ref: "#/components/schemas/ErrorResponse" } } }
-            }
-          }
-        }
+          },
+        },
+        "/api/codechef": {
+          get: {
+            operationId: "getCodeChefStats",
+            summary: "Get CodeChef Statistics",
+            description:
+              "Fetches CodeChef rating, global rank, contest stars, and problems solved.",
+            parameters: [
+              {
+                name: "username",
+                in: "query",
+                required: false,
+                description: "CodeChef handle (defaults to urva_gandhi)",
+                schema: { type: "string", default: "urva_gandhi" },
+              },
+            ],
+            responses: {
+              200: {
+                description: "Successful response",
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/CodeChefProfile" },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/api/gfg": {
+          get: {
+            operationId: "getGfgStats",
+            summary: "Get GeeksforGeeks Statistics",
+            description:
+              "Fetches GeeksforGeeks overall coding score, streak data, and institute ranking.",
+            parameters: [
+              {
+                name: "username",
+                in: "query",
+                required: false,
+                description: "GeeksforGeeks handle (defaults to urvagandhi)",
+                schema: { type: "string", default: "urvagandhi" },
+              },
+            ],
+            responses: {
+              200: {
+                description: "Successful response",
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/GfgProfile" },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/api/hackerrank": {
+          get: {
+            operationId: "getHackerRankStats",
+            summary: "Get HackerRank Statistics",
+            description:
+              "Fetches HackerRank badges, scores, and problem solving achievements.",
+            parameters: [
+              {
+                name: "username",
+                in: "query",
+                required: false,
+                description: "HackerRank handle (defaults to urvagandhi24)",
+                schema: { type: "string", default: "urvagandhi24" },
+              },
+            ],
+            responses: {
+              200: {
+                description: "Successful response",
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/HackerRankProfile" },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/api/contact": {
+          post: {
+            operationId: "submitContactInquiry",
+            summary: "Submit Contact Form Inquiry",
+            description:
+              "Delivers an inquiry email directly to Urva Gandhi via Brevo HTTPS REST API.",
+            requestBody: {
+              required: true,
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ContactPayload" },
+                },
+              },
+            },
+            responses: {
+              200: {
+                description: "Message delivered",
+                content: {
+                  "application/json": {
+                    schema: { $ref: "#/components/schemas/ContactResponse" },
+                  },
+                },
+              },
+              400: {
+                description: "Validation error",
+                content: {
+                  "application/problem+json": {
+                    schema: { $ref: "#/components/schemas/ErrorResponse" },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/api/mcp": {
+          get: {
+            operationId: "getMcpManifest",
+            summary: "MCP Server Handshake",
+            description:
+              "Returns Model Context Protocol server capabilities, transport options, and available tools.",
+            responses: { 200: { description: "MCP Manifest response" } },
+          },
+          post: {
+            operationId: "callMcpTool",
+            summary: "Execute MCP Tool or Handshake (JSON-RPC 2.0)",
+            description: "Executes MCP tools and resource handlers.",
+            responses: { 200: { description: "JSON-RPC response payload" } },
+          },
+        },
       },
-      "/api/mcp": {
-        get: {
-          operationId: "getMcpManifest",
-          summary: "MCP Server Handshake",
-          description: "Returns Model Context Protocol server capabilities, transport options, and available tools.",
-          responses: { "200": { description: "MCP Manifest response" } }
+      components: {
+        schemas: {
+          ErrorResponse: {
+            type: "object",
+            required: ["type", "title", "status", "code", "detail"],
+            properties: {
+              type: {
+                type: "string",
+                example:
+                  "https://urvagandhi.tech/docs/errors/invalid-parameters",
+              },
+              title: { type: "string", example: "Bad Request" },
+              status: { type: "integer", example: 400 },
+              code: { type: "string", example: "MISSING_REQUIRED_FIELDS" },
+              detail: { type: "string", example: "Required fields missing." },
+              instance: { type: "string", example: "/api/contact" },
+              resolution_hint: {
+                type: "string",
+                example: "Check parameters and try again.",
+              },
+            },
+          },
+          LeetCodeProfile: {
+            type: "object",
+            properties: {
+              username: { type: "string" },
+              solved: { type: "integer" },
+              rating: { type: "integer" },
+            },
+          },
+          CodeforcesProfile: {
+            type: "object",
+            properties: {
+              handle: { type: "string" },
+              rating: { type: "integer" },
+            },
+          },
+          CodeChefProfile: {
+            type: "object",
+            properties: {
+              username: { type: "string" },
+              rating: { type: "integer" },
+            },
+          },
+          GfgProfile: {
+            type: "object",
+            properties: {
+              username: { type: "string" },
+              score: { type: "integer" },
+            },
+          },
+          HackerRankProfile: {
+            type: "object",
+            properties: { username: { type: "string" } },
+          },
+          ContactPayload: {
+            type: "object",
+            required: ["name", "email", "message"],
+            properties: {
+              name: { type: "string" },
+              email: { type: "string" },
+              message: { type: "string" },
+            },
+          },
+          ContactResponse: {
+            type: "object",
+            properties: {
+              success: { type: "boolean" },
+              message: { type: "string" },
+            },
+          },
         },
-        post: {
-          operationId: "callMcpTool",
-          summary: "Execute MCP Tool or Handshake (JSON-RPC 2.0)",
-          description: "Executes MCP tools and resource handlers.",
-          responses: { "200": { description: "JSON-RPC response payload" } }
-        }
-      }
+      },
     },
-    components: {
-      schemas: {
-        ErrorResponse: {
-          type: "object",
-          required: ["type", "title", "status", "code", "detail"],
-          properties: {
-            type: { type: "string", example: "https://urvagandhi.tech/docs/errors/invalid-parameters" },
-            title: { type: "string", example: "Bad Request" },
-            status: { type: "integer", example: 400 },
-            code: { type: "string", example: "MISSING_REQUIRED_FIELDS" },
-            detail: { type: "string", example: "Required fields missing." },
-            instance: { type: "string", example: "/api/contact" },
-            resolution_hint: { type: "string", example: "Check parameters and try again." }
-          }
-        },
-        LeetCodeProfile: { type: "object", properties: { username: { type: "string" }, solved: { type: "integer" }, rating: { type: "integer" } } },
-        CodeforcesProfile: { type: "object", properties: { handle: { type: "string" }, rating: { type: "integer" } } },
-        CodeChefProfile: { type: "object", properties: { username: { type: "string" }, rating: { type: "integer" } } },
-        GfgProfile: { type: "object", properties: { username: { type: "string" }, score: { type: "integer" } } },
-        HackerRankProfile: { type: "object", properties: { username: { type: "string" } } },
-        ContactPayload: { type: "object", required: ["name", "email", "message"], properties: { name: { type: "string" }, email: { type: "string" }, message: { type: "string" } } },
-        ContactResponse: { type: "object", properties: { success: { type: "boolean" }, message: { type: "string" } } }
-      }
-    }
-  }, null, 2);
+    null,
+    2,
+  );
 }
 
 function generateDynamicLlms(currentDomain) {
@@ -440,16 +561,16 @@ function getMarkdownPages(domain) {
 `;
 
   return {
-    '/': rootContent,
-    '/pricing': rootContent,
-    '/services': rootContent,
-    '/differentiation': rootContent,
-    '/who': rootContent,
-    '/roles': rootContent,
-    '/skills': rootContent,
-    '/projects': rootContent,
-    '/experience': rootContent,
-    '/about': `# About Urva Yogeshkumar Gandhi
+    "/": rootContent,
+    "/pricing": rootContent,
+    "/services": rootContent,
+    "/differentiation": rootContent,
+    "/who": rootContent,
+    "/roles": rootContent,
+    "/skills": rootContent,
+    "/projects": rootContent,
+    "/experience": rootContent,
+    "/about": `# About Urva Yogeshkumar Gandhi
 
 > Backend Developer Intern & Computer Science Undergraduate at Nirma University.
 
@@ -480,7 +601,7 @@ Urva Yogeshkumar Gandhi is a final-year CS undergraduate at Nirma University (Mi
 - GitHub: https://github.com/urvagandhi
 - LinkedIn: https://www.linkedin.com/in/urva-gandhi/
 `,
-    '/contact': `# Contact Urva Yogeshkumar Gandhi
+    "/contact": `# Contact Urva Yogeshkumar Gandhi
 
 > Verified contact channels and details for recruiters, technical inquiries, and collaborations.
 
@@ -500,7 +621,7 @@ S-308, Venus Parkland, Near Vejalpur Police Chowki, Vejalpur, Ahmedabad, Gujarat
 ## Preferred Professional Roles
 Java Backend Engineer, Spring Boot Developer, Full-Stack Engineer, AI/ML Systems Engineer, Software Developer Intern.
 `,
-    '/privacy': `# Privacy Policy - Urva Gandhi Portfolio
+    "/privacy": `# Privacy Policy - Urva Gandhi Portfolio
 
 > Transparency, minimal data collection, and privacy rights.
 
@@ -516,7 +637,7 @@ Programmatic requests to \`/api/*\` and Model Context Protocol endpoints (\`/api
 ## Security & Contact
 For privacy queries or data concerns, contact: 23bce078@nirmauni.ac.in / urvagandhi24@gmail.com.
 `,
-    '/docs': `# Urva Gandhi Portfolio Developer Portal & API Documentation
+    "/docs": `# Urva Gandhi Portfolio Developer Portal & API Documentation
 
 > Official developer resources, API specs, and MCP integration guides for Urva Gandhi's Portfolio APIs.
 
@@ -529,7 +650,7 @@ For privacy queries or data concerns, contact: 23bce078@nirmauni.ac.in / urvagan
 - **API Authentication Guidelines:** ${domain}/auth
 - **XML Sitemap:** ${domain}/sitemap.xml
 `,
-    '/auth': `# API Authentication & Usage Guidelines - Urva Gandhi Portfolio
+    "/auth": `# API Authentication & Usage Guidelines - Urva Gandhi Portfolio
 
 > Guidelines for accessing public endpoints and MCP tools on Urva Gandhi's Portfolio.
 
@@ -540,117 +661,125 @@ All public endpoints (\`/api/leetcode\`, \`/api/codeforces\`, \`/api/codechef\`,
 - Standard IP limit: 100 requests / min
 - MCP Tool invocations: 60 calls / min
 `,
-    '/mcp': `# Model Context Protocol (MCP) Server - Urva Gandhi Portfolio
+    "/mcp": `# Model Context Protocol (MCP) Server - Urva Gandhi Portfolio
 
 > First-party MCP server exposing Urva Gandhi's portfolio, coding stats, projects, and contact info to AI agents.
 
 ## Endpoint URLs
 - **MCP Manifest:** ${domain}/.well-known/mcp
 - **MCP Tool Calling Endpoint:** ${domain}/api/mcp
-`
+`,
   };
 }
 
 export function proxy(req) {
   let pathname = req.nextUrl.pathname;
   // Normalize pathname (strip trailing slash except for root)
-  if (pathname.length > 1 && pathname.endsWith('/')) {
+  if (pathname.length > 1 && pathname.endsWith("/")) {
     pathname = pathname.slice(0, -1);
   }
 
-  const acceptHeader = req.headers.get('accept') || '';
-  const userAgent = (req.headers.get('user-agent') || '').toLowerCase();
+  const acceptHeader = req.headers.get("accept") || "";
+  const userAgent = (req.headers.get("user-agent") || "").toLowerCase();
   const acceptLower = acceptHeader.toLowerCase();
 
   const isMarkdownRequested =
-    acceptLower.includes('text/markdown') ||
-    userAgent.includes('agent') ||
-    userAgent.includes('llm') ||
-    userAgent.includes('bot') ||
-    userAgent.includes('crawler') ||
-    userAgent.includes('spider') ||
-    userAgent.includes('gpt') ||
-    userAgent.includes('claude') ||
-    userAgent.includes('perplexity') ||
-    userAgent.includes('fetcher') ||
-    userAgent.includes('scraper') ||
-    userAgent.includes('python') ||
-    userAgent.includes('curl') ||
-    userAgent.includes('wget') ||
-    userAgent.includes('ora') ||
-    userAgent.includes('headless');
+    acceptLower.includes("text/markdown") ||
+    userAgent.includes("agent") ||
+    userAgent.includes("llm") ||
+    userAgent.includes("bot") ||
+    userAgent.includes("crawler") ||
+    userAgent.includes("spider") ||
+    userAgent.includes("gpt") ||
+    userAgent.includes("claude") ||
+    userAgent.includes("perplexity") ||
+    userAgent.includes("fetcher") ||
+    userAgent.includes("scraper") ||
+    userAgent.includes("python") ||
+    userAgent.includes("curl") ||
+    userAgent.includes("wget") ||
+    userAgent.includes("ora") ||
+    userAgent.includes("headless");
   const currentDomain = getDynamicDomain(req);
 
   // 1. Dynamic XML Sitemap
-  if (pathname === '/sitemap.xml') {
+  if (pathname === "/sitemap.xml") {
     return new NextResponse(generateDynamicSitemap(currentDomain), {
       status: 200,
       headers: {
-        'Content-Type': 'application/xml; charset=utf-8',
-        'Vary': 'Accept, Accept-Encoding, Host',
-        'Cache-Control': 'public, max-age=3600',
+        "Content-Type": "application/xml; charset=utf-8",
+        Vary: "Accept, Accept-Encoding, Host",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   }
 
   // 2. Dynamic robots.txt
-  if (pathname === '/robots.txt') {
+  if (pathname === "/robots.txt") {
     return new NextResponse(generateDynamicRobots(currentDomain), {
       status: 200,
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Vary': 'Accept, Accept-Encoding, Host',
-        'Cache-Control': 'public, max-age=3600',
+        "Content-Type": "text/plain; charset=utf-8",
+        Vary: "Accept, Accept-Encoding, Host",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   }
 
   // 3. Dynamic MCP Manifest & Handshake
-  if (pathname === '/.well-known/mcp' || pathname === '/.well-known/mcp.json' || pathname === '/mcp') {
+  if (
+    pathname === "/.well-known/mcp" ||
+    pathname === "/.well-known/mcp.json" ||
+    pathname === "/mcp"
+  ) {
     return new NextResponse(generateDynamicMcpManifest(currentDomain), {
       status: 200,
       headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Mcp-Version': '1.0',
-        'Link': `<${currentDomain}/api/mcp>; rel="mcp-server"`,
-        'Vary': 'Accept, Accept-Encoding, Host',
-        'Cache-Control': 'public, max-age=3600',
+        "Content-Type": "application/json; charset=utf-8",
+        "Mcp-Version": "1.0",
+        Link: `<${currentDomain}/api/mcp>; rel="mcp-server"`,
+        Vary: "Accept, Accept-Encoding, Host",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   }
 
   // 4. Dynamic OpenAPI Spec
-  if (pathname === '/openapi.json' || pathname === '/api/openapi.json') {
+  if (pathname === "/openapi.json" || pathname === "/api/openapi.json") {
     return new NextResponse(generateDynamicOpenApi(currentDomain), {
       status: 200,
       headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Vary': 'Accept, Accept-Encoding, Host',
-        'Cache-Control': 'public, max-age=3600',
+        "Content-Type": "application/json; charset=utf-8",
+        Vary: "Accept, Accept-Encoding, Host",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   }
 
   // 5. Dynamic LLM text files
-  if (pathname === '/llms.txt' || pathname === '/llms-full.txt') {
+  if (pathname === "/llms.txt" || pathname === "/llms-full.txt") {
     return new NextResponse(generateDynamicLlms(currentDomain), {
       status: 200,
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Vary': 'Accept, Accept-Encoding, Host',
-        'Cache-Control': 'public, max-age=3600',
+        "Content-Type": "text/plain; charset=utf-8",
+        Vary: "Accept, Accept-Encoding, Host",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   }
 
   // 6. Dynamic Agent Instructions
-  if (pathname === '/.well-known/agent-instructions' || pathname === '/.well-known/agent-instructions.md' || pathname === '/agent-instructions.md') {
+  if (
+    pathname === "/.well-known/agent-instructions" ||
+    pathname === "/.well-known/agent-instructions.md" ||
+    pathname === "/agent-instructions.md"
+  ) {
     return new NextResponse(generateDynamicAgentInstructions(currentDomain), {
       status: 200,
       headers: {
-        'Content-Type': 'text/markdown; charset=utf-8',
-        'Vary': 'Accept, Accept-Encoding, Host',
-        'Cache-Control': 'public, max-age=3600',
+        "Content-Type": "text/markdown; charset=utf-8",
+        Vary: "Accept, Accept-Encoding, Host",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   }
@@ -663,20 +792,20 @@ export function proxy(req) {
       return new NextResponse(MARKDOWN_PAGES[pathname], {
         status: 200,
         headers: {
-          'Content-Type': 'text/markdown; charset=utf-8',
-          'Vary': 'Accept, Accept-Encoding, Host',
-          'Cache-Control': 'public, max-age=3600',
+          "Content-Type": "text/markdown; charset=utf-8",
+          Vary: "Accept, Accept-Encoding, Host",
+          "Cache-Control": "public, max-age=3600",
         },
       });
     }
 
     // Check if static asset or API path
-    const isKnownPath = 
-      pathname.startsWith('/_next') ||
-      pathname.startsWith('/api') ||
-      pathname.startsWith('/images') ||
-      pathname === '/favicon.ico' ||
-      pathname.startsWith('/resumes');
+    const isKnownPath =
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/api") ||
+      pathname.startsWith("/images") ||
+      pathname === "/favicon.ico" ||
+      pathname.startsWith("/resumes");
 
     if (!isKnownPath) {
       const markdown404 = `# 404 Not Found
@@ -700,61 +829,88 @@ The requested path \`${pathname}\` does not exist on Urva Gandhi's Portfolio.
       return new NextResponse(markdown404, {
         status: 404,
         headers: {
-          'Content-Type': 'text/markdown; charset=utf-8',
-          'Vary': 'Accept, Accept-Encoding, Host',
-          'Cache-Control': 'no-store',
+          "Content-Type": "text/markdown; charset=utf-8",
+          Vary: "Accept, Accept-Encoding, Host",
+          "Cache-Control": "no-store",
         },
       });
     }
   }
 
-  const isApiRoute = pathname.startsWith('/api/') || pathname.startsWith('/v1/') || pathname.startsWith('/api/v1/');
+  const isApiRoute =
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/v1/") ||
+    pathname.startsWith("/api/v1/");
   const knownApiRoutes = [
-    '/api/leetcode', '/api/codeforces', '/api/codechef', '/api/gfg', '/api/hackerrank', '/api/contact', '/api/mcp', '/api/openapi.json',
-    '/v1/leetcode', '/v1/codeforces', '/v1/codechef', '/v1/gfg', '/v1/hackerrank', '/v1/contact', '/v1/mcp',
-    '/api/v1/leetcode', '/api/v1/codeforces', '/api/v1/codechef', '/api/v1/gfg', '/api/v1/hackerrank', '/api/v1/contact', '/api/v1/mcp'
+    "/api/leetcode",
+    "/api/codeforces",
+    "/api/codechef",
+    "/api/gfg",
+    "/api/hackerrank",
+    "/api/contact",
+    "/api/mcp",
+    "/api/openapi.json",
+    "/v1/leetcode",
+    "/v1/codeforces",
+    "/v1/codechef",
+    "/v1/gfg",
+    "/v1/hackerrank",
+    "/v1/contact",
+    "/v1/mcp",
+    "/api/v1/leetcode",
+    "/api/v1/codeforces",
+    "/api/v1/codechef",
+    "/api/v1/gfg",
+    "/api/v1/hackerrank",
+    "/api/v1/contact",
+    "/api/v1/mcp",
   ];
 
   if (isApiRoute && !knownApiRoutes.includes(pathname)) {
-    const errorJson = JSON.stringify({
-      type: `${currentDomain}/docs/errors/not-found`,
-      title: "Not Found",
-      status: 404,
-      code: "API_ENDPOINT_NOT_FOUND",
-      detail: `The API endpoint '${pathname}' does not exist on Urva Gandhi's Portfolio platform.`,
-      instance: pathname,
-      resolution_hint: `Consult the OpenAPI spec at ${currentDomain}/openapi.json or LLM index at ${currentDomain}/llms.txt for valid endpoint paths.`
-    }, null, 2);
+    const errorJson = JSON.stringify(
+      {
+        type: `${currentDomain}/docs/errors/not-found`,
+        title: "Not Found",
+        status: 404,
+        code: "API_ENDPOINT_NOT_FOUND",
+        detail: `The API endpoint '${pathname}' does not exist on Urva Gandhi's Portfolio platform.`,
+        instance: pathname,
+        resolution_hint: `Consult the OpenAPI spec at ${currentDomain}/openapi.json or LLM index at ${currentDomain}/llms.txt for valid endpoint paths.`,
+      },
+      null,
+      2,
+    );
 
     return new NextResponse(errorJson, {
       status: 404,
       headers: {
-        'Content-Type': 'application/problem+json; charset=utf-8',
-        'X-API-Version': '1.0.0',
-        'X-RateLimit-Limit': '100',
-        'X-RateLimit-Remaining': '99',
-        'X-RateLimit-Reset': '60',
-        'Sunset': 'Wed, 31 Dec 2026 23:59:59 GMT'
-      }
+        "Content-Type": "application/problem+json; charset=utf-8",
+        "X-API-Version": "1.0.0",
+        "X-RateLimit-Limit": "100",
+        "X-RateLimit-Remaining": "99",
+        "X-RateLimit-Reset": "60",
+        Sunset: "Wed, 31 Dec 2026 23:59:59 GMT",
+      },
     });
   }
 
   // Pass through regular HTML requests, ensuring Vary, RateLimit, and Sunset headers are set
   const response = NextResponse.next();
-  response.headers.set('Vary', 'Accept, Accept-Encoding, Host');
-  response.headers.set('Link', `<${currentDomain}/llms.txt>; rel="llms-txt", <${currentDomain}/.well-known/mcp>; rel="mcp"`);
-  response.headers.set('X-API-Version', '1.0.0');
-  response.headers.set('X-RateLimit-Limit', '100');
-  response.headers.set('X-RateLimit-Remaining', '99');
-  response.headers.set('X-RateLimit-Reset', '60');
-  response.headers.set('Sunset', 'Wed, 31 Dec 2026 23:59:59 GMT');
+  response.headers.set("Vary", "Accept, Accept-Encoding, Host");
+  response.headers.set(
+    "Link",
+    `<${currentDomain}/llms.txt>; rel="llms-txt", <${currentDomain}/.well-known/mcp>; rel="mcp"`,
+  );
+  response.headers.set("X-API-Version", "1.0.0");
+  response.headers.set("X-RateLimit-Limit", "100");
+  response.headers.set("X-RateLimit-Remaining", "99");
+  response.headers.set("X-RateLimit-Reset", "60");
+  response.headers.set("Sunset", "Wed, 31 Dec 2026 23:59:59 GMT");
   return response;
 }
 
 export default proxy;
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|images/|favicon.ico).*)',
-  ],
+  matcher: ["/((?!_next/static|_next/image|images/|favicon.ico).*)"],
 };

@@ -3,19 +3,19 @@
 </div>
 
 <div align="center">
-  
-  [![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3000&pause=1000&color=6C63FF&center=true&vCenter=true&multiline=true&repeat=true&width=600&height=100&lines=Building+Intelligent+Systems+%F0%9F%A7%A0;Transforming+Ideas+into+Production+Code+%F0%9F%9A%80;Open+Source+Enthusiast+%F0%9F%92%9C)](https://git.io/typing-svg)
+
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3000&pause=1000&color=6C63FF&center=true&vCenter=true&multiline=true&repeat=true&width=600&height=100&lines=Building+Intelligent+Systems+%F0%9F%A7%A0;Transforming+Ideas+into+Production+Code+%F0%9F%9A%80;Open+Source+Enthusiast+%F0%9F%92%9C)](https://git.io/typing-svg)
 
   <br/>
-  
-  [![Instagram](https://img.shields.io/badge/Instagram-%23E4405F.svg?style=for-the-badge&logo=Instagram&logoColor=white)](https://instagram.com/urva_gandhi)
-  [![LinkedIn](https://img.shields.io/badge/LinkedIn-%230A66C2.svg?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/urva-gandhi)
-  [![X](https://img.shields.io/badge/X-%23000000.svg?style=for-the-badge&logo=X&logoColor=white)](https://x.com/urva_gandhi)
-  [![Gmail](https://img.shields.io/badge/Gmail-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:urvagandhi24@gmail.com)
-  [![Portfolio](https://img.shields.io/badge/Portfolio-%23000000.svg?style=for-the-badge&logo=firefox&logoColor=%23FF7139)](https://urvagandhi-portfolio.vercel.app/)
-  
+
+[![Instagram](https://img.shields.io/badge/Instagram-%23E4405F.svg?style=for-the-badge&logo=Instagram&logoColor=white)](https://instagram.com/urva_gandhi)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-%230A66C2.svg?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/urva-gandhi)
+[![X](https://img.shields.io/badge/X-%23000000.svg?style=for-the-badge&logo=X&logoColor=white)](https://x.com/urva_gandhi)
+[![Gmail](https://img.shields.io/badge/Gmail-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:urvagandhi24@gmail.com)
+[![Portfolio](https://img.shields.io/badge/Portfolio-%23000000.svg?style=for-the-badge&logo=firefox&logoColor=%23FF7139)](https://urvagandhi-portfolio.vercel.app/)
+
   <br/>
-  
+
   <img src="https://komarev.com/ghpvc/?username=urvagandhi&label=Profile%20Views&color=6C63FF&style=for-the-badge" alt="Profile Views"/>
 
 </div>
@@ -31,15 +31,18 @@
 I'm a **passionate software engineer** who thrives at the intersection of **backend architecture** and **artificial intelligence**. My journey involves transforming complex ideas into elegant, production-ready solutions.
 
 <img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="30"> **Currently Building:**
+
 - **CoinTrack** — Unified financial analytics dashboard with real-time portfolio insights
 - **CodeGuardian** — AI-powered secure code analysis using graph-aware transformers
 
 <img src="https://media.giphy.com/media/iY8CRBdQXODJSCERIr/giphy.gif" width="30"> **Deep Diving Into:**
+
 - Data Structures & Algorithms mastery
 - LLM Application Development & RAG systems
 - High-Performance Backend & System Design
 
 <img src="https://media.giphy.com/media/LnQjpWaON8nhr21vNW/giphy.gif" width="30"> **Open to Collaborate On:**
+
 - Real-time financial data pipelines
 - ML deployment workflows & MLOps
 - Hackathon prototypes → Production systems
@@ -135,9 +138,9 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
 ## 💻 Tech Stack
 
 <div align="center">
-  
+
 ### 🧠 Languages
-  
+
 ![Java](https://img.shields.io/badge/Java-%23ED8B00.svg?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
@@ -145,7 +148,7 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
 ![Bash](https://img.shields.io/badge/Bash-4EAA25?style=for-the-badge&logo=gnu-bash&logoColor=white)
 
 ### ⚙️ Backend & APIs
-  
+
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
@@ -153,14 +156,14 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
 ![Apache Tomcat](https://img.shields.io/badge/Tomcat-F8DC75?style=for-the-badge&logo=apache-tomcat&logoColor=black)
 
 ### 🎨 Frontend & UI
-  
+
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Thymeleaf](https://img.shields.io/badge/Thymeleaf-005F0F?style=for-the-badge&logo=thymeleaf&logoColor=white)
 
 ### 🗄️ Databases & Cloud
-  
+
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
@@ -168,7 +171,7 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 
 ### 🤖 AI & Machine Learning
-  
+
 ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)
@@ -179,7 +182,7 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
 ![CUDA](https://img.shields.io/badge/CUDA-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
 
 ### ☁️ DevOps & Tools
-  
+
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
@@ -205,7 +208,6 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
   </a>
 </p>
 
-
 <!-- GitHub Contribution Graph -->
 <p align="center">
   <a href="https://github.com/urvagandhi">
@@ -227,12 +229,12 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
 ## <img src="https://media.giphy.com/media/WUlplcMpOCEmTGBtBW/giphy.gif" width="28"> &nbsp;Competitive Programming
 
 <div align="center">
-  
-  [![LeetCode](https://img.shields.io/badge/LeetCode-FFA116?style=for-the-badge&logo=LeetCode&logoColor=black)](https://leetcode.com/u/urva_gandhi)
-  [![Codeforces](https://img.shields.io/badge/Codeforces-1F8ACB?style=for-the-badge&logo=Codeforces&logoColor=white)](https://codeforces.com/profile/Urva_Gandhi)
-  [![CodeChef](https://img.shields.io/badge/CodeChef-5B4636?style=for-the-badge&logo=CodeChef&logoColor=white)](https://codechef.com/users/urva_gandhi)
 
-  <br/><br/>
+[![LeetCode](https://img.shields.io/badge/LeetCode-FFA116?style=for-the-badge&logo=LeetCode&logoColor=black)](https://leetcode.com/u/urva_gandhi)
+[![Codeforces](https://img.shields.io/badge/Codeforces-1F8ACB?style=for-the-badge&logo=Codeforces&logoColor=white)](https://codeforces.com/profile/Urva_Gandhi)
+[![CodeChef](https://img.shields.io/badge/CodeChef-5B4636?style=for-the-badge&logo=CodeChef&logoColor=white)](https://codechef.com/users/urva_gandhi)
+
+<br/><br/>
 
   <a href="https://leetcode.com/u/urva_gandhi">
     <img src="https://leetcard.jacoblin.cool/urva_gandhi?theme=dark&font=Fira%20Code&ext=heatmap&border=0&radius=10" width="70%"/>
@@ -273,9 +275,9 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
 ---
 
 <div align="center">
-  
+
 ### 💭 Dev Wisdom of the Day
-  
+
 ![Quote](https://quotes-github-readme.vercel.app/api?type=horizontal&theme=radical&border=true)
 
 </div>
@@ -283,9 +285,9 @@ I'm a **passionate software engineer** who thrives at the intersection of **back
 ---
 
 <div align="center">
-  
+
 ### <img src="https://media.giphy.com/media/LnQjpWaON8nhr21vNW/giphy.gif" width="28"> Let's Build Something Amazing Together!
-  
+
 <a href="mailto:urvagandhi24@gmail.com">
   <img src="https://img.shields.io/badge/Drop_a_Message-6C63FF?style=for-the-badge&logo=gmail&logoColor=white"/>
 </a>
