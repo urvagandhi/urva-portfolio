@@ -39,7 +39,6 @@ export default function PrivacyPolicy() {
             className="mb-8 lg:!text-5xl sm:!text-4xl xs:!text-2xl text-center max-w-4xl mx-auto" 
           />
 
-          <div className="max-w-4xl mx-auto w-full">
             <div className="text-lg text-dark/75 dark:text-light/75 text-center mb-4 max-w-2xl mx-auto leading-relaxed">
               Privacy and data protection guidelines for <strong>Urva Gandhi&apos;s Developer Portfolio &amp; API Infrastructure</strong>.
             </div>
@@ -50,7 +49,7 @@ export default function PrivacyPolicy() {
 
             <div className="space-y-8 w-full mb-16">
               {/* Section 1: Introduction */}
-              <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
+              <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
                 <BorderBeam size={200} duration={12} delay={0} colorFrom="#58E6D9" colorTo="#8B5CF6" />
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 rounded-2xl bg-primary/10 dark:bg-primaryDark/20 text-primary dark:text-primaryDark border border-primary/20">
@@ -68,7 +67,7 @@ export default function PrivacyPolicy() {
               </div>
 
               {/* Section 2: Data Collection */}
-              <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
+              <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
                 <BorderBeam size={200} duration={12} delay={4} colorFrom="#8B5CF6" colorTo="#58E6D9" />
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -103,7 +102,7 @@ export default function PrivacyPolicy() {
               </div>
 
               {/* Section 3: Cookies */}
-              <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
+              <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
                 <BorderBeam size={200} duration={12} delay={8} colorFrom="#58E6D9" colorTo="#8B5CF6" />
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
@@ -121,7 +120,7 @@ export default function PrivacyPolicy() {
               </div>
 
               {/* Section 4: API & MCP */}
-              <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
+              <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
                 <BorderBeam size={200} duration={12} delay={10} colorFrom="#8B5CF6" colorTo="#58E6D9" />
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
@@ -139,7 +138,7 @@ export default function PrivacyPolicy() {
               </div>
 
               {/* Section 5: Contact */}
-              <div className="p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+              <div className="p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-row items-center sm:flex-col sm:items-start justify-between gap-6 flex-wrap">
                 <div className="flex items-center gap-4">
                   <div className="p-3 rounded-2xl bg-primary/10 dark:bg-primaryDark/20 text-primary dark:text-primaryDark border border-primary/20 flex-shrink-0">
                     <Mail className="w-6 h-6" />
@@ -159,7 +158,6 @@ export default function PrivacyPolicy() {
                 </Link>
               </div>
             </div>
-          </div>
         </Layout>
       </main>
     </>

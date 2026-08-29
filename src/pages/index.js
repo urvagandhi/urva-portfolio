@@ -344,9 +344,8 @@ export default function Home() {
                   src={profilePic}
                   alt="Urva Gandhi"
                   className="h-auto w-full rounded-2xl"
-                  sizes="(max-width: 768px) 100vw, 400px"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
                   priority
-                  fetchPriority="high"
                 />
               </div>
             </div>
@@ -400,7 +399,7 @@ export default function Home() {
               </p>
               <p className="font-medium">
                 Open to collaborating on real-time financial data pipelines, ML deployment workflows & MLOps,
-                and turning Hackathon prototypes into Production systems. I&apos;ve solved {" "}
+                and turning Hackathon prototypes into Production systems. I&apos;ve solved{" "}
                 <Link href="https://leetcode.com/u/urva_gandhi" target="_blank" className="underline underline-offset-2 text-primary dark:text-primaryDark">
                   {leetcodeSolvedCount}+ DSA problems in {topLanguage}
                 </Link>{" "}

@@ -1,6 +1,27 @@
+const os = require('os');
+try {
+  require('./scripts/setup-cache.js');
+} catch (e) {}
+
+const getLocalDevOrigins = () => {
+  const origins = ['localhost', '127.0.0.1'];
+  try {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name] || []) {
+        if (!iface.internal && iface.family === 'IPv4') {
+          origins.push(iface.address);
+        }
+      }
+    }
+  } catch (e) {}
+  return [...new Set(origins)];
+};
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: getLocalDevOrigins(),
 
   // Target modern browsers to reduce polyfills and bundle size
   compiler: {

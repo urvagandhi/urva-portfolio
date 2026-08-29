@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LinkArrow } from "./Icons";
-import { Download, DownloadCloud, DownloadCloudIcon } from "lucide-react";
 
 const AnimatedDownloadButton = ({ href = "/urva-gandhi_resume.pdf", filename = "urva-gandhi_resume.pdf" }) => {
   const [status, setStatus] = useState("idle"); // idle, downloading, completed
@@ -54,6 +53,19 @@ const AnimatedDownloadButton = ({ href = "/urva-gandhi_resume.pdf", filename = "
     }, 20);
   };
 
+  // Dynamic parabola: sags DOWN to 50%, then rises back UP to the baseline at 100%
+  const t = Math.max(0, Math.min(1, progress / 100));
+  const ctrlY = 74 - 50 * Math.abs(2 * t - 1);
+  const ropeD = `M 12 24 Q 100 ${ctrlY} 188 24`;
+
+  // Point on the quadratic bezier at the current progress (riding ball)
+  const bx = (1 - t) * (1 - t) * 12 + 2 * (1 - t) * t * 100 + t * t * 188;
+  const by = (1 - t) * (1 - t) * 24 + 2 * (1 - t) * t * ctrlY + t * t * 24;
+
+  // Lowest point of the parabola so the label sits just above the rope (no overlap)
+  const minY = 12 + ctrlY / 2;
+  const labelY = minY - 14;
+
   return (
     <div className="relative h-12 w-48 flex items-center justify-center">
       <AnimatePresence mode="wait">
@@ -74,32 +86,67 @@ const AnimatedDownloadButton = ({ href = "/urva-gandhi_resume.pdf", filename = "
         {status === "downloading" && (
           <motion.div
             key="progress"
-            className="absolute flex flex-col items-center justify-center w-full"
+            className="absolute inset-0 flex flex-col items-center justify-center"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
+            aria-live="polite"
+            role="progressbar"
+            aria-valuenow={Math.round(progress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
           >
-            {/* Percentage Text */}
-            <span className="mb-2 text-sm font-bold text-dark dark:text-light" aria-live="polite">
-              Downloading... {progress.toFixed(0)}%
+            <div className="flex flex-col items-center justify-center translate-y-3">
+            <svg viewBox="0 0 200 84" className="w-40 h-[84px] overflow-visible">
+              {/* Back rope (unfilled) */}
+              <path
+                d={ropeD}
+                fill="none"
+                stroke="currentColor"
+                strokeOpacity="0.15"
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
+
+              {/* Progress rope (consistent parabola) */}
+              <motion.path
+                d={ropeD}
+                fill="none"
+                stroke="currentColor"
+                strokeOpacity="0.95"
+                strokeWidth="4"
+                strokeLinecap="round"
+                pathLength={1}
+                strokeDasharray="1"
+                strokeDashoffset={1 - progress / 100}
+              />
+
+              {/* Ball riding the rope tip */}
+              <motion.circle
+                cx={bx}
+                cy={by}
+                r="6"
+                fill="currentColor"
+                animate={{ r: [5.5, 6.5, 5.5] }}
+                transition={{ repeat: Infinity, duration: 0.8, ease: "easeInOut" }}
+              />
+
+              {/* Percentage inside the parabola */}
+              <text
+                x="100"
+                y={labelY}
+                textAnchor="middle"
+                className="fill-dark dark:fill-light font-bold"
+                fontSize="18"
+              >
+                {Math.round(progress)}%
+              </text>
+            </svg>
+
+            <span className="relative -mt-1 text-[11px] font-semibold uppercase tracking-widest text-dark/60 dark:text-light/60">
+              Downloading
             </span>
-
-            <div className="relative w-full h-1 bg-gray-300 dark:bg-gray-700 rounded-full mt-1" role="progressbar" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100}>
-              {/* String / Progress Line */}
-              <motion.div 
-                className="absolute top-0 left-0 h-full bg-primary dark:bg-primaryDark rounded-full"
-                style={{ width: `${progress}%` }}
-              />
-
-              {/* Rolling Ball */}
-              <motion.div 
-                className="absolute top-1/2 -mt-1.5 h-3 w-3 rounded-full bg-primary dark:bg-primaryDark shadow-[0_0_10px_rgba(182,62,150,0.8)] dark:shadow-[0_0_10px_rgba(88,230,217,0.8)] z-20"
-                style={{ left: `${progress}%`, x: "-50%" }}
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-              />
             </div>
-            
           </motion.div>
         )}
 

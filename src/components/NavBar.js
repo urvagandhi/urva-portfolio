@@ -18,7 +18,7 @@ import useThemeSwitcher from "./hooks/useThemeSwitcher";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { useModalControls } from "@/components/hooks/useModalControls";
 
-const CustomLink = ({ href, title, className = "" }) => {
+const CustomLink = ({ href, title, className = "", active = false }) => {
     const router = useRouter();
 
     const handleClick = (e) => {
@@ -54,14 +54,16 @@ const CustomLink = ({ href, title, className = "" }) => {
         >
             {title}
             <span
-                className={`absolute left-0 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-primary via-purple-500 to-primaryDark
-                    group-hover:w-full transition-all duration-300 ease-out rounded-full`}
+                className={`absolute left-0 -bottom-1 h-[2px] bg-gradient-to-r from-primary via-purple-500 to-primaryDark
+                    rounded-full transition-all duration-300 ease-out ${
+                        active ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
             />
         </motion.a>
     );
 };
 
-const CustomMobileLink = ({ href, title, className = "", toggle }) => {
+const CustomMobileLink = ({ href, title, className = "", toggle, active = false }) => {
     const router = useRouter();
 
     const handleClick = (e) => {
@@ -96,8 +98,10 @@ const CustomMobileLink = ({ href, title, className = "", toggle }) => {
         >
             {title}
             <span
-                className={`absolute left-0 -bottom-1 h-[2px] w-0 bg-gradient-to-r from-primaryDark via-cyan-400 to-primary
-                    group-hover:w-full transition-all duration-300 ease-out rounded-full`}
+                className={`absolute left-0 -bottom-1 h-[2px] bg-gradient-to-r from-primaryDark via-cyan-400 to-primary
+                    rounded-full transition-all duration-300 ease-out ${
+                        active ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
             />
         </motion.button>
     );
@@ -117,9 +121,11 @@ const SocialIcon = ({ href, children, className = "" }) => (
 );
 
 const NavBar = () => {
+    const router = useRouter();
     const [mode, setMode] = useThemeSwitcher();
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const [activeSection, setActiveSection] = useState("home");
     const { canPortal } = useModalControls(isOpen, () => setIsOpen(false));
 
     useEffect(() => {
@@ -152,6 +158,35 @@ const NavBar = () => {
             }
         };
     }, []);
+
+    useEffect(() => {
+        if (router.pathname !== "/") {
+            setActiveSection("");
+            return;
+        }
+        const ids = ["home", "about", "contributions", "projects"];
+        const onScroll = () => {
+            let current = "home";
+            for (const id of ids) {
+                const el = document.getElementById(id);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top <= 160 && rect.bottom >= 0) current = id;
+                }
+            }
+            setActiveSection(current);
+        };
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, [router.pathname]);
+
+    const isLinkActive = (href) => {
+        const section = href.startsWith("#") ? href.slice(1) : href;
+        if (router.pathname === "/") return activeSection === section;
+        if (section === "about") return router.pathname === "/about";
+        return false;
+    };
 
     const handleClick = () => {
         setIsOpen(!isOpen);
@@ -197,10 +232,10 @@ const NavBar = () => {
             {/* Desktop Navigation */}
             <div className="w-full flex justify-between items-center lg:hidden">
                 <nav className="flex items-center justify-center gap-8">
-                    <CustomLink href="#home" title="Home" />
-                    <CustomLink href="#about" title="About" />
-                    <CustomLink href="#contributions" title="Contributions" />
-                    <CustomLink href="#projects" title="Projects" />
+                    <CustomLink href="#home" title="Home" active={isLinkActive("#home")} />
+                    <CustomLink href="#about" title="About" active={isLinkActive("#about")} />
+                    <CustomLink href="#contributions" title="Contributions" active={isLinkActive("#contributions")} />
+                    <CustomLink href="#projects" title="Projects" active={isLinkActive("#projects")} />
                 </nav>
 
                 <nav className="flex items-center justify-center gap-3" aria-label="Social media links">
@@ -289,24 +324,24 @@ const NavBar = () => {
 
             {isOpen && canPortal ? createPortal(
                 <motion.div
-                    className="fixed top-1/2 left-1/2 z-50 flex flex-col justify-between items-center bg-dark/90 dark:bg-light/75 rounded-2xl backdrop-blur-md py-20 min-w-[70vw] sm:min-w-[90vw] shadow-2xl border border-light/10 dark:border-dark/10"
-                    initial={{ scale: 0.5, opacity: 0, x: "-50%", y: "-50%" }}
+                    className="fixed top-1/2 left-1/2 z-50 flex flex-col justify-between items-center bg-dark/95 dark:bg-light/95 rounded-2xl backdrop-blur-xl py-10 px-6 max-h-[85vh] overflow-y-auto w-[90vw] max-w-sm shadow-2xl border border-light/10 dark:border-dark/10"
+                    initial={{ scale: 0.8, opacity: 0, x: "-50%", y: "-50%" }}
                     animate={{ scale: 1, opacity: 1, x: "-50%", y: "-50%" }}
                     transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 >
-                    <nav className="flex items-center flex-col justify-center">
-                        <CustomMobileLink href="#home" title="Home" className="" toggle={handleClick} />
-                        <CustomMobileLink href="#about" title="About" className="" toggle={handleClick} />
-                        <CustomMobileLink href="#contributions" title="Contributions" className="" toggle={handleClick} />
-                        <CustomMobileLink href="#projects" title="Projects" className="" toggle={handleClick} />
+                    <nav className="flex items-center flex-col justify-center w-full">
+                        <CustomMobileLink href="#home" title="Home" className="" toggle={handleClick} active={isLinkActive("#home")} />
+                        <CustomMobileLink href="#about" title="About" className="" toggle={handleClick} active={isLinkActive("#about")} />
+                        <CustomMobileLink href="#contributions" title="Contributions" className="" toggle={handleClick} active={isLinkActive("#contributions")} />
+                        <CustomMobileLink href="#projects" title="Projects" className="" toggle={handleClick} active={isLinkActive("#projects")} />
                     </nav>
 
-                    <nav className="flex items-center justify-center flex-wrap mt-6" aria-label="Social media links">
+                    <nav className="flex items-center justify-center flex-wrap gap-5 mt-6 pt-6 border-t border-light/10 dark:border-dark/10 w-full" aria-label="Social media links">
                         <motion.a
                             href="https://x.com/urva_gandhi"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-6 mr-3 sm:mx-1"
+                            className="w-6 h-6 text-light dark:text-dark"
                             aria-label="Follow me on Twitter"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
@@ -317,7 +352,7 @@ const NavBar = () => {
                             href="https://github.com/urvagandhi"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-6 mx-3 bg-light rounded-full dark:bg-dark sm:mx-1"
+                            className="w-6 h-6 text-light dark:text-dark"
                             aria-label="View my GitHub profile"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
@@ -328,7 +363,7 @@ const NavBar = () => {
                             href="https://www.linkedin.com/in/urva-gandhi/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-6 mx-3 sm:mx-1"
+                            className="w-6 h-6 text-light dark:text-dark"
                             aria-label="Connect on LinkedIn"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
@@ -339,7 +374,7 @@ const NavBar = () => {
                             href="https://leetcode.com/u/urva_gandhi"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-6 mx-3 sm:mx-1"
+                            className="w-6 h-6 text-light dark:text-dark"
                             aria-label="See my LeetCode profile"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
@@ -350,7 +385,7 @@ const NavBar = () => {
                             href="https://codeforces.com/profile/Urva_Gandhi"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-6 mx-3 sm:mx-1"
+                            className="w-6 h-6 text-light dark:text-dark"
                             aria-label="See my Codeforces profile"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
@@ -361,7 +396,7 @@ const NavBar = () => {
                             href="https://codechef.com/users/urva_gandhi"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-6 mx-3 sm:mx-1"
+                            className="w-6 h-6 text-light dark:text-dark"
                             aria-label="See my CodeChef profile"
                             whileHover={{ y: -2 }}
                             whileTap={{ scale: 0.9 }}
@@ -369,7 +404,7 @@ const NavBar = () => {
                             <CodeChefIcon />
                         </motion.a>
 
-                        <ThemeSwitcher mode={mode} setMode={setMode} className="ml-3 sm:mx-1" />
+                        <ThemeSwitcher mode={mode} setMode={setMode} className="ml-1" />
                     </nav>
                 </motion.div>,
                 document.body

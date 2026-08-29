@@ -16,7 +16,8 @@ import {
   ExternalLink,
   Copy,
   Check,
-  UserCheck
+  UserCheck,
+  Zap
 } from "lucide-react";
 import { useState } from "react";
 
@@ -64,9 +65,9 @@ export default function Contact() {
               If you are a recruiter, engineering manager, or collaborator looking for strong <strong>Java / Spring Boot backend development</strong>, microservices, or <strong>AI systems engineering</strong> skills, reach out directly below.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-8 mb-12">
               {/* Card 1: Direct Email Addresses */}
-              <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-col justify-between overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/40 dark:hover:border-primaryDark/40">
+              <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-col justify-between overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/40 dark:hover:border-primaryDark/40">
                 <BorderBeam size={220} duration={12} delay={0} colorFrom="#58E6D9" colorTo="#8B5CF6" />
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -154,7 +155,7 @@ export default function Contact() {
               </div>
 
               {/* Card 2: Phone & Social Networks */}
-              <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-col justify-between overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/40 dark:hover:border-primaryDark/40">
+              <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-col justify-between overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/40 dark:hover:border-primaryDark/40">
                 <BorderBeam size={220} duration={12} delay={6} colorFrom="#8B5CF6" colorTo="#58E6D9" />
                 <div>
                   <div className="flex items-center gap-3 mb-4">
@@ -213,16 +214,17 @@ export default function Contact() {
                 </div>
 
                 <div className="pt-2">
-                  <div className="p-3 rounded-2xl bg-primary/10 dark:bg-primaryDark/10 text-xs text-center font-medium text-dark/80 dark:text-light/80 border border-primary/20">
-                    ⚡ Available for Full-Time Backend / Software Engineering Roles &amp; Internships
+                  <div className="p-3 rounded-2xl bg-primary/10 dark:bg-primaryDark/10 text-xs text-center font-medium text-dark/80 dark:text-light/80 border border-primary/20 flex items-center justify-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-primary dark:text-primaryDark flex-shrink-0" />
+                    <span>Available for Full-Time Backend / Software Engineering Roles &amp; Internships</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Card 3: Address & Location Info */}
-            <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
+              <div className="grid grid-cols-2 sm:grid-cols-1 gap-8">
                 <div className="flex items-start gap-4">
                   <div className="p-3 rounded-2xl bg-primary/10 dark:bg-primaryDark/20 text-primary dark:text-primaryDark border border-primary/20 flex-shrink-0 mt-1">
                     <MapPin className="w-5 h-5" />

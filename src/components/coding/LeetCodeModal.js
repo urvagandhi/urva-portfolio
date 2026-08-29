@@ -138,10 +138,10 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
             </button>
 
             {/* Header Details */}
-            <div className="p-8 pb-4 border-b border-solid border-dark/10 dark:border-light/10 flex flex-col md:gap-4 relative">
+            <div className="p-8 xs:p-4 pb-4 xs:pb-2 border-b border-solid border-dark/10 dark:border-light/10 flex flex-col md:gap-4 relative">
               <BorderBeam size={150} duration={8} delay={4} colorFrom="#f59e0b" colorTo="#eab308" />
               <div className="flex items-center gap-4 sm:flex-col sm:items-start">
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-solid border-amber-500/50 shadow-md">
+                <div className="relative w-20 h-20 xs:w-14 xs:h-14 rounded-2xl overflow-hidden border-2 border-solid border-amber-500/50 shadow-md">
                   {profile.userAvatar ? (
                     <img src={profile.userAvatar} alt="LeetCode Avatar" className="w-full h-full object-cover" />
                   ) : (
@@ -158,7 +158,7 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
 
                 <div className="flex-1">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h4 className="text-3xl font-extrabold tracking-tight">
+                    <h4 className="text-3xl xs:text-xl font-extrabold tracking-tight">
                       {profile.realName || "Urva Gandhi"}
                     </h4>
                     {contest.rating && (
@@ -190,13 +190,13 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
               </div>
 
               {profile.aboutMe && (
-                <p className="mt-4 text-sm font-medium leading-relaxed max-w-3xl text-dark/80 dark:text-light/80">
+                <p className="mt-4 xs:mt-2 text-sm xs:text-xs font-medium leading-relaxed max-w-3xl text-dark/80 dark:text-light/80">
                   {profile.aboutMe}
                 </p>
               )}
 
               {/* Tab Navigation */}
-              <div className="flex items-center gap-2 mt-6 overflow-x-auto no-scrollbar border-b border-solid border-dark/5 dark:border-light/5">
+              <div className="flex items-center gap-2 mt-6 xs:mt-3 overflow-x-auto no-scrollbar border-b border-solid border-dark/5 dark:border-light/5">
                 {tabs.map((tab) => {
                   const TabIcon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -204,7 +204,7 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`relative pb-3 px-4 text-sm font-bold flex items-center gap-2 transition-colors duration-200 whitespace-nowrap ${
+                      className={`relative pb-3 xs:pb-2 px-4 xs:px-3 text-sm xs:text-xs font-bold flex items-center gap-2 transition-colors duration-200 whitespace-nowrap ${
                         isActive
                           ? "text-amber-600 dark:text-amber-400"
                           : "text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light"
@@ -231,7 +231,7 @@ export const LeetCodeModal = ({ show, onClose, data }) => {
               <div
                 ref={scrollContainerRef}
                 onScroll={handleScroll}
-                className="p-8 flex-1 overflow-y-auto max-h-[50vh] min-h-[40vh] no-scrollbar bg-light dark:bg-[#0d1117]/95"
+                className="p-8 xs:p-4 flex-1 overflow-y-auto max-h-[50vh] xs:max-h-[55vh] min-h-[40vh] xs:min-h-[25vh] no-scrollbar bg-light dark:bg-[#0d1117]/95"
               >
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">

@@ -249,10 +249,10 @@ export const CodeChefModal = ({ show, onClose, data }) => {
               <X className="w-6 h-6" />
             </button>
             {/* Header Details */}
-            <div className="p-8 pb-4 border-b border-solid border-dark/10 dark:border-light/10 flex flex-col md:gap-4 relative">
+            <div className="p-8 xs:p-4 pb-4 xs:pb-2 border-b border-solid border-dark/10 dark:border-light/10 flex flex-col md:gap-4 relative">
               <BorderBeam size={150} duration={8} delay={4} colorFrom="#ef4444" colorTo="#dc2626" />
               <div className="flex items-center gap-4 sm:flex-col sm:items-start">
-                <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-solid border-red-500/50 shadow-md">
+                <div className="relative w-20 h-20 xs:w-14 xs:h-14 rounded-2xl overflow-hidden border-2 border-solid border-red-500/50 shadow-md">
                   <img
                     src={ccData?.info?.avatar || "https://cdn.codechef.com/sites/all/themes/abessive/images/user_default_thumb.jpg"}
                     alt={ccData?.info?.handle || "CodeChef"}
@@ -262,7 +262,7 @@ export const CodeChefModal = ({ show, onClose, data }) => {
 
                 <div className="flex-1">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h4 className="text-3xl font-extrabold tracking-tight">
+                    <h4 className="text-3xl xs:text-xl font-extrabold tracking-tight">
                       {ccData?.info?.realName || "Urva Gandhi"}
                     </h4>
                     {ccData?.info?.rating && (
@@ -289,7 +289,7 @@ export const CodeChefModal = ({ show, onClose, data }) => {
               </div>
 
               {/* Tab Navigation */}
-              <div className="flex items-center gap-2 mt-6 overflow-x-auto no-scrollbar border-b border-solid border-dark/5 dark:border-light/5">
+              <div className="flex items-center gap-2 mt-6 xs:mt-3 overflow-x-auto no-scrollbar border-b border-solid border-dark/5 dark:border-light/5">
                 {[
                   { id: "overview", label: "Overview", icon: LayoutDashboard },
                   { id: "badges", label: "Badges & Languages", icon: Award },
@@ -302,7 +302,7 @@ export const CodeChefModal = ({ show, onClose, data }) => {
                     <button
                       key={tab.id}
                       onClick={() => setCcActiveTab(tab.id)}
-                      className={`relative pb-3 px-4 text-sm font-bold flex items-center gap-2 transition-colors duration-200 whitespace-nowrap ${
+                      className={`relative pb-3 xs:pb-2 px-4 xs:px-3 text-sm xs:text-xs font-bold flex items-center gap-2 transition-colors duration-200 whitespace-nowrap ${
                         isActive
                           ? "text-red-600 dark:text-red-400"
                           : "text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light"
@@ -329,7 +329,7 @@ export const CodeChefModal = ({ show, onClose, data }) => {
               <div
                 ref={scrollContainerRef}
                 onScroll={handleScroll}
-                className="flex-1 overflow-y-auto p-8 max-h-[50vh] min-h-[40vh] no-scrollbar bg-light dark:bg-[#0d1117]/95"
+                className="flex-1 overflow-y-auto p-8 xs:p-4 max-h-[50vh] xs:max-h-[55vh] min-h-[40vh] xs:min-h-[25vh] no-scrollbar bg-light dark:bg-[#0d1117]/95"
               >
               {ccLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">

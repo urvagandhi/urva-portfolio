@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { GithubIcon } from "@/components/Icons";
+import { X } from "lucide-react";
 
 const FramerImage = motion.create(Image);
 
@@ -157,6 +158,14 @@ export default function InnovativeProjectsShowcase() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("bento");
   const [selectedId, setSelectedId] = useState(PROJECTS[0].id);
+  const [slideDir, setSlideDir] = useState(1);
+
+  const handleSelectProject = (id) => {
+    const currentIdx = filteredProjects.findIndex((p) => p.id === selectedId);
+    const nextIdx = filteredProjects.findIndex((p) => p.id === id);
+    setSlideDir(nextIdx >= currentIdx ? 1 : -1);
+    setSelectedId(id);
+  };
 
   const filteredProjects = useMemo(() => {
     return PROJECTS.filter((proj) => {
@@ -184,9 +193,9 @@ export default function InnovativeProjectsShowcase() {
     <div className="w-full flex flex-col items-center">
       {/* Ultra-Clean Single-Line Floating Control Bar */}
       <div className="w-full mb-10">
-        <div className="w-full flex items-center justify-between gap-4 p-2.5 rounded-2xl border border-dark/10 dark:border-light/10 bg-light/80 dark:bg-dark/80 backdrop-blur-xl shadow-xl flex-nowrap overflow-x-auto">
+        <div className="w-full flex flex-nowrap lg:flex-wrap items-center justify-between gap-4 lg:gap-3 p-2.5 rounded-2xl border border-dark/10 dark:border-light/10 bg-light/80 dark:bg-dark/80 backdrop-blur-xl shadow-xl">
           {/* Category Tabs (Left) */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex flex-nowrap lg:flex-wrap lg:w-full items-center gap-1.5 shrink-0">
             {CATEGORIES.map((cat) => {
               const count =
                 cat === "All"
@@ -198,7 +207,11 @@ export default function InnovativeProjectsShowcase() {
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`relative px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`relative px-3.5 py-1.5 lg:justify-center text-xs font-bold rounded-xl transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap ${
+                    cat === "All"
+                      ? "lg:w-full lg:py-2.5"
+                      : "lg:flex-1 lg:py-1.5"
+                  } ${
                     isActive
                       ? "text-light dark:text-dark"
                       : "text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light"
@@ -227,7 +240,7 @@ export default function InnovativeProjectsShowcase() {
           </div>
 
           {/* Centered Bento Grid / Focus Spotlight Switcher (Center) */}
-          <div className="flex items-center p-1 rounded-xl bg-dark/5 dark:bg-light/10 border border-dark/10 dark:border-light/10 shrink-0">
+          <div className="flex items-center p-1 rounded-xl bg-dark/5 dark:bg-light/10 border border-dark/10 dark:border-light/10 shrink-0 lg:w-full lg:justify-center">
             <button
               onClick={() => setViewMode("bento")}
               className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap ${
@@ -257,7 +270,7 @@ export default function InnovativeProjectsShowcase() {
           </div>
 
           {/* Prominent Search Bar (Right) */}
-          <div className="relative shrink-0 w-80 md:w-60 sm:w-48">
+          <div className="relative shrink-0 w-80 lg:w-full">
             <input
               type="text"
               placeholder="Search tech (Spring Boot, Python, Docker, ML...)"
@@ -281,9 +294,10 @@ export default function InnovativeProjectsShowcase() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1.5 text-xs font-bold text-dark/40 hover:text-dark dark:text-light/40 dark:hover:text-light"
+                className="absolute right-2.5 top-1.5 p-0.5 text-dark/40 hover:text-dark dark:text-light/40 dark:hover:text-light"
+                aria-label="Clear search"
               >
-                ✕
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -458,7 +472,7 @@ export default function InnovativeProjectsShowcase() {
 
           {/* VIEW 2: INNOVATIVE FOCUS SPOTLIGHT */}
           {viewMode === "showcase" && (
-            <div className={`relative w-full flex flex-col gap-6 rounded-3xl border border-dark/15 bg-gradient-to-br ${activeShowcaseProj.gradient} bg-light/95 dark:border-light/15 dark:bg-dark/95 backdrop-blur-xl p-8 shadow-2xl overflow-hidden`}>
+            <div className={`relative w-full flex flex-col gap-6 rounded-3xl border border-dark/15 bg-gradient-to-br ${activeShowcaseProj.gradient} bg-light/95 dark:border-light/15 dark:bg-dark/95 backdrop-blur-xl p-8 lg:p-5 shadow-2xl overflow-hidden max-w-full`}>
               <BorderBeam
                 size={300}
                 duration={12}
@@ -472,7 +486,7 @@ export default function InnovativeProjectsShowcase() {
                 {filteredProjects.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => setSelectedId(p.id)}
+                    onClick={() => handleSelectProject(p.id)}
                     className={`px-4 py-2 text-xs font-bold rounded-xl transition-all duration-300 ${
                       activeShowcaseProj.id === p.id
                         ? "bg-dark text-light dark:bg-primaryDark dark:text-dark shadow-lg scale-105"
@@ -485,22 +499,30 @@ export default function InnovativeProjectsShowcase() {
               </div>
 
               {/* Spotlight Frame */}
-              <div className="grid grid-cols-12 gap-8 items-center pt-2 relative z-20">
-                <div className="col-span-7 lg:col-span-12 relative overflow-hidden rounded-2xl border border-dark/10 dark:border-light/10 shadow-xl group max-h-[380px]">
-                  <Image
-                    src={activeShowcaseProj.img}
-                    alt={activeShowcaseProj.title}
-                    width={1280}
-                    height={720}
-                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="col-span-5 lg:col-span-12 flex flex-col justify-between">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeShowcaseProj.id}
+                  initial={{ opacity: 0, x: slideDir * 60 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -slideDir * 60 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 30 }}
+                  className="grid grid-cols-12 gap-8 lg:gap-4 items-center pt-2 relative z-20 lg:min-w-0"
+                >
+                  <div className="col-span-7 lg:col-span-12 relative overflow-hidden rounded-2xl border border-dark/10 dark:border-light/10 shadow-xl group max-h-[380px] lg:max-h-[200px]">
+                    <Image
+                      src={activeShowcaseProj.img}
+                      alt={activeShowcaseProj.title}
+                      width={1280}
+                      height={720}
+                      className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="col-span-5 lg:col-span-12 flex flex-col justify-between">
                   <div>
                     <span className="inline-block rounded-full bg-primary/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-primary dark:bg-primaryDark/20 dark:text-primaryDark border border-primary/20 dark:border-primaryDark/30 mb-3">
                       {activeShowcaseProj.badge}
                     </span>
-                    <h3 className="text-3xl font-extrabold text-dark dark:text-light mb-1">
+                    <h3 className="text-3xl lg:text-2xl font-extrabold text-dark dark:text-light mb-1">
                       {activeShowcaseProj.title}
                     </h3>
                     {activeShowcaseProj.subtitle && (
@@ -557,7 +579,38 @@ export default function InnovativeProjectsShowcase() {
                       <span>↗</span>
                     </Link>
                   </div>
-                </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Prev / Next Arrows */}
+              <div className="flex items-center justify-center gap-3 pt-1 relative z-20">
+                <button
+                  onClick={() => {
+                    const idx = filteredProjects.findIndex((p) => p.id === activeShowcaseProj.id);
+                    const prev = filteredProjects[(idx - 1 + filteredProjects.length) % filteredProjects.length];
+                    setSlideDir(-1);
+                    setSelectedId(prev.id);
+                  }}
+                  disabled={filteredProjects.length <= 1}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-dark/5 dark:bg-light/5 text-dark dark:text-light border border-dark/10 dark:border-light/10 hover:bg-dark/10 dark:hover:bg-light/10 transition-all disabled:opacity-30"
+                  aria-label="Previous project"
+                >
+                  ←
+                </button>
+                <button
+                  onClick={() => {
+                    const idx = filteredProjects.findIndex((p) => p.id === activeShowcaseProj.id);
+                    const next = filteredProjects[(idx + 1) % filteredProjects.length];
+                    setSlideDir(1);
+                    setSelectedId(next.id);
+                  }}
+                  disabled={filteredProjects.length <= 1}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-dark/5 dark:bg-light/5 text-dark dark:text-light border border-dark/10 dark:border-light/10 hover:bg-dark/10 dark:hover:bg-light/10 transition-all disabled:opacity-30"
+                  aria-label="Next project"
+                >
+                  →
+                </button>
               </div>
             </div>
           )}

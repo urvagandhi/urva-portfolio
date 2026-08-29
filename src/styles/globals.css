@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 html {
+  position: relative;
   scroll-behavior: smooth;
 }
 
@@ -449,5 +450,25 @@ body {
     transform: rotate(var(--angle)) translateX(-500px);
     opacity: 0;
     }
+  }
+
+  /* Logo: slow rotating conic ring */
+  @keyframes spin-slow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 6s linear infinite;
+  }
+
+  /* Logo: small-scale meteor / shooting star */
+  @keyframes logo-meteor {
+    0% { transform: rotate(var(--angle)) translateX(0); opacity: 0; }
+    8%  { opacity: 1; }
+    60% { opacity: 1; }
+    100% { transform: rotate(var(--angle)) translateX(-90px); opacity: 0; }
+  }
+  .animate-logo-meteor {
+    animation: logo-meteor 3.2s linear infinite;
   }
 }

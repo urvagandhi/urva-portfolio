@@ -7,11 +7,13 @@ import {
 
 export default function CustomCursor() {
   return (
-    <CursorProvider global>
-      <Cursor className="text-primary dark:text-primaryDark" />
-      <CursorFollow side="bottom" sideOffset={15} align="end" alignOffset={5}>
-        Developer
-      </CursorFollow>
-    </CursorProvider>
+    <div className="block md:hidden">
+      <CursorProvider global>
+        <Cursor className="text-primary dark:text-primaryDark" />
+        <CursorFollow side="bottom" sideOffset={15} align="end" alignOffset={5}>
+          Developer
+        </CursorFollow>
+      </CursorProvider>
+    </div>
   );
 }

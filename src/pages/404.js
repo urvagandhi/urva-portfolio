@@ -14,7 +14,7 @@ export default function NotFound() {
       <TransitionEffect />
       <main className="flex min-h-screen items-center text-dark dark:text-light pt-24 pb-16">
         <Layout className="flex flex-col items-center justify-center text-center">
-          <h1 className="text-8xl font-bold text-primary dark:text-primaryDark sm:text-6xl">
+          <h1 className="text-8xl font-bold text-primary dark:text-primaryDark sm:text-6xl xs:text-5xl">
             404
           </h1>
           <h2 className="mt-4 text-3xl font-semibold sm:text-2xl">

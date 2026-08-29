@@ -41,14 +41,13 @@ export default function AuthDocsPage() {
             className="mb-8 lg:!text-5xl sm:!text-4xl xs:!text-2xl text-center max-w-4xl mx-auto" 
           />
 
-          <div className="max-w-4xl mx-auto w-full">
             <div className="text-lg text-dark/75 dark:text-light/75 text-center mb-12 max-w-2xl mx-auto leading-relaxed">
               Complete authentication guidelines, rate limits, CORS policies, and security models for integrating with <strong>Urva Gandhi&apos;s API infrastructure</strong>.
             </div>
 
             <div className="space-y-8 w-full mb-16">
               {/* Card 1: Authentication Model */}
-              <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
+              <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
                 <BorderBeam size={200} duration={12} delay={0} colorFrom="#58E6D9" colorTo="#8B5CF6" />
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -72,7 +71,7 @@ export default function AuthDocsPage() {
               </div>
 
               {/* Card 2: Rate Limiting */}
-              <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
+              <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
                 <BorderBeam size={200} duration={12} delay={4} colorFrom="#8B5CF6" colorTo="#58E6D9" />
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
@@ -86,7 +85,7 @@ export default function AuthDocsPage() {
 
                 <div className="space-y-3 text-sm text-dark/80 dark:text-light/80 font-medium">
                   <div>To preserve server availability and protect upstream APIs, public endpoints enforce the following quotas:</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div className="grid grid-cols-3 xs:grid-cols-1 gap-4 pt-2">
                     <div className="p-4 rounded-2xl bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10">
                       <div className="text-xs font-bold text-dark/60 dark:text-light/60 mb-1">Standard IP Limit</div>
                       <div className="text-lg font-bold text-dark dark:text-light">100 req / min</div>
@@ -104,7 +103,7 @@ export default function AuthDocsPage() {
               </div>
 
               {/* Card 3: CORS & Security Headers */}
-              <div className="relative p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
+              <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
                 <BorderBeam size={200} duration={12} delay={8} colorFrom="#58E6D9" colorTo="#8B5CF6" />
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-3 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
@@ -160,7 +159,6 @@ Vary: Accept, Accept-Encoding, Host`}
                 </div>
               </div>
             </div>
-          </div>
         </Layout>
       </main>
     </>

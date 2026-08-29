@@ -11,7 +11,7 @@ export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratin
       whileHover={{ y: -5 }}
       transition={{ duration: 0.2 }}
       onClick={onClick}
-      className={`relative flex flex-col justify-between rounded-2xl border border-solid border-dark/20 bg-light p-6 shadow-md dark:border-light/10 dark:bg-[#0d1117] overflow-hidden group min-h-[200px] ${
+      className={`relative flex flex-col justify-between rounded-2xl border border-solid border-dark/20 bg-light p-6 xs:p-4 shadow-md dark:border-light/10 dark:bg-[#0d1117] overflow-hidden group min-h-[200px] xs:min-h-[170px] ${
         onClick ? "cursor-pointer" : ""
       }`}
     >
@@ -23,16 +23,16 @@ export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratin
             <div className="w-8 h-8 flex items-center justify-center dark:text-light">
               <Icon className="w-full h-full" />
             </div>
-            <h4 className="text-xl font-bold text-dark dark:text-light">{platform}</h4>
+            <h4 className="text-xl xs:text-lg font-bold text-dark dark:text-light">{platform}</h4>
           </div>
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold border border-solid ${badgeColor}`}>
+          <span className={`px-3 xs:px-2 py-1 xs:py-0.5 rounded-full text-xs font-semibold border border-solid ${badgeColor}`}>
             {badge}
           </span>
         </div>
  
         <div className="my-4">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <div className="text-3xl font-extrabold text-dark dark:text-light flex items-baseline gap-1">
+            <div className="text-3xl xs:text-2xl font-extrabold text-dark dark:text-light flex items-baseline gap-1">
               {rating}
               <span className="text-sm font-medium text-dark/60 dark:text-light/60">{ratingLabel || "rating"}</span>
             </div>
@@ -105,10 +105,10 @@ export const ProfileCard = ({ platform, icon: Icon, rating, highestRating, ratin
             href={link}
             target="_blank"
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 text-sm font-bold text-dark/60 dark:text-light/60 hover:text-primary dark:hover:text-primaryDark transition-colors duration-200"
+            className="flex items-center gap-1 text-sm xs:text-xs font-bold text-dark/60 dark:text-light/60 hover:text-primary dark:hover:text-primaryDark transition-colors duration-200"
           >
             View Profile
-            <LinkArrow className="w-4 ml-1" />
+            <LinkArrow className="w-4 xs:w-3 ml-1" />
           </Link>
         )}
       </div>

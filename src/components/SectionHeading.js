@@ -68,9 +68,9 @@ const SectionHeading = ({ title, subTitle, className = "", theme = "blue" }) => 
       )}
 
       {/* Title */}
-      <div className="relative inline-block mt-2">
+      <div className="relative inline-block mt-2 max-w-full">
         <motion.h2 
-          className={`text-8xl lg:text-7xl sm:text-6xl xs:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${colors.textLight} ${colors.textDark} leading-tight`}
+          className={`text-8xl lg:text-7xl sm:text-6xl xs:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${colors.textLight} ${colors.textDark} leading-tight break-words`}
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}

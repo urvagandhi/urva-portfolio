@@ -84,7 +84,7 @@ const SwaggerEndpoint = ({
       {/* Swagger Accordion Header */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-dark/5 dark:hover:bg-light/5 transition-colors flex-wrap sm:flex-nowrap"
+        className="p-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-dark/5 dark:hover:bg-light/5 transition-colors flex-nowrap sm:flex-wrap"
       >
         <div className="flex items-center gap-3 min-w-0">
           <span className={`px-3 py-1 rounded-md font-mono font-extrabold text-xs tracking-wider text-white shadow-sm flex-shrink-0 ${
@@ -125,22 +125,27 @@ const SwaggerEndpoint = ({
               <span>Parameters</span>
             </h4>
             <div className="overflow-x-auto rounded-xl border border-dark/10 dark:border-light/10 bg-dark/5 dark:bg-light/5">
+              {/* Desktop: full table incl. In/Type/Required columns.
+                  Mobile/tablet (<=1023px, Tailwind max-width breakpoints): In/Type/Required are
+                  removed from the table via `lg:hidden` (keeping only Name + Value so the "Value"
+                  input is fully readable) and shown as a small info row BELOW the table instead.
+                  Keep the <th>/<td> cells and the info row below in sync. */}
               <table className="w-full text-left text-xs font-mono">
                 <thead className="bg-dark/10 dark:bg-light/10 text-dark/70 dark:text-light/70 uppercase">
                   <tr>
                     <th className="p-3">Name</th>
-                    <th className="p-3">In</th>
-                    <th className="p-3">Type</th>
-                    <th className="p-3">Required</th>
+                    <th className="p-3 lg:hidden">In</th>
+                    <th className="p-3 lg:hidden">Type</th>
+                    <th className="p-3 lg:hidden">Required</th>
                     <th className="p-3">Value</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-dark/10 dark:divide-light/10">
                   <tr>
                     <td className="p-3 font-bold text-primary dark:text-primaryDark">{defaultParamName}</td>
-                    <td className="p-3 text-dark/70 dark:text-light/70">query</td>
-                    <td className="p-3 text-dark/70 dark:text-light/70">string</td>
-                    <td className="p-3"><span className="text-red-500 font-bold">true</span></td>
+                    <td className="p-3 text-dark/70 dark:text-light/70 lg:hidden">query</td>
+                    <td className="p-3 text-dark/70 dark:text-light/70 lg:hidden">string</td>
+                    <td className="p-3 lg:hidden"><span className="text-red-500 font-bold">true</span></td>
                     <td className="p-3">
                       <input 
                         type="text" 
@@ -153,6 +158,19 @@ const SwaggerEndpoint = ({
                   </tr>
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile/tablet only (<=1023px): In/Type/Required info shown below the table */}
+            <div className="hidden lg:flex items-center flex-wrap gap-x-5 gap-y-1 mt-2.5 px-1">
+              <span className="text-[11px] font-mono text-dark/70 dark:text-light/70">
+                <span className="font-bold text-dark dark:text-light">In:</span> query
+              </span>
+              <span className="text-[11px] font-mono text-dark/70 dark:text-light/70">
+                <span className="font-bold text-dark dark:text-light">Type:</span> string
+              </span>
+              <span className="text-[11px] font-mono text-red-500">
+                <span className="font-bold text-dark dark:text-light">Required:</span> true
+              </span>
             </div>
           </div>
 
@@ -253,13 +271,13 @@ export default function DocsPage() {
             className="mb-8 lg:!text-5xl sm:!text-4xl xs:!text-2xl text-center max-w-4xl mx-auto" 
           />
 
-          <div className="max-w-5xl mx-auto w-full">
-            <div className="text-lg text-dark/75 dark:text-light/75 text-center mb-12 max-w-3xl mx-auto leading-relaxed">
+          <div className="max-w-4xl mx-auto w-full">
+            <div className="text-lg text-dark/75 dark:text-light/75 text-center mb-12 max-w-2xl mx-auto leading-relaxed">
               Welcome to <strong>Urva Gandhi&apos;s Interactive Swagger API Explorer</strong>. Click any endpoint below to view schema parameters, execute live requests, and inspect real-time JSON responses directly in your browser.
             </div>
 
             {/* Top Quick-Access Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full mb-16">
+            <div className="grid grid-cols-4 lg:grid-cols-2 sm:grid-cols-1 gap-6 w-full mb-16">
               {/* Card 1: OpenAPI */}
               <Link 
                 href="/openapi.json" 
@@ -424,12 +442,12 @@ export default function DocsPage() {
                 </h2>
               </div>
 
-              <div className="p-8 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl">
+              <div className="p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl">
                 <div className="text-base text-dark/80 dark:text-light/80 mb-6 leading-relaxed">
                   Urva Gandhi&apos;s Portfolio features a native, first-party <strong>Model Context Protocol (MCP)</strong> server implementation supporting JSON-RPC 2.0 and Streamable HTTP. This enables Claude, ChatGPT, and AI agents to invoke tools natively.
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-1 gap-6 mb-6">
                   <Link 
                     href="/.well-known/mcp" 
                     target="_blank" 
@@ -460,7 +478,7 @@ export default function DocsPage() {
                 </div>
 
                 <h4 className="font-bold text-base mb-3 text-dark dark:text-light">Exposed MCP Tools:</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 text-xs font-mono">
                   <div className="p-3 rounded-xl bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10">
                     <strong className="text-primary dark:text-primaryDark block mb-1">1. get_developer_profile</strong>
                     <span className="text-dark/75 dark:text-light/75 font-sans">Returns Nirma University credentials, Spring Boot &amp; AI tech stack, hackathons.</span>

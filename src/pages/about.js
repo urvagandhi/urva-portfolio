@@ -45,7 +45,7 @@ export default function About() {
             className="mb-16 lg:!text-6xl sm:!text-5xl xs:!text-3xl text-center" 
           />
 
-          <div className="grid w-full grid-cols-8 gap-16 sm:gap-8 md:grid-cols-1">
+          <div className="grid w-full grid-cols-8 gap-16 lg:gap-10 sm:gap-8 md:grid-cols-1">
             {/* Biography Column */}
             <div className="col-span-5 flex flex-col items-start justify-start md:col-span-8">
               <h1 className="text-3xl font-extrabold uppercase text-dark/85 dark:text-light/85 mb-4 flex items-center gap-2">
@@ -106,6 +106,7 @@ export default function About() {
                   src={profilePic} 
                   alt="Urva Yogeshkumar Gandhi" 
                   className="h-auto w-full rounded-2xl object-cover" 
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 384px"
                   priority 
                 />
               </div>
@@ -139,14 +140,14 @@ export default function About() {
 
                 <div className="flex items-start gap-3 pt-2 border-t border-dark/10 dark:border-light/10">
                   <Mail className="w-4 h-4 text-primary dark:text-primaryDark flex-shrink-0 mt-0.5" />
-                  <div className="space-y-1 font-mono text-xs">
+                  <div className="space-y-1 font-mono text-xs min-w-0">
                     <div>
                       <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">Personal Email</span>
-                      <strong className="text-dark dark:text-light">urvagandhi24@gmail.com</strong>
+                      <strong className="text-dark dark:text-light break-all">urvagandhi24@gmail.com</strong>
                     </div>
                     <div>
                       <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">University Email</span>
-                      <span className="text-dark/80 dark:text-light/80">23bce078@nirmauni.ac.in</span>
+                      <span className="text-dark/80 dark:text-light/80 break-all">23bce078@nirmauni.ac.in</span>
                     </div>
                   </div>
                 </div>

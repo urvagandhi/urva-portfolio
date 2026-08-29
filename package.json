@@ -7,11 +7,15 @@
     "urvagandhi": "./bin/cli.js"
   },
   "scripts": {
-    "dev": "next dev",
+    "predev": "node scripts/setup-cache.js",
+    "prebuild": "node scripts/setup-cache.js",
+    "dev": "next dev --webpack",
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",

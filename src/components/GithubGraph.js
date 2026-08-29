@@ -46,21 +46,26 @@ export default function GithubGraph({ username, themeMode }) {
   if (!mounted) return null;
 
   return (
-    <div className="w-full h-full flex flex-col items-start gap-4 mb-4">
+    <div className="w-full h-full min-w-0 flex flex-col items-start gap-4 mb-4">
       <h3 className="text-2xl font-bold dark:text-light mb-2">GitHub Contributions</h3>
       
-      <div className="w-full h-full flex md:flex-col gap-4 border border-solid border-dark/20 dark:border-light/20 bg-light dark:bg-[#0d1117] p-8 rounded-2xl shadow-sm">
-        <div className="flex-1 overflow-x-auto">
-          <GitHubCalendar
-            username={username}
-            year={selectedYear}
-            theme={explicitTheme}
-            colorScheme={themeMode === "dark" ? "dark" : "light"}
-            blockSize={14}
-            blockMargin={5}
-            fontSize={14}
-            transformData={transformContributions}
-          />
+      <div className="w-full h-full flex md:flex-col gap-4 border border-solid border-dark/20 dark:border-light/20 bg-light dark:bg-[#0d1117] p-8 md:p-5 xs:p-3 rounded-2xl shadow-sm">
+        <div className="flex-1 flex flex-col min-w-0">
+          <span className="text-[11px] font-semibold text-dark/50 dark:text-light/50 mb-2 md:block hidden">
+            ← Scroll horizontally to explore activity →
+          </span>
+          <div className="min-w-0 w-full overflow-x-auto no-scrollbar">
+            <GitHubCalendar
+              username={username}
+              year={selectedYear}
+              theme={explicitTheme}
+              colorScheme={themeMode === "dark" ? "dark" : "light"}
+              blockSize={14}
+              blockMargin={5}
+              fontSize={14}
+              transformData={transformContributions}
+            />
+          </div>
         </div>
 
         {/* Year Selector */}

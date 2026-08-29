@@ -120,7 +120,7 @@ const ContactModal = () => {
 
   return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-8 md:p-6 sm:p-4 overflow-y-auto">
         {/* Backdrop overlay */}
         <motion.div
           className="fixed inset-0 bg-dark/80 dark:bg-dark/90 backdrop-blur-md"
@@ -130,9 +130,9 @@ const ContactModal = () => {
           onClick={closeContactModal}
         />
 
-        {/* Modal Container — WIDER (max-w-2xl = 672px) */}
+        {/* Modal Container */}
         <motion.div
-          className="relative w-full max-w-2xl rounded-3xl border border-dark/15 dark:border-light/15 bg-light dark:bg-dark p-6 sm:p-8 md:p-10 shadow-2xl backdrop-blur-xl z-10 overflow-hidden text-dark dark:text-light transition-all"
+          className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl border border-dark/15 dark:border-light/15 bg-light dark:bg-dark p-8 md:p-6 sm:p-5 shadow-2xl backdrop-blur-xl z-10 text-dark dark:text-light transition-all"
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -147,7 +147,7 @@ const ContactModal = () => {
               <button
                 type="button"
                 onClick={() => setStep("bento")}
-                className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                className={`px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-lg text-sm sm:text-xs font-bold transition-all cursor-pointer ${
                   step === "bento"
                     ? "bg-white dark:bg-dark text-primary dark:text-primaryDark shadow-sm"
                     : "text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light"
@@ -158,7 +158,7 @@ const ContactModal = () => {
               <button
                 type="button"
                 onClick={() => setStep("form")}
-                className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                className={`px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-lg text-sm sm:text-xs font-bold transition-all cursor-pointer ${
                   step === "form"
                     ? "bg-white dark:bg-dark text-primary dark:text-primaryDark shadow-sm"
                     : "text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light"
@@ -171,7 +171,7 @@ const ContactModal = () => {
             {/* Absolute Close X Button */}
             <button
               onClick={closeContactModal}
-              className="absolute top-5 right-5 sm:top-6 sm:right-6 z-20 p-2.5 rounded-full bg-dark/5 dark:bg-light/10 hover:bg-dark/10 dark:hover:bg-light/20 text-dark/70 dark:text-light/70 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 sm:top-5 sm:right-5 z-20 p-2.5 rounded-full bg-dark/5 dark:bg-light/10 hover:bg-dark/10 dark:hover:bg-light/20 text-dark/70 dark:text-light/70 transition-colors cursor-pointer"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -180,17 +180,17 @@ const ContactModal = () => {
 
           {/* STEP 1: BENTO SELECTION SCREEN */}
           {step === "bento" && (
-            <div className="flex flex-col gap-6 pr-4 sm:pr-8">
+            <div className="flex flex-col gap-6 px-1 sm:px-2">
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-2">
                   <span className="px-3 py-1 rounded-full bg-primary/10 dark:bg-primaryDark/20 text-primary dark:text-primaryDark text-xs font-extrabold uppercase tracking-wider border border-primary/20 dark:border-primaryDark/30">
                     Contact &amp; Communications
                   </span>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-dark dark:text-light tracking-tight">
+                <h3 className="text-3xl sm:text-2xl font-extrabold text-dark dark:text-light tracking-tight">
                   Reach Out to Urva Gandhi
                 </h3>
-                <p className="text-xs sm:text-sm text-dark/70 dark:text-light/70">
+                <p className="text-sm sm:text-xs text-dark/70 dark:text-light/70">
                   Select your preferred channel to connect regarding roles or proposals.
                 </p>
               </div>
@@ -199,18 +199,18 @@ const ContactModal = () => {
               <motion.div
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                className="group relative rounded-2xl border border-dark/15 dark:border-light/15 bg-white dark:bg-dark/60 p-6 shadow-sm hover:border-primary dark:hover:border-primaryDark transition-all duration-300 flex flex-col gap-4"
+                className="group relative rounded-2xl border border-dark/15 dark:border-light/15 bg-white dark:bg-dark/60 p-6 sm:p-5 shadow-sm hover:border-primary dark:hover:border-primaryDark transition-all duration-300 flex flex-col gap-4"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-4 flex-nowrap md:flex-wrap">
                   <div className="flex items-center gap-4">
-                    <div className="p-3.5 rounded-xl bg-primary/10 text-primary dark:bg-primaryDark/20 dark:text-primaryDark">
+                    <div className="p-3.5 rounded-xl bg-primary/10 text-primary dark:bg-primaryDark/20 dark:text-primaryDark flex-shrink-0">
                       <Mail className="w-6 h-6" />
                     </div>
                     <div>
                       <h4 className="font-extrabold text-base text-dark dark:text-light">
                         Send Direct Email
                       </h4>
-                      <span className="text-xs sm:text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="text-sm sm:text-xs font-semibold text-emerald-600 dark:text-emerald-400 break-all">
                         urvagandhi24@gmail.com
                       </span>
                     </div>
@@ -223,10 +223,10 @@ const ContactModal = () => {
                 </div>
 
                 {/* Quick Buttons inside Card 1 */}
-                <div className="flex items-center gap-3 pt-2">
+                <div className="flex flex-row items-center sm:flex-col sm:items-stretch gap-3 pt-2">
                   <button
                     onClick={handleDirectEmail}
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-dark text-light dark:bg-primaryDark dark:text-dark font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-dark text-light dark:bg-primaryDark dark:text-dark font-bold text-sm sm:text-xs hover:opacity-90 transition-opacity flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                   >
                     <span>Launch Mail App</span>
                     <ExternalLink className="w-4 h-4" />
@@ -234,7 +234,7 @@ const ContactModal = () => {
 
                   <button
                     onClick={copyEmailToClipboard}
-                    className="py-2.5 px-4 rounded-xl border border-dark/15 dark:border-light/15 bg-dark/5 dark:bg-light/10 text-dark dark:text-light font-bold text-xs sm:text-sm hover:bg-dark/10 dark:hover:bg-light/20 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    className="py-2.5 px-4 rounded-xl border border-dark/15 dark:border-light/15 bg-dark/5 dark:bg-light/10 text-dark dark:text-light font-bold text-sm sm:text-xs hover:bg-dark/10 dark:hover:bg-light/20 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     title="Copy Email Address"
                   >
                     {copiedEmail ? (
@@ -272,7 +272,7 @@ const ContactModal = () => {
                         Interactive Form
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-dark/60 dark:text-light/60 mt-1">
+                    <p className="text-sm sm:text-xs text-dark/60 dark:text-light/60 mt-1">
                       Submit a structured inquiry directly through the portfolio server.
                     </p>
                   </div>
@@ -291,8 +291,8 @@ const ContactModal = () => {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-xs sm:text-sm">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-sm sm:text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
                   {/* Name Input */}
                   <div className="flex flex-col gap-1.5">
                     <label className="font-bold text-dark dark:text-light flex items-center gap-1.5 text-xs">
@@ -306,7 +306,7 @@ const ContactModal = () => {
                       onChange={handleChange}
                       placeholder="e.g. John Doe"
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark focus:ring-2 focus:ring-primary/20 dark:focus:ring-primaryDark/30 transition-all text-xs sm:text-sm font-medium shadow-sm"
+                      className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark focus:ring-2 focus:ring-primary/20 dark:focus:ring-primaryDark/30 transition-all text-sm sm:text-xs font-medium shadow-sm"
                     />
                   </div>
 
@@ -323,7 +323,7 @@ const ContactModal = () => {
                       onChange={handleChange}
                       placeholder="e.g. john@company.com"
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark focus:ring-2 focus:ring-primary/20 dark:focus:ring-primaryDark/30 transition-all text-xs sm:text-sm font-medium shadow-sm"
+                      className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark focus:ring-2 focus:ring-primary/20 dark:focus:ring-primaryDark/30 transition-all text-sm sm:text-xs font-medium shadow-sm"
                     />
                   </div>
                 </div>
@@ -334,7 +334,7 @@ const ContactModal = () => {
                     <Briefcase className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
                     <span>Category Quick Select</span>
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 sm:grid-cols-2 xs:grid-cols-1 gap-2">
                     {INQUIRY_TYPES.map((type) => (
                       <button
                         key={type.id}
@@ -365,7 +365,7 @@ const ContactModal = () => {
                     onChange={handleChange}
                     placeholder="e.g. Hiring Senior Full Stack Engineer"
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark focus:ring-2 focus:ring-primary/20 dark:focus:ring-primaryDark/30 transition-all text-xs sm:text-sm font-medium shadow-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark focus:ring-2 focus:ring-primary/20 dark:focus:ring-primaryDark/30 transition-all text-sm sm:text-xs font-medium shadow-sm"
                   />
                 </div>
 
@@ -381,7 +381,7 @@ const ContactModal = () => {
                     value={formData.company}
                     onChange={handleChange}
                     placeholder="e.g. Google, Tech Startup"
-                    className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark transition-all text-xs sm:text-sm font-medium shadow-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark transition-all text-sm sm:text-xs font-medium shadow-sm"
                   />
                 </div>
 
@@ -404,7 +404,7 @@ const ContactModal = () => {
                     onChange={handleChange}
                     placeholder="Describe your proposal, engineering role, or questions..."
                     required
-                    className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark focus:ring-2 focus:ring-primary/20 dark:focus:ring-primaryDark/30 transition-all text-xs sm:text-sm font-medium resize-none shadow-sm"
+                    className="w-full px-4 py-3 rounded-xl border border-dark/20 dark:border-light/20 bg-white dark:bg-dark/80 text-dark dark:text-light placeholder:text-dark/40 dark:placeholder:text-light/40 focus:outline-none focus:border-primary dark:focus:border-primaryDark focus:ring-2 focus:ring-primary/20 dark:focus:ring-primaryDark/30 transition-all text-sm sm:text-xs font-medium resize-none shadow-sm"
                   />
                 </div>
 
@@ -412,7 +412,7 @@ const ContactModal = () => {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="mt-2 w-full py-3.5 rounded-xl bg-dark text-light dark:bg-primaryDark dark:text-dark font-bold text-xs sm:text-sm hover:opacity-95 disabled:opacity-50 transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  className="mt-2 w-full py-3.5 rounded-xl bg-dark text-light dark:bg-primaryDark dark:text-dark font-bold text-sm sm:text-xs hover:opacity-95 disabled:opacity-50 transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {submitting ? (
                     <>
@@ -440,14 +440,14 @@ const ContactModal = () => {
                 <h3 className="text-2xl font-extrabold text-dark dark:text-light">
                   Message Delivered!
                 </h3>
-                <p className="text-xs sm:text-sm text-dark/70 dark:text-light/70 max-w-sm leading-relaxed">
+                <p className="text-sm sm:text-xs text-dark/70 dark:text-light/70 max-w-sm leading-relaxed">
                   Thank you for reaching out! Your inquiry has been formatted and delivered to <strong>urvagandhi24@gmail.com</strong>.
                 </p>
               </div>
 
               <button
                 onClick={closeContactModal}
-                className="mt-2 px-8 py-3 rounded-xl bg-dark text-light dark:bg-light dark:text-dark font-bold text-xs sm:text-sm hover:opacity-90 transition-opacity shadow-md cursor-pointer"
+                className="mt-2 px-8 py-3 rounded-xl bg-dark text-light dark:bg-light dark:text-dark font-bold text-sm sm:text-xs hover:opacity-90 transition-opacity shadow-md cursor-pointer"
               >
                 Close Window
               </button>
