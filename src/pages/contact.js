@@ -1,8 +1,8 @@
 import AnimatedText from "@/components/shared/AnimatedText.js";
 import Layout from "@/components/layout/Layout.js";
 import TransitionEffect from "@/components/layout/TransitionEffect.js";
-import Head from "next/head";
 import Link from "next/link";
+import Seo from "@/components/seo/Seo.js";
 import SectionHeading from "@/components/shared/SectionHeading.js";
 import { BorderBeam } from "@/vendor/magicui/border-beam";
 import {
@@ -41,15 +41,18 @@ export default function Contact() {
 
   return (
     <>
-      <Head>
-        <title>
-          Contact Urva Yogeshkumar Gandhi | Software &amp; AI Engineer
-        </title>
-        <meta
-          name="description"
-          content="Contact details for Urva Yogeshkumar Gandhi (B.Tech Computer Science & Engineering, Nirma University). Personal Email: urvagandhi24@gmail.com, College Email: 23bce078@nirmauni.ac.in. Phone: +91-8866241204."
-        />
-      </Head>
+      <Seo
+        title="Contact Urva Yogeshkumar Gandhi | Software &amp; AI Engineer"
+        description="Contact Software & AI Engineer Urva Gandhi. Email urvagandhi24@gmail.com, phone +91-8866241204. Open to full-time roles and AI/backend projects."
+        path="/contact"
+        keywords={[
+          "contact Urva Gandhi",
+          "hire Urva Gandhi",
+          "Urva Gandhi email",
+          "Urva Gandhi phone",
+        ]}
+        breadcrumb="Contact"
+      />
       <TransitionEffect />
       <main className="flex w-full flex-col items-center justify-center text-dark dark:text-light pt-24 pb-16">
         <Layout className="pt-16">

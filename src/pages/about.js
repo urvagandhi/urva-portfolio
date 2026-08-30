@@ -1,10 +1,10 @@
 import AnimatedText from "@/components/shared/AnimatedText.js";
 import Layout from "@/components/layout/Layout.js";
 import TransitionEffect from "@/components/layout/TransitionEffect.js";
-import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import profilePic from "../../public/images/profile/urva.png";
+import Seo from "@/components/seo/Seo.js";
 import Education from "@/components/sections/Education.js";
 import Experience from "@/components/sections/Experience.js";
 import Skills from "@/components/sections/Skills.js";
@@ -26,15 +26,17 @@ import {
 export default function About() {
   return (
     <>
-      <Head>
-        <title>
-          About Urva Yogeshkumar Gandhi | Software &amp; AI Systems Engineer
-        </title>
-        <meta
-          name="description"
-          content="Official portfolio about page of Urva Yogeshkumar Gandhi, final year Computer Science undergraduate at Nirma University (Minor in Adaptive AI, CGPA: 8.83/10). Java, Spring Boot, Microservices, AI/ML, NLP specialist."
-        />
-      </Head>
+      <Seo
+        title="About Urva Yogeshkumar Gandhi | Software &amp; AI Systems Engineer"
+        description="About Urva Yogeshkumar Gandhi, CSE at Nirma University (CGPA 8.83/10, Minor Adaptive AI). Java, Spring Boot, Microservices, and multi-agent AI engineer."
+        path="/about"
+        keywords={[
+          "about Urva Gandhi",
+          "Urva Gandhi biography",
+          "Urva Gandhi Nirma University",
+        ]}
+        breadcrumb="About"
+      />
       <TransitionEffect />
       <main className="flex w-full flex-col items-center justify-center text-dark dark:text-light pt-24 pb-16">
         <Layout className="pt-16">

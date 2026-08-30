@@ -297,7 +297,7 @@ export default function Home() {
         <title>Urva Gandhi | Software Developer Portfolio</title>
         <meta
           name="description"
-          content="Urva Gandhi — Computer Science undergraduate at Nirma University. Full-stack developer specializing in React.js, Spring Boot, and Machine Learning. 3x Hackathon Winner across 500+ teams. Explore projects, skills, and experience."
+          content="Urva Gandhi — CSE undergraduate at Nirma University, full-stack developer and 3x hackathon winner in React.js, Spring Boot, and ML."
         />
 
         {/* SEO meta tags */}

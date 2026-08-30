@@ -1,8 +1,8 @@
 import AnimatedText from "@/components/shared/AnimatedText.js";
 import Layout from "@/components/layout/Layout.js";
 import TransitionEffect from "@/components/layout/TransitionEffect.js";
-import Head from "next/head";
 import Link from "next/link";
+import Seo from "@/components/seo/Seo.js";
 import SectionHeading from "@/components/shared/SectionHeading.js";
 import { BorderBeam } from "@/vendor/magicui/border-beam";
 import {
@@ -22,13 +22,18 @@ import {
 export default function AuthDocsPage() {
   return (
     <>
-      <Head>
-        <title>Urva Gandhi API Auth &amp; Usage Documentation</title>
-        <meta
-          name="description"
-          content="Authentication requirements, rate limits, CORS policies, and access guidelines for Urva Gandhi's Portfolio APIs and MCP server."
-        />
-      </Head>
+      <Seo
+        title="Urva Gandhi | API Auth &amp; Usage Documentation"
+        description="Authentication, rate limits, CORS, and access guidelines for Urva Gandhi's Portfolio APIs and MCP server. Get a free self-serve API key."
+        path="/auth"
+        keywords={[
+          "Urva Gandhi API",
+          "Urva Gandhi API key",
+          "Urva Gandhi MCP auth",
+          "portfolio API docs",
+        ]}
+        breadcrumb="API Auth Docs"
+      />
       <TransitionEffect />
       <main className="flex w-full flex-col items-center justify-center text-dark dark:text-light pt-24 pb-16">
         <Layout className="pt-16">

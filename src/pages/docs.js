@@ -1,8 +1,8 @@
 import AnimatedText from "@/components/shared/AnimatedText.js";
 import Layout from "@/components/layout/Layout.js";
 import TransitionEffect from "@/components/layout/TransitionEffect.js";
-import Head from "next/head";
 import Link from "next/link";
+import Seo from "@/components/seo/Seo.js";
 import SectionHeading from "@/components/shared/SectionHeading.js";
 import { BorderBeam } from "@/vendor/magicui/border-beam";
 import {
@@ -302,13 +302,18 @@ export default function DocsPage() {
 
   return (
     <>
-      <Head>
-        <title>Urva Gandhi Developer Portal &amp; API Documentation</title>
-        <meta
-          name="description"
-          content="Official developer documentation for Urva Gandhi's Portfolio APIs, OpenAPI specification, and Model Context Protocol (MCP) server integration."
-        />
-      </Head>
+      <Seo
+        title="Urva Gandhi | Developer Portal &amp; API Documentation"
+        description="Developer docs for Urva Gandhi's portfolio: OpenAPI spec, MCP server, free API keys, rate limits, and the versioning & deprecation policy."
+        path="/docs"
+        keywords={[
+          "Urva Gandhi API docs",
+          "Urva Gandhi OpenAPI",
+          "Urva Gandhi MCP server",
+          "portfolio developer portal",
+        ]}
+        breadcrumb="Developer Docs"
+      />
       <TransitionEffect />
       <main className="flex w-full flex-col items-center justify-center text-dark dark:text-light pt-24 pb-16">
         <Layout className="pt-16">

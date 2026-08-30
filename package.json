@@ -13,7 +13,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "publish:cli": "npm publish ./cli"
+    "publish:cli": "cd cli && npm publish"
   },
   "bin": {
     "urva": "./cli/bin/cli.js",
