@@ -703,15 +703,15 @@ function generateDynamicLlms(currentDomain) {
 > When to use this: Reach for this site and its machine-readable endpoints when an AI agent needs to evaluate Urva Gandhi's software engineering credentials, Java Spring Boot backend skills, AI/ML engineering background, hackathon achievements, competitive programming statistics, or contact information for recruitment, technical consulting, or technical interviews.
 
 ## Official Web Domains
-- **Active Requested Domain:** ${currentDomain}
-- **Primary Custom Domain:** ${PRIMARY_DOMAIN}
-- **Lifetime Alternate Mirror:** ${LIFETIME_DOMAIN}
+- **Active Requested Domain:** [${currentDomain}](${currentDomain})
+- **Primary Custom Domain:** [${PRIMARY_DOMAIN}](${PRIMARY_DOMAIN})
+- **Lifetime Alternate Mirror:** [${LIFETIME_DOMAIN}](${LIFETIME_DOMAIN})
 
 ## Best-Fit Use Cases
 - **Recruitment & Technical Hiring:** Evaluate software engineering background, primary expertise (Java, Spring Boot, Spring Security, REST APIs, ReactJS, Next.js, PostgreSQL, MongoDB, Docker, Microservices, AI/ML, NLP), education (Nirma University B.Tech CSE, Minor in Adaptive AI, CGPA 8.83), and 3x hackathon winner record.
 - **Backend & Java Engineering Evaluation:** Assess CoinTrack (Multi-broker finance platform using Java, Spring Boot, Spring Security, JWT, TOTP 2FA, Hexagonal Architecture) and FleetFlow (Fleet management platform using PostgreSQL, Prisma, Socket.IO).
 - **AI / Agentic Systems Research:** Evaluate Agent Paperpal (CrewAI, Google Gemini multi-agent paper formatter) and RWEsearch (1st Place Healthcare Analytics platform).
-- **Autonomous Tool-Calling Agents:** Interact with Urva Gandhi's Model Context Protocol (MCP) server at \`${currentDomain}/api/mcp\`, \`${PRIMARY_DOMAIN}/api/mcp\`, or \`${LIFETIME_DOMAIN}/api/mcp\`.
+- **Autonomous Tool-Calling Agents:** Interact with Urva Gandhi's [Model Context Protocol (MCP) server](${currentDomain}/.well-known/mcp) at \`${currentDomain}/api/mcp\`, \`${PRIMARY_DOMAIN}/api/mcp\`, or \`${LIFETIME_DOMAIN}/api/mcp\`.
 
 ## Core Capabilities & Tech Stack
 - **Backend & Java (Primary Focus):** Java, Spring Boot, Spring Security, Microservices, REST APIs, OOP, PostgreSQL, MongoDB, MySQL, Docker, Git, JWT, OAuth 2.0, Hexagonal Architecture, Caffeine Caching, Bucket4j Rate Limiting.
@@ -721,30 +721,30 @@ function generateDynamicLlms(currentDomain) {
 - **Competitive Coding:** Solved 300+ DSA problems on LeetCode (Rating 1637, Top 19.46%), active on Codeforces (\`Urva_Gandhi\`) and CodeChef (\`urva_gandhi\`).
 
 ## Developer Resources & Machine Endpoints
-- **Developer Portal:** ${currentDomain}/docs | ${currentDomain}/api-docs
-- **API Authentication:** ${currentDomain}/auth
-- **OpenAPI 3.0 Specification:** ${currentDomain}/openapi.json | ${currentDomain}/api/openapi.json
-- **MCP Server Manifest:** ${currentDomain}/.well-known/mcp | ${currentDomain}/.well-known/mcp.json | ${currentDomain}/mcp
-- **MCP Tool Calling Endpoint:** ${currentDomain}/api/mcp
+- **Developer Portal & API Docs:** [${currentDomain}/docs](${currentDomain}/docs) | [${currentDomain}/api-docs](${currentDomain}/api-docs)
+- **API Authentication:** [${currentDomain}/auth](${currentDomain}/auth)
+- **OpenAPI 3.0 Specification:** [${currentDomain}/openapi.json](${currentDomain}/openapi.json) | [api/openapi.json](${currentDomain}/api/openapi.json)
+- **MCP Server Manifest:** [${currentDomain}/.well-known/mcp](${currentDomain}/.well-known/mcp) | [.well-known/mcp.json](${currentDomain}/.well-known/mcp.json) | [mcp](${currentDomain}/mcp)
+- **MCP Tool Calling Endpoint:** [${currentDomain}/api/mcp](${currentDomain}/api/mcp)
 - **Official CLI Tool:** \`npm install -g urvagandhi\` then run \`urvagandhi help\` (commands: profile, stats [platform], projects, contact, mcp, discover, openapi)
-- **Self-Serve API Key (free tier, no signup):** ${currentDomain}/api/keys
-- **Sandbox / Test Environment:** ${currentDomain}/api/sandbox (returns labelled sample data)
+- **Self-Serve API Key (free tier, no signup):** [${currentDomain}/api/keys](${currentDomain}/api/keys)
+- **Sandbox / Test Environment:** [${currentDomain}/api/sandbox](${currentDomain}/api/sandbox) (returns labelled sample data)
 - **Rate Limit Headers:** Responses include standard IETF \`RateLimit-Limit\`, \`RateLimit-Remaining\`, \`RateLimit-Reset\` headers; a 429 includes \`Retry-After\`.
-- **API Versioning & Deprecation Policy:** ${currentDomain}/docs/versioning (Sunset/Deprecation header timeline, RFC 8594).
-- **OAuth Scoped Permissions (RFC 9728):** ${currentDomain}/.well-known/oauth-protected-resource
-- **OAuth Authorization Server Metadata (RFC 8414):** ${currentDomain}/.well-known/oauth-authorization-server
-- **XML Sitemap:** ${currentDomain}/sitemap.xml
+- **API Versioning & Deprecation Policy:** [${currentDomain}/docs/versioning](${currentDomain}/docs/versioning) (Sunset/Deprecation header timeline, RFC 8594).
+- **OAuth Scoped Permissions (RFC 9728):** [${currentDomain}/.well-known/oauth-protected-resource](${currentDomain}/.well-known/oauth-protected-resource)
+- **OAuth Authorization Server Metadata (RFC 8414):** [${currentDomain}/.well-known/oauth-authorization-server](${currentDomain}/.well-known/oauth-authorization-server)
+- **XML Sitemap:** [${currentDomain}/sitemap.xml](${currentDomain}/sitemap.xml)
 
 ## Trust Anchor Pages
-- **About Urva Gandhi:** ${currentDomain}/about
-- **Contact & Communications:** ${currentDomain}/contact
-- **Privacy Policy:** ${currentDomain}/privacy
+- **[About Urva Gandhi](${currentDomain}/about)**
+- **[Contact & Communications](${currentDomain}/contact)**
+- **[Privacy Policy](${currentDomain}/privacy)**
 
 ## Contact Details
 - **Email:** 23bce078@nirmauni.ac.in / urvagandhi24@gmail.com
 - **Phone:** +91-8866241204
-- **LinkedIn:** https://www.linkedin.com/in/urva-gandhi/
-- **GitHub:** https://github.com/urvagandhi
+- **LinkedIn:** [linkedin.com/in/urva-gandhi](https://www.linkedin.com/in/urva-gandhi/)
+- **GitHub:** [github.com/urvagandhi](https://github.com/urvagandhi)
 - **Location:** Ahmedabad, Gujarat, India - 380051
 `;
 }
@@ -1117,6 +1117,7 @@ export function proxy(req) {
       status: 200,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
+        "X-Robots-Tag": "llms-txt",
         Vary: "Accept, Accept-Encoding, Host",
         "Cache-Control": "public, max-age=3600",
       },

@@ -51,13 +51,23 @@ const TypewriterText = ({ text, className = "" }) => {
 
   return (
     <div className="w-full mx-auto flex flex-col items-start justify-center overflow-hidden">
-      <h1 className={`inline-block w-full font-bold capitalize ${className}`}>
-        {displayedText}
-        <motion.span
-          variants={cursorVariants}
-          animate="blinking"
-          className="inline-block text-primary dark:text-primaryDark ml-1 font-normal w-1 h-[1em] bg-primary dark:bg-primaryDark align-bottom"
-        />
+      {/* Grid-stacked spans: the invisible spacer reserves the full-text
+          height, so the typing animation never collapses the H1 (no CLS). */}
+      <h1 className={`grid w-full font-bold capitalize ${className}`}>
+        <span
+          aria-hidden="true"
+          className="col-start-1 row-start-1 invisible select-none pointer-events-none"
+        >
+          {text}
+        </span>
+        <span className="col-start-1 row-start-1">
+          {displayedText}
+          <motion.span
+            variants={cursorVariants}
+            animate="blinking"
+            className="inline-block text-primary dark:text-primaryDark ml-1 font-normal w-1 h-[1em] bg-primary dark:bg-primaryDark align-bottom"
+          />
+        </span>
       </h1>
     </div>
   );
