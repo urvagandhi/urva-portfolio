@@ -414,7 +414,12 @@ export default function Home() {
                   ],
                   sameAs: [
                     "https://github.com/urvagandhi",
+                    "https://www.linkedin.com/in/urva-gandhi/",
                     "https://leetcode.com/u/urva_gandhi",
+                    "https://codeforces.com/profile/Urva_Gandhi",
+                    "https://www.codechef.com/users/urva_gandhi",
+                    "https://www.geeksforgeeks.org/user/urvagandhi/",
+                    "https://www.hackerrank.com/profile/urvagandhi24",
                   ],
                 },
               ],

@@ -12,16 +12,46 @@ function getDynamicDomain(req) {
 }
 
 function generateDynamicSitemap(currentDomain) {
-  const pages = ["", "/about", "/auth", "/contact", "/docs", "/privacy"];
+  const pages = [
+    { path: "", priority: "1.0" },
+    { path: "/about", priority: "0.9" },
+    { path: "/auth", priority: "0.8" },
+    { path: "/contact", priority: "0.8" },
+    { path: "/docs", priority: "0.9" },
+    { path: "/privacy", priority: "0.5" },
+  ];
+  // Machine-readable developer resources, indexed alongside pages so
+  // name-based searches surface the developer surface directly.
+  const resources = [
+    "/openapi.json",
+    "/.well-known/mcp.json",
+    "/.well-known/oauth-authorization-server",
+    "/.well-known/oauth-protected-resource",
+    "/.well-known/agent-instructions",
+    "/llms.txt",
+  ];
   const lastmod = new Date().toISOString();
 
-  const urlElements = pages
+  const pageElements = pages
+    .map(
+      ({ path, priority }) => `  <url>
+    <loc>${currentDomain}${path}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>${priority}</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="${PRIMARY_DOMAIN}${path}" />
+    <xhtml:link rel="alternate" hreflang="en" href="${LIFETIME_DOMAIN}${path}" />
+  </url>`,
+    )
+    .join("\n");
+
+  const resourceElements = resources
     .map(
       (path) => `  <url>
     <loc>${currentDomain}${path}</loc>
     <lastmod>${lastmod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="x-default" href="${PRIMARY_DOMAIN}${path}" />
     <xhtml:link rel="alternate" hreflang="en" href="${LIFETIME_DOMAIN}${path}" />
   </url>`,
@@ -31,7 +61,8 @@ function generateDynamicSitemap(currentDomain) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${urlElements}
+${pageElements}
+${resourceElements}
 </urlset>`;
 }
 
@@ -209,9 +240,9 @@ function generateDynamicOpenApi(currentDomain) {
         url: currentDomain,
       },
       "x-versioning-policy":
-        "URL path versioning (/v1/) and X-API-Version header parameter. Backward compatibility guaranteed for version 1.",
+        "URL path versioning (/v1/) and X-API-Version header parameter. Backward compatibility guaranteed for version 1. Full contract: ${currentDomain}/docs/versioning.",
       "x-deprecation-policy":
-        "Deprecation notices served via Sunset HTTP header 6 months prior to end-of-life.",
+        "Deprecations announced 6 months before end-of-life via the Sunset HTTP header (RFC 8594); deprecated surfaces also return the Deprecation header. Full timeline: ${currentDomain}/docs/versioning.",
       "x-rate-limit-policy":
         "Responses carry the standard IETF RateLimit-* headers (RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset). When rate limited, HTTP 429 is returned with a Retry-After header so agents can self-throttle in real time.",
     },
@@ -699,6 +730,7 @@ function generateDynamicLlms(currentDomain) {
 - **Self-Serve API Key (free tier, no signup):** ${currentDomain}/api/keys
 - **Sandbox / Test Environment:** ${currentDomain}/api/sandbox (returns labelled sample data)
 - **Rate Limit Headers:** Responses include standard IETF \`RateLimit-Limit\`, \`RateLimit-Remaining\`, \`RateLimit-Reset\` headers; a 429 includes \`Retry-After\`.
+- **API Versioning & Deprecation Policy:** ${currentDomain}/docs/versioning (Sunset/Deprecation header timeline, RFC 8594).
 - **OAuth Scoped Permissions (RFC 9728):** ${currentDomain}/.well-known/oauth-protected-resource
 - **OAuth Authorization Server Metadata (RFC 8414):** ${currentDomain}/.well-known/oauth-authorization-server
 - **XML Sitemap:** ${currentDomain}/sitemap.xml
@@ -894,6 +926,7 @@ For privacy queries or data concerns, contact: 23bce078@nirmauni.ac.in / urvagan
 - **MCP Tool Endpoint:** ${domain}/api/mcp
 - **LLM Agent Index:** ${domain}/llms.txt
 - **API Authentication Guidelines:** ${domain}/auth
+- **API Versioning & Deprecation Policy:** ${domain}/docs/versioning
 - **Self-Serve API Key (free tier, no signup):** ${domain}/api/keys
 - **Sandbox Test Environment:** ${domain}/api/sandbox
 - **XML Sitemap:** ${domain}/sitemap.xml
@@ -924,6 +957,26 @@ Try the API safely with clearly-labelled sample data (zero quota impact):
 - MCP Tool invocations: 60 calls / min
 - Headers: \`RateLimit-Limit\`, \`RateLimit-Remaining\`, \`RateLimit-Reset\` (+ \`Retry-After\` on 429)
 `,
+    "/docs/versioning": `# API Versioning & Deprecation Policy - Urva Gandhi Portfolio
+
+> A contract agents can rely on: versions are stable, deprecations are announced in advance, and nothing changes without warning.
+
+## Versioning Strategy
+- **URL path versioning:** Every canonical endpoint is mirrored under stable versioned paths: \`/api/*\`, \`/v1/*\`, and \`/api/v1/*\`. Example: \`GET /v1/leetcode\`.
+- **Version header:** Operations also accept the \`X-API-Version\` request header (value \`1\`), documented in the OpenAPI spec at ${domain}/openapi.json.
+- **Current stable version:** \`1\` — offered in advance, no change since launch.
+
+## Deprecation Policy (timeline)
+1. **Announcement:** A deprecation is announced at least **6 months before** end-of-life.
+2. **Signal:** Deprecated surfaces are identified by the \`Sunset\` HTTP header (RFC 8594) on responses, plus this policy page and the OpenAPI spec.
+3. **Deprecation header:** If a version is formally deprecated rather than removed, the \`Deprecation\` HTTP header is also returned.
+4. **Removal:** After end-of-life, deprecated endpoints return HTTP 404 with an RFC 9457 \`application/problem+json\` body explaining the removal and pointing to the replacement surface.
+
+## Guarantees
+- Version 1 is backward compatible and will not break during its lifetime.
+- No endpoint is removed without a \`Sunset\` announcement.
+`,
+    "/docs/deprecation": `See the \`/docs/versioning\` policy.`,
     "/sandbox": `# Sandbox Test Environment - Urva Gandhi Portfolio
 
 > Free, zero-quota testing environment for the developer API and MCP server.

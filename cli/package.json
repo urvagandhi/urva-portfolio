@@ -1,6 +1,6 @@
 {
   "name": "urvagandhi",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Official CLI for Urva Gandhi - developer portfolio, verified coding stats, projects, contact channels, and Model Context Protocol (MCP) endpoints.",
   "license": "MIT",
   "bin": {

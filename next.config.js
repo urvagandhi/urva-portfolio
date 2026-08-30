@@ -58,6 +58,10 @@ const nextConfig = {
             value: "camera=(), microphone=(), geolocation=()",
           },
           { key: "Vary", value: "Accept, Accept-Encoding, Host" },
+          {
+            key: "X-Robots-Tag",
+            value: "index, follow, max-snippet:-1, max-image-preview:large",
+          },
         ],
       },
     ];

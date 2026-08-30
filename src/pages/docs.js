@@ -550,6 +550,40 @@ export default function DocsPage() {
               </div>
             </div>
 
+            {/* Versioning & Deprecation Policy */}
+            <div
+              id="versioning"
+              className="mt-4 p-5 rounded-2xl bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Server className="w-5 h-5 text-primary dark:text-primaryDark" />
+                <h3 className="text-base font-extrabold text-dark dark:text-light">
+                  API Versioning &amp; Deprecation Policy
+                </h3>
+              </div>
+              <p className="text-xs text-dark/70 dark:text-light/70 leading-relaxed">
+                Every endpoint is mirrored under stable versioned paths (
+                <code className="font-mono">/api/*</code>,{" "}
+                <code className="font-mono">/v1/*</code>,{" "}
+                <code className="font-mono">/api/v1/*</code>) and accepts the{" "}
+                <code className="font-mono">X-API-Version</code> header (value{" "}
+                <code className="font-mono">1</code>). Deprecations are
+                announced 6 months before end-of-life via the{" "}
+                <code className="font-mono">Sunset</code> HTTP header (RFC
+                8594); deprecated surfaces additionally return the{" "}
+                <code className="font-mono">Deprecation</code> header and a
+                documented timeline at{" "}
+                <a
+                  href="/docs/versioning"
+                  rel="noopener noreferrer"
+                  className="underline text-primary dark:text-primaryDark"
+                >
+                  /docs/versioning
+                </a>
+                .
+              </p>
+            </div>
+
             {/* Swagger REST API Endpoints Accordion */}
             <div className="w-full mb-16">
               <div className="flex items-center gap-3 mb-6 border-b border-dark/10 dark:border-light/10 pb-4">

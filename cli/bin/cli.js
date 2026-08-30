@@ -4,7 +4,7 @@
 const https = require("https");
 
 const PRIMARY_DOMAIN = "https://urvagandhi.tech";
-const VERSION = "1.0.1";
+const VERSION = "1.0.2";
 
 let jsonOnly = false;
 
