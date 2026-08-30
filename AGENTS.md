@@ -7,3 +7,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# Domain / Hosting
+
+- Permanent domain (Vercel): `https://urvagandhi-portfolio.vercel.app/`
+- Temporary domain (bought for 1 year): `https://urvagandhi.tech/`
+- Redirect: anyone visiting `urvagandhi-portfolio.vercel.app/` is redirected to `urvagandhi.tech/`
+- Hosting: Vercel

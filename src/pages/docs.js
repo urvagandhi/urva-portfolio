@@ -472,6 +472,84 @@ export default function DocsPage() {
               </Link>
             </div>
 
+            {/* Getting Started: Self-Serve Keys & Sandbox */}
+            <div className="w-full mb-16">
+              <div className="flex items-center gap-3 mb-6 border-b border-dark/10 dark:border-light/10 pb-4">
+                <Zap className="w-7 h-7 text-primary dark:text-primaryDark" />
+                <h2 className="text-3xl font-extrabold text-dark dark:text-light">
+                  Getting Started (No Signup Needed)
+                </h2>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-1 gap-6">
+                <div className="p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Key className="w-5 h-5 text-primary dark:text-primaryDark" />
+                    <h3 className="text-lg font-extrabold text-dark dark:text-light">
+                      Self-Serve API Key
+                    </h3>
+                  </div>
+                  <p className="text-xs text-dark/70 dark:text-light/70 mb-4 leading-relaxed">
+                    Free-tier, scoped API key issued instantly without a signup
+                    form. Auth via{" "}
+                    <code className="font-mono text-[11px] bg-dark/10 dark:bg-light/10 px-1.5 py-0.5 rounded font-bold">
+                      Authorization: Bearer &lt;apiKey&gt;
+                    </code>
+                    .
+                  </p>
+                  <a
+                    href="/api/keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-dark text-light dark:bg-light dark:text-dark font-bold text-xs hover:opacity-90 transition-opacity"
+                  >
+                    <Key className="w-3.5 h-3.5" />
+                    <span>Issue a Key</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+
+                <div className="p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Terminal className="w-5 h-5 text-primary dark:text-primaryDark" />
+                    <h3 className="text-lg font-extrabold text-dark dark:text-light">
+                      Sandbox Test Environment
+                    </h3>
+                  </div>
+                  <p className="text-xs text-dark/70 dark:text-light/70 mb-4 leading-relaxed">
+                    Zero-quota playground returning clearly-labelled sample data
+                    (marked{" "}
+                    <code className="font-mono text-[11px] bg-dark/10 dark:bg-light/10 px-1.5 py-0.5 rounded font-bold">
+                      X-Environment: sandbox
+                    </code>
+                    ).
+                  </p>
+                  <a
+                    href="/api/sandbox?platform=leetcode"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-dark text-light dark:bg-light dark:text-dark font-bold text-xs hover:opacity-90 transition-opacity"
+                  >
+                    <Terminal className="w-3.5 h-3.5" />
+                    <span>Try the Sandbox</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+              <div className="mt-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-700 dark:text-emerald-300 font-medium flex items-center gap-2">
+                <span className="font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-[10px]">
+                  Rate Limit Headers
+                </span>
+                <span>
+                  Every response carries standard IETF{" "}
+                  <code className="font-mono">RateLimit-Limit</code>,{" "}
+                  <code className="font-mono">RateLimit-Remaining</code>,{" "}
+                  <code className="font-mono">RateLimit-Reset</code> headers;
+                  HTTP 429 adds <code className="font-mono">Retry-After</code>{" "}
+                  for agents to self-throttle.
+                </span>
+              </div>
+            </div>
+
             {/* Swagger REST API Endpoints Accordion */}
             <div className="w-full mb-16">
               <div className="flex items-center gap-3 mb-6 border-b border-dark/10 dark:border-light/10 pb-4">

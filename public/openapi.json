@@ -20,6 +20,10 @@
     {
       "url": "https://urvagandhi-portfolio.vercel.app",
       "description": "Lifetime Vercel Mirror Domain"
+    },
+    {
+      "url": "https://urvagandhi.tech/v1",
+      "description": "Active Domain Versioned Base URL (/v1)"
     }
   ],
   "paths": {
@@ -28,7 +32,19 @@
         "operationId": "getLeetCodeStats",
         "summary": "Get LeetCode Statistics",
         "description": "Fetches verified LeetCode profile statistics, global ranking, total problems solved, contest rating, and difficulty breakdown for Urva Gandhi.",
+        "security": [],
         "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
           {
             "name": "username",
             "in": "query",
@@ -79,7 +95,19 @@
         "operationId": "getCodeforcesStats",
         "summary": "Get Codeforces Statistics",
         "description": "Fetches Codeforces contest rating, max rating, rank, and submission metrics.",
+        "security": [],
         "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
           {
             "name": "username",
             "in": "query",
@@ -120,7 +148,19 @@
         "operationId": "getCodeChefStats",
         "summary": "Get CodeChef Statistics",
         "description": "Fetches CodeChef rating, global rank, contest stars, and problems solved.",
+        "security": [],
         "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
           {
             "name": "username",
             "in": "query",
@@ -161,7 +201,19 @@
         "operationId": "getGfgStats",
         "summary": "Get GeeksforGeeks Statistics",
         "description": "Fetches GeeksforGeeks overall coding score, streak data, and institute ranking.",
+        "security": [],
         "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
           {
             "name": "username",
             "in": "query",
@@ -192,7 +244,19 @@
         "operationId": "getHackerRankStats",
         "summary": "Get HackerRank Statistics",
         "description": "Fetches HackerRank badges, scores, and problem solving achievements.",
+        "security": [],
         "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
           {
             "name": "username",
             "in": "query",
@@ -223,6 +287,11 @@
         "operationId": "submitContactInquiry",
         "summary": "Submit Contact Form Inquiry",
         "description": "Delivers an inquiry email directly to Urva Gandhi via Brevo HTTPS REST API.",
+        "security": [
+          {
+            "oauth2": ["profile:write"]
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -254,7 +323,20 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          }
+        ]
       }
     },
     "/api/mcp": {
@@ -262,6 +344,7 @@
         "operationId": "getMcpManifest",
         "summary": "MCP Server Handshake & Capabilities",
         "description": "Returns Model Context Protocol server capabilities, tool declarations, and server metadata.",
+        "security": [],
         "responses": {
           "200": {
             "description": "MCP Manifest payload",
@@ -273,12 +356,26 @@
               }
             }
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          }
+        ]
       },
       "post": {
         "operationId": "callMcpTool",
         "summary": "Execute MCP Tool or Handshake (JSON-RPC 2.0)",
         "description": "Handles MCP JSON-RPC 2.0 requests (initialize, tools/list, tools/call, resources/list, resources/read, ping).",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -300,11 +397,818 @@
               }
             }
           }
+        },
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/leetcode": {
+      "get": {
+        "operationId": "getLeetCodeStats",
+        "summary": "Get LeetCode Statistics",
+        "description": "Fetches verified LeetCode profile statistics, global ranking, total problems solved, contest rating, and difficulty breakdown for Urva Gandhi.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "LeetCode handle (defaults to Urva_Gandhi)",
+            "schema": {
+              "type": "string",
+              "default": "Urva_Gandhi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful LeetCode response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeetCodeProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
         }
+      }
+    },
+    "/api/v1/leetcode": {
+      "get": {
+        "operationId": "getLeetCodeStats",
+        "summary": "Get LeetCode Statistics",
+        "description": "Fetches verified LeetCode profile statistics, global ranking, total problems solved, contest rating, and difficulty breakdown for Urva Gandhi.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "LeetCode handle (defaults to Urva_Gandhi)",
+            "schema": {
+              "type": "string",
+              "default": "Urva_Gandhi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful LeetCode response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeetCodeProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/codeforces": {
+      "get": {
+        "operationId": "getCodeforcesStats",
+        "summary": "Get Codeforces Statistics",
+        "description": "Fetches Codeforces contest rating, max rating, rank, and submission metrics.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "Codeforces handle (defaults to Urva_Gandhi)",
+            "schema": {
+              "type": "string",
+              "default": "Urva_Gandhi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Codeforces response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeforcesProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/codeforces": {
+      "get": {
+        "operationId": "getCodeforcesStats",
+        "summary": "Get Codeforces Statistics",
+        "description": "Fetches Codeforces contest rating, max rating, rank, and submission metrics.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "Codeforces handle (defaults to Urva_Gandhi)",
+            "schema": {
+              "type": "string",
+              "default": "Urva_Gandhi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Codeforces response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeforcesProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/codechef": {
+      "get": {
+        "operationId": "getCodeChefStats",
+        "summary": "Get CodeChef Statistics",
+        "description": "Fetches CodeChef rating, global rank, contest stars, and problems solved.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "CodeChef handle (defaults to urva_gandhi)",
+            "schema": {
+              "type": "string",
+              "default": "urva_gandhi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful CodeChef response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeChefProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/codechef": {
+      "get": {
+        "operationId": "getCodeChefStats",
+        "summary": "Get CodeChef Statistics",
+        "description": "Fetches CodeChef rating, global rank, contest stars, and problems solved.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "CodeChef handle (defaults to urva_gandhi)",
+            "schema": {
+              "type": "string",
+              "default": "urva_gandhi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful CodeChef response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeChefProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/gfg": {
+      "get": {
+        "operationId": "getGfgStats",
+        "summary": "Get GeeksforGeeks Statistics",
+        "description": "Fetches GeeksforGeeks overall coding score, streak data, and institute ranking.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "GeeksforGeeks handle (defaults to urvagandhi)",
+            "schema": {
+              "type": "string",
+              "default": "urvagandhi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful GeeksforGeeks response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GfgProfile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/gfg": {
+      "get": {
+        "operationId": "getGfgStats",
+        "summary": "Get GeeksforGeeks Statistics",
+        "description": "Fetches GeeksforGeeks overall coding score, streak data, and institute ranking.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "GeeksforGeeks handle (defaults to urvagandhi)",
+            "schema": {
+              "type": "string",
+              "default": "urvagandhi"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful GeeksforGeeks response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GfgProfile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/hackerrank": {
+      "get": {
+        "operationId": "getHackerRankStats",
+        "summary": "Get HackerRank Statistics",
+        "description": "Fetches HackerRank badges, scores, and problem solving achievements.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "HackerRank handle (defaults to urvagandhi24)",
+            "schema": {
+              "type": "string",
+              "default": "urvagandhi24"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful HackerRank response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HackerRankProfile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hackerrank": {
+      "get": {
+        "operationId": "getHackerRankStats",
+        "summary": "Get HackerRank Statistics",
+        "description": "Fetches HackerRank badges, scores, and problem solving achievements.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "required": false,
+            "description": "HackerRank handle (defaults to urvagandhi24)",
+            "schema": {
+              "type": "string",
+              "default": "urvagandhi24"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful HackerRank response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HackerRankProfile"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/contact": {
+      "post": {
+        "operationId": "submitContactInquiry",
+        "summary": "Submit Contact Form Inquiry",
+        "description": "Delivers an inquiry email directly to Urva Gandhi via Brevo HTTPS REST API.",
+        "security": [
+          {
+            "oauth2": ["profile:write"]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message delivered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/contact": {
+      "post": {
+        "operationId": "submitContactInquiry",
+        "summary": "Submit Contact Form Inquiry",
+        "description": "Delivers an inquiry email directly to Urva Gandhi via Brevo HTTPS REST API.",
+        "security": [
+          {
+            "oauth2": ["profile:write"]
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message delivered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContactResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/mcp": {
+      "get": {
+        "operationId": "getMcpManifest",
+        "summary": "MCP Server Handshake & Capabilities",
+        "description": "Returns Model Context Protocol server capabilities, tool declarations, and server metadata.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "MCP Manifest payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpManifest"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "callMcpTool",
+        "summary": "Execute MCP Tool or Handshake (JSON-RPC 2.0)",
+        "description": "Handles MCP JSON-RPC 2.0 requests (initialize, tools/list, tools/call, resources/list, resources/read, ping).",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/McpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON-RPC response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/mcp": {
+      "get": {
+        "operationId": "getMcpManifest",
+        "summary": "MCP Server Handshake & Capabilities",
+        "description": "Returns Model Context Protocol server capabilities, tool declarations, and server metadata.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "MCP Manifest payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpManifest"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "callMcpTool",
+        "summary": "Execute MCP Tool or Handshake (JSON-RPC 2.0)",
+        "description": "Handles MCP JSON-RPC 2.0 requests (initialize, tools/list, tools/call, resources/list, resources/read, ping).",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/McpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JSON-RPC response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-API-Version",
+            "in": "header",
+            "required": false,
+            "description": "API version to target. Omit to use the latest stable version (1).",
+            "schema": {
+              "type": "string",
+              "enum": ["1"],
+              "default": "1"
+            }
+          }
+        ]
       }
     }
   },
   "components": {
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://urvagandhi.tech/.well-known/oauth/token",
+            "scopes": {
+              "profile:read": "Read public developer profile and coding statistics.",
+              "profile:write": "Submit a contact inquiry on behalf of an authenticated client."
+            }
+          },
+          "authorizationCode": {
+            "authorizationUrl": "https://urvagandhi.tech/.well-known/oauth/authorize",
+            "tokenUrl": "https://urvagandhi.tech/.well-known/oauth/token",
+            "scopes": {
+              "profile:read": "Read public developer profile and coding statistics.",
+              "profile:write": "Submit a contact inquiry on behalf of an authenticated client."
+            }
+          }
+        }
+      }
+    },
     "schemas": {
       "ErrorResponse": {
         "type": "object",
@@ -343,54 +1247,108 @@
       "LeetCodeProfile": {
         "type": "object",
         "properties": {
-          "username": { "type": "string", "example": "Urva_Gandhi" },
-          "solved": { "type": "integer", "example": 312 },
-          "rating": { "type": "integer", "example": 1637 },
-          "topPercentile": { "type": "string", "example": "Top 19.46%" },
-          "globalRanking": { "type": "integer", "example": 142500 }
+          "username": {
+            "type": "string",
+            "example": "Urva_Gandhi"
+          },
+          "solved": {
+            "type": "integer",
+            "example": 312
+          },
+          "rating": {
+            "type": "integer",
+            "example": 1637
+          },
+          "topPercentile": {
+            "type": "string",
+            "example": "Top 19.46%"
+          },
+          "globalRanking": {
+            "type": "integer",
+            "example": 142500
+          }
         }
       },
       "CodeforcesProfile": {
         "type": "object",
         "properties": {
-          "handle": { "type": "string", "example": "Urva_Gandhi" },
-          "rating": { "type": "integer", "example": 1350 },
-          "maxRating": { "type": "integer", "example": 1420 },
-          "rank": { "type": "string", "example": "pupil" }
+          "handle": {
+            "type": "string",
+            "example": "Urva_Gandhi"
+          },
+          "rating": {
+            "type": "integer",
+            "example": 1350
+          },
+          "maxRating": {
+            "type": "integer",
+            "example": 1420
+          },
+          "rank": {
+            "type": "string",
+            "example": "pupil"
+          }
         }
       },
       "CodeChefProfile": {
         "type": "object",
         "properties": {
-          "username": { "type": "string", "example": "urva_gandhi" },
-          "rating": { "type": "integer", "example": 1580 },
-          "stars": { "type": "string", "example": "2★" }
+          "username": {
+            "type": "string",
+            "example": "urva_gandhi"
+          },
+          "rating": {
+            "type": "integer",
+            "example": 1580
+          },
+          "stars": {
+            "type": "string",
+            "example": "2★"
+          }
         }
       },
       "GfgProfile": {
         "type": "object",
         "properties": {
-          "username": { "type": "string", "example": "urvagandhi" },
-          "score": { "type": "integer", "example": 450 }
+          "username": {
+            "type": "string",
+            "example": "urvagandhi"
+          },
+          "score": {
+            "type": "integer",
+            "example": 450
+          }
         }
       },
       "HackerRankProfile": {
         "type": "object",
         "properties": {
-          "username": { "type": "string", "example": "urvagandhi24" }
+          "username": {
+            "type": "string",
+            "example": "urvagandhi24"
+          }
         }
       },
       "ContactPayload": {
         "type": "object",
         "required": ["name", "email", "message"],
         "properties": {
-          "name": { "type": "string", "example": "Jane Doe" },
-          "email": { "type": "string", "example": "jane@example.com" },
+          "name": {
+            "type": "string",
+            "example": "Jane Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "jane@example.com"
+          },
           "subject": {
             "type": "string",
             "example": "Engineering Role Inquiry"
           },
-          "company": { "type": "string", "example": "Acme Corp" },
+          "company": {
+            "type": "string",
+            "example": "Acme Corp"
+          },
           "message": {
             "type": "string",
             "example": "We would love to discuss backend engineering opportunities with you."
@@ -400,7 +1358,10 @@
       "ContactResponse": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean", "example": true },
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
           "message": {
             "type": "string",
             "example": "Your message has been delivered to urvagandhi24@gmail.com!"
@@ -410,26 +1371,51 @@
       "McpManifest": {
         "type": "object",
         "properties": {
-          "schema_version": { "type": "string", "example": "1.0" },
-          "name": { "type": "string", "example": "urva-gandhi-portfolio-mcp" }
+          "schema_version": {
+            "type": "string",
+            "example": "1.0"
+          },
+          "name": {
+            "type": "string",
+            "example": "urva-gandhi-portfolio-mcp"
+          }
         }
       },
       "McpRequest": {
         "type": "object",
         "required": ["jsonrpc", "method"],
         "properties": {
-          "jsonrpc": { "type": "string", "example": "2.0" },
-          "id": { "type": "integer", "example": 1 },
-          "method": { "type": "string", "example": "tools/call" },
-          "params": { "type": "object" }
+          "jsonrpc": {
+            "type": "string",
+            "example": "2.0"
+          },
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "method": {
+            "type": "string",
+            "example": "tools/call"
+          },
+          "params": {
+            "type": "object"
+          }
         }
       },
       "McpResponse": {
         "type": "object",
         "properties": {
-          "jsonrpc": { "type": "string", "example": "2.0" },
-          "id": { "type": "integer", "example": 1 },
-          "result": { "type": "object" }
+          "jsonrpc": {
+            "type": "string",
+            "example": "2.0"
+          },
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "result": {
+            "type": "object"
+          }
         }
       }
     }

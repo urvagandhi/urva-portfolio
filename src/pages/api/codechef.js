@@ -20,6 +20,9 @@
  * ─────────────────────────────────────────────────────────────────────
  */
 export default async function handler(req, res) {
+  res.setHeader("RateLimit-Limit", "100");
+  res.setHeader("RateLimit-Remaining", "99");
+  res.setHeader("RateLimit-Reset", "60");
   res.setHeader("X-RateLimit-Limit", "100");
   res.setHeader("X-RateLimit-Remaining", "99");
   res.setHeader("X-RateLimit-Reset", "60");

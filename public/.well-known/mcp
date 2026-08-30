@@ -14,8 +14,29 @@
   "capabilities": {
     "tools": {
       "listChanged": false
+    },
+    "resources": {
+      "subscribe": false,
+      "listChanged": false
+    },
+    "prompts": {
+      "listChanged": false
     }
   },
+  "resources": [
+    {
+      "uri": "portfolio://developer-profile",
+      "name": "Urva Gandhi Developer Profile & Credentials",
+      "description": "Complete developer profile, Nirma University education, Java/Spring Boot & AI tech stack, and hackathon achievements.",
+      "mimeType": "application/json"
+    },
+    {
+      "uri": "portfolio://llms-summary",
+      "name": "LLM Agent Portfolio Summary",
+      "description": "Machine-readable summary of Urva Gandhi for AI agents.",
+      "mimeType": "text/markdown"
+    }
+  ],
   "tools": [
     {
       "name": "get_developer_profile",

@@ -310,14 +310,11 @@ export default function Home() {
           name="robots"
           content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
         />
-        <link rel="canonical" href="https://urvagandhi-portfolio.vercel.app/" />
+        <link rel="canonical" href="https://urvagandhi.tech/" />
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
-        <meta
-          property="og:url"
-          content="https://urvagandhi-portfolio.vercel.app/"
-        />
+        <meta property="og:url" content="https://urvagandhi.tech/" />
         <meta property="og:site_name" content="Urva Gandhi Portfolio" />
         <meta
           property="og:title"
@@ -329,7 +326,7 @@ export default function Home() {
         />
         <meta
           property="og:image"
-          content="https://urvagandhi-portfolio.vercel.app/images/profile/urva.png"
+          content="https://urvagandhi.tech/images/profile/urva.png"
         />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
@@ -351,7 +348,7 @@ export default function Home() {
         />
         <meta
           name="twitter:image"
-          content="https://urvagandhi-portfolio.vercel.app/images/profile/urva.png"
+          content="https://urvagandhi.tech/images/profile/urva.png"
         />
         <meta
           name="twitter:image:alt"
@@ -367,23 +364,23 @@ export default function Home() {
               "@graph": [
                 {
                   "@type": "WebSite",
-                  "@id": "https://urvagandhi-portfolio.vercel.app/#website",
+                  "@id": "https://urvagandhi.tech/#website",
                   name: "Urva Gandhi Portfolio",
-                  url: "https://urvagandhi-portfolio.vercel.app",
+                  url: "https://urvagandhi.tech",
                   description:
                     "Portfolio of Urva Gandhi — Full-Stack Developer & ML Engineer",
                   inLanguage: "en-US",
                 },
                 {
                   "@type": "WebPage",
-                  "@id": "https://urvagandhi-portfolio.vercel.app/#webpage",
-                  url: "https://urvagandhi-portfolio.vercel.app/",
+                  "@id": "https://urvagandhi.tech/#webpage",
+                  url: "https://urvagandhi.tech/",
                   name: "Urva Gandhi | Software Developer Portfolio",
                   isPartOf: {
-                    "@id": "https://urvagandhi-portfolio.vercel.app/#website",
+                    "@id": "https://urvagandhi.tech/#website",
                   },
                   about: {
-                    "@id": "https://urvagandhi-portfolio.vercel.app/#person",
+                    "@id": "https://urvagandhi.tech/#person",
                   },
                   description:
                     "Portfolio showcasing projects, skills, and experience of Urva Gandhi — a full-stack developer and ML engineer.",
@@ -391,11 +388,10 @@ export default function Home() {
                 },
                 {
                   "@type": "Person",
-                  "@id": "https://urvagandhi-portfolio.vercel.app/#person",
+                  "@id": "https://urvagandhi.tech/#person",
                   name: "Urva Gandhi",
-                  url: "https://urvagandhi-portfolio.vercel.app",
-                  image:
-                    "https://urvagandhi-portfolio.vercel.app/images/profile/urva.png",
+                  url: "https://urvagandhi.tech",
+                  image: "https://urvagandhi.tech/images/profile/urva.png",
                   jobTitle: "Full-Stack Developer",
                   description:
                     "Computer Science undergraduate at Nirma University. Full-stack developer with expertise in React.js, Spring Boot, and Machine Learning.",
@@ -620,7 +616,7 @@ export default function Home() {
         className="sr-only"
         aria-label="Urva Gandhi Developer & Agent Summary"
       >
-        <h1>Urva Yogeshkumar Gandhi - Backend &amp; AI Systems Engineer</h1>
+        <h2>Urva Yogeshkumar Gandhi - Backend &amp; AI Systems Engineer</h2>
         <p>
           Urva Gandhi is a final-year Computer Science &amp; Engineering
           undergraduate at Nirma University (Minor in Adaptive AI, CGPA:

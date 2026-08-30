@@ -102,6 +102,21 @@ export default function AuthDocsPage() {
                     or AI agent tool invocations.
                   </span>
                 </div>
+                <div className="flex items-center gap-2 text-dark/70 dark:text-light/70">
+                  <Key className="w-4 h-4 flex-shrink-0" />
+                  <span>
+                    Self-serve a free scoped key anytime at{" "}
+                    <a
+                      href="/api/keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline text-primary dark:text-primaryDark"
+                    >
+                      /api/keys
+                    </a>{" "}
+                    (no signup, no sales contact).
+                  </span>
+                </div>
               </div>
             </div>
 

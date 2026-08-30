@@ -26,9 +26,7 @@ export default function NotFoundShared({ showSearch = false }) {
         <CTALink href="/contact">Contact</CTALink>
       </div>
 
-      {showSearch && (
-        <SiteSearch />
-      )}
+      {showSearch && <SiteSearch />}
 
       <div className="mt-10 w-full max-w-lg rounded-xl border border-dark/10 bg-dark/5 p-6 text-left text-sm dark:border-light/10 dark:bg-light/5 sm:p-4 xs:p-3">
         <h3 className="font-bold text-dark dark:text-light mb-2">

@@ -1,0 +1,40 @@
+{
+  "name": "urvagandhi",
+  "version": "1.0.1",
+  "description": "Official CLI for Urva Gandhi - developer portfolio, verified coding stats, projects, contact channels, and Model Context Protocol (MCP) endpoints.",
+  "license": "MIT",
+  "bin": {
+    "urva": "bin/cli.js",
+    "urvagandhi": "bin/cli.js",
+    "urvagandhi-cli": "bin/cli.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "urva-gandhi",
+    "urvagandhi",
+    "portfolio",
+    "cli",
+    "coding-stats",
+    "leetcode",
+    "codeforces",
+    "codechef",
+    "gfg",
+    "hackerrank",
+    "mcp",
+    "model-context-protocol",
+    "developer-portfolio"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/urvagandhi/urva-portfolio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/urvagandhi/urva-portfolio/issues"
+  },
+  "homepage": "https://urvagandhi.tech"
+}

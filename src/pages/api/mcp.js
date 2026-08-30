@@ -3,6 +3,19 @@ import mcpManifest from "../../../public/.well-known/mcp.json";
 const PRIMARY_DOMAIN = "https://urvagandhi.tech";
 const LIFETIME_DOMAIN = "https://urvagandhi-portfolio.vercel.app";
 
+const SUPPORTED_PROTOCOL_VERSIONS = ["2024-11-05", "2025-03-26", "2025-06-18"];
+const DEFAULT_PROTOCOL_VERSION = "2024-11-05";
+
+const jsonrpcResponse = (id, resultOrError) => {
+  if (
+    resultOrError &&
+    Object.prototype.hasOwnProperty.call(resultOrError, "error")
+  ) {
+    return { jsonrpc: "2.0", id, ...resultOrError };
+  }
+  return { jsonrpc: "2.0", id, result: resultOrError };
+};
+
 export default async function handler(req, res) {
   const host = req.headers.host || "urvagandhi.tech";
   const proto =
@@ -15,10 +28,14 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, Accept, Mcp-Version, X-API-Version",
+    "Content-Type, Authorization, Accept, Mcp-Version, Mcp-Protocol-Version, X-API-Version",
   );
   res.setHeader("Mcp-Version", "1.0");
+  res.setHeader("Mcp-Protocol-Version", "2024-11-05");
   res.setHeader("X-API-Version", "1.0.0");
+  res.setHeader("RateLimit-Limit", "100");
+  res.setHeader("RateLimit-Remaining", "99");
+  res.setHeader("RateLimit-Reset", "60");
   res.setHeader("X-RateLimit-Limit", "100");
   res.setHeader("X-RateLimit-Remaining", "99");
   res.setHeader("X-RateLimit-Reset", "60");
@@ -50,6 +67,26 @@ export default async function handler(req, res) {
         description: "Lifetime Vercel Mirror Endpoint",
       },
     ],
+  };
+
+  const wantsSse = (req.headers.accept || "")
+    .split(",")
+    .map((a) => a.trim().toLowerCase())
+    .includes("text/event-stream");
+
+  // Send a JSON-RPC 2.0 response honoring the Streamable HTTP transport
+  // (SSE framing) when the client asks for text/event-stream.
+  const sendJsonRpc = (id, resultOrError, status = 200) => {
+    const payload = JSON.stringify(jsonrpcResponse(id, resultOrError));
+    if (wantsSse) {
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache, no-transform");
+      res.setHeader("Connection", "close");
+      res.status(status);
+      return res.end(`data: ${payload}\n\n`);
+    }
+    res.setHeader("Content-Type", "application/json");
+    return res.status(status).json(jsonrpcResponse(id, resultOrError));
   };
 
   if (req.method === "OPTIONS") {
@@ -123,64 +160,65 @@ Primary Web Domain: ${PRIMARY_DOMAIN} | Alternate Mirror: ${LIFETIME_DOMAIN}`;
 
     // Handle MCP JSON-RPC 2.0 requests
     if (jsonrpc === "2.0" || method) {
+      if (method && method.startsWith("notifications/")) {
+        // JSON-RPC notifications are fire-and-forget: the server MUST NOT
+        // return a response body. Acknowledge with 202 Accepted per the MCP
+        // Streamable HTTP transport spec.
+        res.status(202).end();
+        return;
+      }
+
       if (method === "initialize") {
-        return res.status(200).json({
-          jsonrpc: "2.0",
-          id: id || 1,
-          result: {
-            protocolVersion: "2024-11-05",
-            capabilities: {
-              tools: { listChanged: false },
-              resources: { subscribe: false, listChanged: false },
-            },
-            serverInfo: {
-              name: "urva-gandhi-portfolio-mcp",
-              version: "1.0.0",
-            },
+        const requestedVersion = params?.protocolVersion;
+        const negotiatedVersion = SUPPORTED_PROTOCOL_VERSIONS.includes(
+          requestedVersion,
+        )
+          ? requestedVersion
+          : DEFAULT_PROTOCOL_VERSION;
+        res.setHeader("Mcp-Protocol-Version", negotiatedVersion);
+        return sendJsonRpc(id, {
+          protocolVersion: negotiatedVersion,
+          capabilities: {
+            tools: { listChanged: false },
+            resources: { subscribe: false, listChanged: false },
           },
+          serverInfo: {
+            name: "urva-gandhi-portfolio-mcp",
+            version: "1.0.0",
+          },
+          instructions:
+            "Urva Gandhi portfolio MCP server. Public read-only tools: get_developer_profile, get_coding_stats, get_projects, get_contact_info. Available resources: portfolio://developer-profile and portfolio://llms-summary.",
         });
       }
 
       if (method === "ping") {
-        return res.status(200).json({
-          jsonrpc: "2.0",
-          id: id || 1,
-          result: {},
-        });
+        return sendJsonRpc(id, {});
       }
 
       if (method === "tools/list") {
-        return res.status(200).json({
-          jsonrpc: "2.0",
-          id: id || 1,
-          result: {
-            tools: mcpManifest.tools,
-          },
+        return sendJsonRpc(id, {
+          tools: mcpManifest.tools,
         });
       }
 
       if (method === "resources/list") {
-        return res.status(200).json({
-          jsonrpc: "2.0",
-          id: id || 1,
-          result: {
-            resources: [
-              {
-                uri: "portfolio://developer-profile",
-                name: "Urva Gandhi Developer Profile & Credentials",
-                description:
-                  "Complete developer profile, Nirma University education, Java/Spring Boot & AI tech stack, and hackathon achievements.",
-                mimeType: "application/json",
-              },
-              {
-                uri: "portfolio://llms-summary",
-                name: "LLM Agent Portfolio Summary",
-                description:
-                  "Machine-readable summary of Urva Gandhi for AI agents.",
-                mimeType: "text/markdown",
-              },
-            ],
-          },
+        return sendJsonRpc(id, {
+          resources: [
+            {
+              uri: "portfolio://developer-profile",
+              name: "Urva Gandhi Developer Profile & Credentials",
+              description:
+                "Complete developer profile, Nirma University education, Java/Spring Boot & AI tech stack, and hackathon achievements.",
+              mimeType: "application/json",
+            },
+            {
+              uri: "portfolio://llms-summary",
+              name: "LLM Agent Portfolio Summary",
+              description:
+                "Machine-readable summary of Urva Gandhi for AI agents.",
+              mimeType: "text/markdown",
+            },
+          ],
         });
       }
 
@@ -196,28 +234,26 @@ Primary Web Domain: ${PRIMARY_DOMAIN} | Alternate Mirror: ${LIFETIME_DOMAIN}`;
           contentText = llmsSummaryText;
           mimeType = "text/markdown";
         } else {
-          return res.status(200).json({
-            jsonrpc: "2.0",
-            id: id || 1,
-            error: {
-              code: -32602,
-              message: `Resource not found: ${uri}`,
+          return sendJsonRpc(
+            id,
+            {
+              error: {
+                code: -32602,
+                message: `Resource not found: ${uri}`,
+              },
             },
-          });
+            200,
+          );
         }
 
-        return res.status(200).json({
-          jsonrpc: "2.0",
-          id: id || 1,
-          result: {
-            contents: [
-              {
-                uri: uri,
-                mimeType: mimeType,
-                text: contentText,
-              },
-            ],
-          },
+        return sendJsonRpc(id, {
+          contents: [
+            {
+              uri: uri,
+              mimeType: mimeType,
+              text: contentText,
+            },
+          ],
         });
       }
 
@@ -345,27 +381,25 @@ Primary Web Domain: ${PRIMARY_DOMAIN} | Alternate Mirror: ${LIFETIME_DOMAIN}`;
               "S-308, Venus Parkland, Near Vejalpur Police Chowki, Vejalpur, Ahmedabad, Gujarat, India - 380051",
           };
         } else {
-          return res.status(200).json({
-            jsonrpc: "2.0",
-            id: id || 1,
-            error: {
-              code: -32601,
-              message: `Unknown tool: ${name}`,
+          return sendJsonRpc(
+            id,
+            {
+              error: {
+                code: -32601,
+                message: `Unknown tool: ${name}`,
+              },
             },
-          });
+            200,
+          );
         }
 
-        return res.status(200).json({
-          jsonrpc: "2.0",
-          id: id || 1,
-          result: {
-            content: [
-              {
-                type: "text",
-                text: JSON.stringify(toolResult, null, 2),
-              },
-            ],
-          },
+        return sendJsonRpc(id, {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(toolResult, null, 2),
+            },
+          ],
         });
       }
     }

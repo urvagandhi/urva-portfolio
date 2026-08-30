@@ -25,6 +25,10 @@
 - **OpenAPI 3.0 Specification:** https://urvagandhi.tech/openapi.json | https://urvagandhi-portfolio.vercel.app/openapi.json
 - **MCP Server Manifest:** https://urvagandhi.tech/.well-known/mcp | https://urvagandhi-portfolio.vercel.app/.well-known/mcp
 - **MCP Tool Calling Endpoint:** https://urvagandhi.tech/api/mcp | https://urvagandhi-portfolio.vercel.app/api/mcp
+- **Official CLI Tool:** \`npm install -g urvagandhi\` then run \`urvagandhi help\` (commands: profile, stats [platform], projects, contact, mcp, discover, openapi)
+- **Self-Serve API Key (free tier, no signup):** https://urvagandhi.tech/api/keys
+- **Sandbox / Test Environment:** https://urvagandhi.tech/api/sandbox (returns labelled sample data)
+- **Rate Limit Headers:** Responses include standard IETF \`RateLimit-Limit\`, \`RateLimit-Remaining\`, \`RateLimit-Reset\` headers; a 429 includes \`Retry-After\`.
 - **XML Sitemap:** https://urvagandhi.tech/sitemap.xml | https://urvagandhi-portfolio.vercel.app/sitemap.xml
 
 ## Trust Anchor Pages

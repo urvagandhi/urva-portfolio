@@ -15,7 +15,7 @@ const cursorVariants = {
 };
 
 const TypewriterText = ({ text, className = "" }) => {
-  const [displayedText, setDisplayedText] = useState("");
+  const [displayedText, setDisplayedText] = useState(text);
   const indexRef = useRef(0);
   const lastTimeRef = useRef(0);
 

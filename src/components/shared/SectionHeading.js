@@ -49,18 +49,18 @@ const SectionHeading = ({
 
   return (
     <div className={`relative flex flex-col items-start ${className}`}>
-      {/* Subtitle */}
+      {/* Subtitle (decorative label, not a heading, so H1 → H2 → H3 stays sequential) */}
       {subTitle && (
         <div className="relative mb-2">
-          <motion.h3
-            className="text-lg md:text-base font-semibold uppercase tracking-[0.2em] text-slate-700 dark:text-slate-300"
+          <motion.p
+            className="m-0 text-lg md:text-base font-semibold uppercase tracking-[0.2em] text-slate-700 dark:text-slate-300"
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true, margin: "-100px" }}
           >
             {subTitle}
-          </motion.h3>
+          </motion.p>
           {/* Underline */}
           <motion.div
             className={`absolute -bottom-1 left-0 h-[2px] bg-gradient-to-r ${colors.underline}`}

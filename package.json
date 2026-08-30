@@ -2,10 +2,6 @@
   "name": "urva-portfolio",
   "version": "1.0.0",
   "private": true,
-  "bin": {
-    "urva": "./bin/cli.js",
-    "urvagandhi": "./bin/cli.js"
-  },
   "scripts": {
     "predev": "node scripts/setup-cache.js",
     "prebuild": "node scripts/setup-cache.js",
@@ -16,7 +12,13 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "publish:cli": "npm publish ./cli"
+  },
+  "bin": {
+    "urva": "./cli/bin/cli.js",
+    "urvagandhi": "./cli/bin/cli.js",
+    "urvagandhi-cli": "./cli/bin/cli.js"
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",

@@ -5,42 +5,177 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 const INDEX = [
   // Pages
   { cat: "Page", label: "Home", href: "/", keywords: "home hero landing" },
-  { cat: "Page", label: "About", href: "/about", keywords: "about bio education experience skills" },
-  { cat: "Page", label: "Contact", href: "/contact", keywords: "contact email get in touch" },
-  { cat: "Page", label: "Developer Portal", href: "/docs", keywords: "docs developer api agents" },
-  { cat: "Page", label: "Privacy Policy", href: "/privacy", keywords: "privacy policy" },
-  { cat: "Page", label: "Agent Auth", href: "/auth", keywords: "auth agent login" },
+  {
+    cat: "Page",
+    label: "About",
+    href: "/about",
+    keywords: "about bio education experience skills",
+  },
+  {
+    cat: "Page",
+    label: "Contact",
+    href: "/contact",
+    keywords: "contact email get in touch",
+  },
+  {
+    cat: "Page",
+    label: "Developer Portal",
+    href: "/docs",
+    keywords: "docs developer api agents",
+  },
+  {
+    cat: "Page",
+    label: "Privacy Policy",
+    href: "/privacy",
+    keywords: "privacy policy",
+  },
+  {
+    cat: "Page",
+    label: "Agent Auth",
+    href: "/auth",
+    keywords: "auth agent login",
+  },
 
   // Projects
-  { cat: "Project", label: "CoinTrack", href: "/#projects", keywords: "cotrack broker asset investment" },
-  { cat: "Project", label: "Agent Paperpal", href: "/#projects", keywords: "paperpal ai manuscript agentic" },
-  { cat: "Project", label: "FleetFlow", href: "/#projects", keywords: "fleet logistics management" },
-  { cat: "Project", label: "RWEsearch", href: "/#projects", keywords: "rweni healthcare readmission analytics" },
-  { cat: "Project", label: "Connecting the Dots", href: "/#projects", keywords: "adobe pdf intelligence" },
-  { cat: "Project", label: "CodeGuardian", href: "/#projects", keywords: "ai vulnerability detection security" },
+  {
+    cat: "Project",
+    label: "CoinTrack",
+    href: "/#projects",
+    keywords: "cotrack broker asset investment",
+  },
+  {
+    cat: "Project",
+    label: "Agent Paperpal",
+    href: "/#projects",
+    keywords: "paperpal ai manuscript agentic",
+  },
+  {
+    cat: "Project",
+    label: "FleetFlow",
+    href: "/#projects",
+    keywords: "fleet logistics management",
+  },
+  {
+    cat: "Project",
+    label: "RWEsearch",
+    href: "/#projects",
+    keywords: "rweni healthcare readmission analytics",
+  },
+  {
+    cat: "Project",
+    label: "Connecting the Dots",
+    href: "/#projects",
+    keywords: "adobe pdf intelligence",
+  },
+  {
+    cat: "Project",
+    label: "CodeGuardian",
+    href: "/#projects",
+    keywords: "ai vulnerability detection security",
+  },
 
   // Skills
   { cat: "Skill", label: "Java", href: "/#skills", keywords: "java" },
   { cat: "Skill", label: "Python", href: "/#skills", keywords: "python" },
-  { cat: "Skill", label: "JavaScript", href: "/#skills", keywords: "javascript js" },
+  {
+    cat: "Skill",
+    label: "JavaScript",
+    href: "/#skills",
+    keywords: "javascript js",
+  },
   { cat: "Skill", label: "SQL", href: "/#skills", keywords: "sql database" },
-  { cat: "Skill", label: "Spring Boot", href: "/#skills", keywords: "spring boot java" },
-  { cat: "Skill", label: "Node.js", href: "/#skills", keywords: "node nodejs backend" },
-  { cat: "Skill", label: "React.js", href: "/#skills", keywords: "react frontend" },
-  { cat: "Skill", label: "Next.js", href: "/#skills", keywords: "next framework" },
-  { cat: "Skill", label: "Tailwind CSS", href: "/#skills", keywords: "tailwind css styling" },
-  { cat: "Skill", label: "PostgreSQL", href: "/#skills", keywords: "postgres sql database" },
-  { cat: "Skill", label: "MongoDB", href: "/#skills", keywords: "mongo database nosql" },
-  { cat: "Skill", label: "TensorFlow", href: "/#skills", keywords: "tensorflow ml ai" },
-  { cat: "Skill", label: "Docker", href: "/#skills", keywords: "docker container devops" },
-  { cat: "Skill", label: "Git", href: "/#skills", keywords: "git version control github" },
-  { cat: "Skill", label: "ML & AI", href: "/#skills", keywords: "machine learning ai" },
+  {
+    cat: "Skill",
+    label: "Spring Boot",
+    href: "/#skills",
+    keywords: "spring boot java",
+  },
+  {
+    cat: "Skill",
+    label: "Node.js",
+    href: "/#skills",
+    keywords: "node nodejs backend",
+  },
+  {
+    cat: "Skill",
+    label: "React.js",
+    href: "/#skills",
+    keywords: "react frontend",
+  },
+  {
+    cat: "Skill",
+    label: "Next.js",
+    href: "/#skills",
+    keywords: "next framework",
+  },
+  {
+    cat: "Skill",
+    label: "Tailwind CSS",
+    href: "/#skills",
+    keywords: "tailwind css styling",
+  },
+  {
+    cat: "Skill",
+    label: "PostgreSQL",
+    href: "/#skills",
+    keywords: "postgres sql database",
+  },
+  {
+    cat: "Skill",
+    label: "MongoDB",
+    href: "/#skills",
+    keywords: "mongo database nosql",
+  },
+  {
+    cat: "Skill",
+    label: "TensorFlow",
+    href: "/#skills",
+    keywords: "tensorflow ml ai",
+  },
+  {
+    cat: "Skill",
+    label: "Docker",
+    href: "/#skills",
+    keywords: "docker container devops",
+  },
+  {
+    cat: "Skill",
+    label: "Git",
+    href: "/#skills",
+    keywords: "git version control github",
+  },
+  {
+    cat: "Skill",
+    label: "ML & AI",
+    href: "/#skills",
+    keywords: "machine learning ai",
+  },
 
   // Agent / machine resources
-  { cat: "Resource", label: "llms.txt Index", href: "/llms.txt", keywords: "llms index ai" },
-  { cat: "Resource", label: "OpenAPI 3.0 Specification", href: "/openapi.json", keywords: "openapi spec api" },
-  { cat: "Resource", label: "MCP Server Manifest", href: "/.well-known/mcp", keywords: "mcp manifest" },
-  { cat: "Resource", label: "XML Sitemap", href: "/sitemap.xml", keywords: "sitemap xml" },
+  {
+    cat: "Resource",
+    label: "llms.txt Index",
+    href: "/llms.txt",
+    keywords: "llms index ai",
+  },
+  {
+    cat: "Resource",
+    label: "OpenAPI 3.0 Specification",
+    href: "/openapi.json",
+    keywords: "openapi spec api",
+  },
+  {
+    cat: "Resource",
+    label: "MCP Server Manifest",
+    href: "/.well-known/mcp",
+    keywords: "mcp manifest",
+  },
+  {
+    cat: "Resource",
+    label: "XML Sitemap",
+    href: "/sitemap.xml",
+    keywords: "sitemap xml",
+  },
 ];
 
 const normalize = (s) => s.toLowerCase().trim();
@@ -96,9 +231,7 @@ export default function SiteSearch({ autoFocus = false }) {
   return (
     <div className="mx-auto mt-8 w-full max-w-md text-left">
       <div className="relative">
-        <div
-          className="flex items-center gap-2 rounded-lg border border-dark/20 bg-light/60 px-3 dark:border-light/20 dark:bg-dark/60"
-        >
+        <div className="flex items-center gap-2 rounded-lg border border-dark/20 bg-light/60 px-3 dark:border-light/20 dark:bg-dark/60">
           <span
             className="shrink-0 text-dark/40 dark:text-light/40"
             aria-hidden="true"
@@ -191,9 +324,19 @@ export default function SiteSearch({ autoFocus = false }) {
         </AnimatePresence>
       </div>
       <p className="mt-2 text-center text-xs text-dark/40 dark:text-light/40">
-        Tip: press <kbd className="rounded border border-dark/20 px-1 dark:border-light/20">Enter</kbd> to open,{" "}
-        <kbd className="rounded border border-dark/20 px-1 dark:border-light/20">↑↓</kbd> to navigate,{" "}
-        <kbd className="rounded border border-dark/20 px-1 dark:border-light/20">Esc</kbd> to close
+        Tip: press{" "}
+        <kbd className="rounded border border-dark/20 px-1 dark:border-light/20">
+          Enter
+        </kbd>{" "}
+        to open,{" "}
+        <kbd className="rounded border border-dark/20 px-1 dark:border-light/20">
+          ↑↓
+        </kbd>{" "}
+        to navigate,{" "}
+        <kbd className="rounded border border-dark/20 px-1 dark:border-light/20">
+          Esc
+        </kbd>{" "}
+        to close
       </p>
     </div>
   );
