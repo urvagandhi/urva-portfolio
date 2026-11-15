@@ -49,6 +49,7 @@ export default async function handler(req, res) {
     const updatedOpens = await hincrby(k(`mail:m:${t}`), 'opens', 1);
     await hset(k(`mail:m:${t}`), {
       last_opened_at: now,
+      last_event_at: now,
       status: msg.status === 'registered' ? 'opened' : msg.status
     });
 
