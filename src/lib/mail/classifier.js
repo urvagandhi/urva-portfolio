@@ -57,6 +57,24 @@ export function truncateIp(ip) {
 }
 
 /**
+ * Decodes URL-encoded location headers (e.g. Vercel's x-vercel-ip-city).
+ * Resolves percent-encoded characters (e.g. "J%C5%ABn%C4%81gadh" -> "Jūnāgadh", "The%20Dalles" -> "The Dalles").
+ *
+ * @param {string} city Raw header value
+ * @returns {string} Clean, decoded city string
+ */
+export function decodeCity(city) {
+  if (!city || typeof city !== 'string') {
+    return '';
+  }
+  try {
+    return decodeURIComponent(city.trim());
+  } catch (_) {
+    return city.trim();
+  }
+}
+
+/**
  * Sanitises input strings to neutralise HTML injection before template interpolation.
  *
  * @param {string} str Raw user string

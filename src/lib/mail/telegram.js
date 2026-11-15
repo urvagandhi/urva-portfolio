@@ -3,6 +3,8 @@
  * Dispatches real-time alerts formatted in Indian Standard Time (Asia/Kolkata).
  */
 
+import { decodeCity } from './classifier.js';
+
 /**
  * Formats a Date or epoch millisecond value into Indian Standard Time (IST).
  * Format: YYYY-MM-DD HH:mm:ss IST
@@ -50,7 +52,7 @@ export function buildAlertMessage(params = {}) {
     headerTag = '[Link Clicked]';
   } else if (params.eventType === 'resume_view') {
     headerTag = '[Resume Viewed]';
-  } else if (params.eventType === 'resume_download') {
+  } else if (params.eventType === 'resume_download' || params.eventType === 'download') {
     headerTag = '[Resume Downloaded]';
   }
 
@@ -65,7 +67,8 @@ export function buildAlertMessage(params = {}) {
     : (params.recipientEmail || 'Unknown recipient');
   const company = params.company || 'Unknown organisation';
   const detail = params.detail || 'None';
-  const location = [params.city, params.region, params.country].filter(Boolean).join(', ') || 'Unknown location';
+  const cleanCity = params.city ? decodeCity(params.city) : '';
+  const location = [cleanCity, params.region, params.country].filter(Boolean).join(', ') || 'Unknown location';
   const ip = params.ipTrunc || 'Unknown IP';
   const ua = params.ua || 'Unknown client';
 

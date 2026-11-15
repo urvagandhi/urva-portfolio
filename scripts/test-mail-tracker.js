@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { generateToken, verifyToken } from '../src/lib/mail/token.js';
 import { ALLOWED_SLUGS, resolveDestination } from '../src/lib/mail/allowlist.js';
-import { classifyClient, truncateIp, escapeHtml } from '../src/lib/mail/classifier.js';
+import { classifyClient, truncateIp, escapeHtml, decodeCity } from '../src/lib/mail/classifier.js';
 import {
   k,
   clearMockStore,
@@ -368,6 +368,20 @@ async function runUnitTests() {
         await del('test:list');
         await del('test:zset');
       }
+    }
+  );
+
+  await testCase(
+    'UT-SUPP-04',
+    'classifier.js | decodeCity() decodes percent-encoded location headers and preserves clean strings',
+    async () => {
+      assert.equal(decodeCity('J%C5%ABn%C4%81gadh'), 'Jūnāgadh', 'Percent-encoded UTF-8 city must decode properly');
+      assert.equal(decodeCity('The%20Dalles'), 'The Dalles', 'Spaces in city names must decode properly');
+      assert.equal(decodeCity('London'), 'London', 'Clean ASCII string should be preserved');
+      assert.equal(decodeCity(''), '', 'Empty string should return empty string');
+      assert.equal(decodeCity(null), '', 'Null input should return empty string');
+      assert.equal(decodeCity(undefined), '', 'Undefined input should return empty string');
+      assert.equal(decodeCity(12345), '', 'Non-string input should return empty string');
     }
   );
 }
@@ -744,6 +758,17 @@ async function runIntegrationTests() {
       assert.equal(Number(msg.resume_views), 1, 'Resume views must increment to 1');
       assert.equal(Number(msg.total_dwell_ms), 32000, 'Dwell ms must accumulate 32000');
       assert.equal(Number(msg.downloads), 1, 'Downloads must increment to 1');
+
+      // 4. Test debounce suppression: rapid duplicate resume_view should not double increment
+      const { req: req4, res: res4 } = createMockReqRes({
+        method: 'POST',
+        body: JSON.stringify({ t: activeTestToken, event: 'resume_view' })
+      });
+      await beaconHandler(req4, res4);
+      assert.equal(res4.statusCode, 204);
+
+      const msgAfterDup = await hgetall(k(`mail:m:${activeTestToken}`));
+      assert.equal(Number(msgAfterDup.resume_views), 1, 'Duplicate resume view within debounce must be suppressed');
     }
   );
 

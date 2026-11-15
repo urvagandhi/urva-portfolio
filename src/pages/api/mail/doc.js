@@ -106,17 +106,20 @@ export default async function handler(req, res) {
 
       function sendPayload(data) {
         const payload = JSON.stringify(Object.assign({ t: TOKEN }, data));
-        try {
-          fetch('/api/mail/beacon', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: payload,
-            keepalive: true
-          }).catch(function() {});
-        } catch (_) {}
+        let sent = false;
         if (navigator.sendBeacon) {
           try {
-            navigator.sendBeacon('/api/mail/beacon', payload);
+            sent = navigator.sendBeacon('/api/mail/beacon', payload);
+          } catch (_) {}
+        }
+        if (!sent) {
+          try {
+            fetch('/api/mail/beacon', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: payload,
+              keepalive: true
+            }).catch(function() {});
           } catch (_) {}
         }
       }
@@ -148,14 +151,6 @@ export default async function handler(req, res) {
           }
         }
       });
-
-      // Track custom download button click
-      const downloadBtn = document.getElementById('downloadBtn');
-      if (downloadBtn) {
-        downloadBtn.addEventListener('click', function() {
-          sendPayload({ event: 'resume_download' });
-        });
-      }
     })();
   </script>
 </body>
