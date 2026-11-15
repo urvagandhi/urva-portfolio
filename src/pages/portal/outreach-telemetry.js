@@ -25,7 +25,11 @@ import {
   ChevronDown,
   ChevronRight,
   Building2,
-  Layers
+  Layers,
+  MapPin,
+  User,
+  MousePointerClick,
+  ExternalLink
 } from 'lucide-react';
 
 export { getServerSideProps } from '../../lib/mail/portal-gssp.js';
@@ -39,31 +43,89 @@ function formatLocation(city, country) {
   return [cleanCity, country].filter(Boolean).join(', ') || 'Unknown';
 }
 
-// Helper to determine styling badge and label for interaction events
-function getEventBadge(evt) {
-  let badgeStyle = 'bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 border-dark/10 dark:border-light/10';
-  let label = evt.event;
+// Helper to compute relative elapsed time from timestamp (e.g. 'Just now', '2m ago')
+function formatRelativeTime(ts) {
+  if (!ts) return '';
+  const now = Date.now();
+  const diffSec = Math.floor((now - ts) / 1000);
+  if (diffSec < 15) return 'Just now';
+  if (diffSec < 60) return `${diffSec}s ago`;
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+  return `${Math.floor(diffSec / 86400)}d ago`;
+}
 
+// Helper to determine styling badge, dots, and rich contextual descriptions
+function getEventVisuals(evt) {
   if (evt.event === 'open') {
-    badgeStyle =
-      evt.client_class === 'apple_mpp'
+    const isProxy = evt.client_class === 'gmail_proxy';
+    const isMpp = evt.client_class === 'apple_mpp';
+    return {
+      type: 'open',
+      badgeStyle: isMpp
         ? 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400'
-        : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
-    label = `Open (${evt.client_class || 'direct'})`;
-  } else if (evt.event === 'click') {
-    badgeStyle = 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400';
-    label = 'Showcase Click';
-  } else if (evt.event === 'resume_view') {
-    badgeStyle = 'bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400';
-    label = 'Resume View';
-  } else if (evt.event === 'download' || evt.event === 'resume_download') {
-    badgeStyle = 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400';
-    label = 'Resume Download';
-  } else if (evt.event === 'beacon_dwell') {
-    label = 'Active Dwell';
+        : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400',
+      dotColor: isMpp ? 'bg-amber-500' : 'bg-emerald-500',
+      label: isMpp ? 'Apple MPP Prefetch' : isProxy ? 'Open (gmail_proxy)' : 'Direct Open',
+      description: isMpp
+        ? 'Prefetched by Apple Mail Privacy Protection server'
+        : isProxy
+        ? 'Outreach email opened via Google Image Proxy'
+        : 'Outreach email opened in email client'
+    };
   }
-
-  return { badgeStyle, label };
+  if (evt.event === 'click') {
+    const slugName = evt.slug ? (evt.slug.startsWith('/') ? evt.slug : `/${evt.slug}`) : '';
+    let desc = `Explored showcase project (${slugName})`;
+    if (evt.slug) {
+      if (evt.slug.includes('github')) desc = `Explored GitHub repository (${slugName})`;
+      else if (evt.slug.includes('linkedin')) desc = `Visited LinkedIn profile (${slugName})`;
+      else if (evt.slug.includes('portfolio')) desc = `Visited portfolio homepage (${slugName})`;
+    }
+    return {
+      type: 'click',
+      badgeStyle: 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400',
+      dotColor: 'bg-cyan-500',
+      label: 'Showcase Click',
+      slug: slugName,
+      description: desc
+    };
+  }
+  if (evt.event === 'resume_view') {
+    return {
+      type: 'resume_view',
+      badgeStyle: 'bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400',
+      dotColor: 'bg-purple-500',
+      label: 'Resume View',
+      description: 'Viewed verified web curriculum vitae (/api/mail/doc)'
+    };
+  }
+  if (evt.event === 'download' || evt.event === 'resume_download') {
+    return {
+      type: 'download',
+      badgeStyle: 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400',
+      dotColor: 'bg-indigo-500',
+      label: 'Resume Download',
+      description: 'Downloaded direct PDF resume document'
+    };
+  }
+  if (evt.event === 'beacon_dwell') {
+    const sec = evt.dwell_ms ? Math.round(evt.dwell_ms / 1000) : 0;
+    return {
+      type: 'dwell',
+      badgeStyle: 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400',
+      dotColor: 'bg-amber-500',
+      label: 'Active Dwell',
+      description: `Active reading dwell: ${sec}s visible on screen`
+    };
+  }
+  return {
+    type: evt.event,
+    badgeStyle: 'bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 border border-dark/10 dark:border-light/10',
+    dotColor: 'bg-primary',
+    label: evt.event,
+    description: evt.detail || evt.event
+  };
 }
 
 // Helper to compute mathematically authentic sparklines from real event timestamps
@@ -118,9 +180,10 @@ export default function OutreachTelemetry({ initialAuth }) {
   const [statsError, setStatsError] = useState('');
   const [currentTimeIst, setCurrentTimeIst] = useState('');
 
-  // Company accordion toggle state (default: all expanded) and view mode switch
+  // Company accordion toggle state (default: all expanded), view mode switch, and card sub-mode
   const [collapsedCompanies, setCollapsedCompanies] = useState({});
   const [feedViewMode, setFeedViewMode] = useState('company'); // 'company' | 'flat'
+  const [companyViewSubMode, setCompanyViewSubMode] = useState({}); // { [company]: 'timeline' | 'table' }
 
   const toggleCompany = (companyName) => {
     setCollapsedCompanies((prev) => ({
@@ -139,6 +202,13 @@ export default function OutreachTelemetry({ initialAuth }) {
       next[c.company] = true;
     });
     setCollapsedCompanies(next);
+  };
+
+  const setCardMode = (compName, mode) => {
+    setCompanyViewSubMode((prev) => ({
+      ...prev,
+      [compName]: mode
+    }));
   };
 
   // Update IST clock every second
@@ -661,24 +731,24 @@ export default function OutreachTelemetry({ initialAuth }) {
                   <button
                     type="button"
                     onClick={() => setFeedViewMode('company')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                       feedViewMode === 'company'
-                        ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
+                        ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-xs'
                         : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
                     }`}
                   >
-                    Company View
+                    🏢 Company Hub
                   </button>
                   <button
                     type="button"
                     onClick={() => setFeedViewMode('flat')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                       feedViewMode === 'flat'
-                        ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
+                        ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-xs'
                         : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
                     }`}
                   >
-                    Flat Stream
+                    ⚡ Live Stream
                   </button>
                 </div>
 
@@ -687,7 +757,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                     <button
                       type="button"
                       onClick={() => expandAll()}
-                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors"
+                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors cursor-pointer"
                       title="Expand all companies"
                     >
                       Expand All
@@ -695,7 +765,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                     <button
                       type="button"
                       onClick={() => collapseAll(companyRollups)}
-                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors border-l border-dark/10 dark:border-light/10"
+                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors border-l border-dark/10 dark:border-light/10 cursor-pointer"
                       title="Collapse all companies"
                     >
                       Collapse All
@@ -706,177 +776,307 @@ export default function OutreachTelemetry({ initialAuth }) {
             </div>
 
             {companyRollups.length === 0 ? (
-              <div className="text-center py-12 text-xs text-dark/50 dark:text-light/50 font-medium">
-                No company outreach registered yet. Telemetry will stream in real time.
+              <div className="text-center py-16 px-4 rounded-2xl border border-dashed border-dark/10 dark:border-light/10">
+                <Building2 className="w-10 h-10 mx-auto text-dark/30 dark:text-light/30 mb-3" />
+                <h4 className="text-sm font-semibold text-dark/70 dark:text-light/70">
+                  No company outreach registered yet
+                </h4>
+                <p className="text-xs text-dark/50 dark:text-light/50 font-mono mt-1">
+                  Live interaction telemetry will stream into this feed automatically.
+                </p>
               </div>
             ) : feedViewMode === 'company' ? (
-              /* Grouped Company Rollup Table with Expandable Accordion */
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono">
-                      <th className="pb-3 font-semibold">Company</th>
-                      <th className="pb-3 font-semibold text-center">Sent</th>
-                      <th className="pb-3 font-semibold text-center">Opened</th>
-                      <th className="pb-3 font-semibold text-center">Resume</th>
-                      <th className="pb-3 font-semibold text-center">Clicks</th>
-                      <th className="pb-3 font-semibold">Last Active</th>
-                      <th className="pb-3 font-semibold text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-dark/5 dark:divide-light/5">
-                    {companyRollups.map((c) => {
-                      const isExpanded = !collapsedCompanies[c.company];
-                      const compEvents = recentEvents.filter(
-                        (e) => (e.company || 'Unknown Organisation') === c.company
-                      );
+              /* Executive Card Accordions per Company */
+              <div className="space-y-4">
+                {companyRollups.map((c) => {
+                  const isExpanded = !collapsedCompanies[c.company];
+                  const compEvents = recentEvents.filter(
+                    (e) => (e.company || 'Unknown Organisation') === c.company
+                  );
+                  const cardMode = companyViewSubMode[c.company] || 'timeline';
+                  const leadRecruiter = compEvents[0]?.recipient || 'Active Recruiter';
+                  const track = compEvents[0]?.track;
+                  const initials = (c.company || 'Org').substring(0, 2).toUpperCase();
 
-                      return (
-                        <React.Fragment key={c.company}>
-                          <tr
-                            onClick={() => toggleCompany(c.company)}
-                            className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors cursor-pointer group"
-                          >
-                            <td className="py-3.5 font-bold text-dark dark:text-light flex items-center gap-2">
-                              <span className="p-1 rounded-md bg-dark/5 dark:bg-light/5 group-hover:bg-primary/10 transition-colors">
-                                {isExpanded ? (
-                                  <ChevronDown className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
-                                ) : (
-                                  <ChevronRight className="w-3.5 h-3.5 text-dark/50 dark:text-light/50" />
-                                )}
+                  return (
+                    <div
+                      key={c.company}
+                      className="rounded-3xl border border-dark/10 dark:border-light/10 bg-light/90 dark:bg-dark/90 backdrop-blur-md overflow-hidden shadow-xs transition-all duration-200 hover:border-dark/20 dark:hover:border-light/20"
+                    >
+                      {/* Company Header Row (Interactive Accordion Trigger) */}
+                      <div
+                        onClick={() => toggleCompany(c.company)}
+                        className="p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4 cursor-pointer select-none hover:bg-dark/[0.02] dark:hover:bg-light/[0.02] transition-colors"
+                      >
+                        {/* Left: Identity */}
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/15 to-purple-500/15 dark:from-primaryDark/25 dark:to-purple-400/25 border border-primary/20 flex items-center justify-center font-bold text-sm text-primary dark:text-primaryDark shrink-0 shadow-xs">
+                            {initials}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-base font-bold text-dark dark:text-light tracking-tight">
+                                {c.company}
+                              </h4>
+                              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 font-semibold border border-dark/5 dark:border-light/10">
+                                {compEvents.length} interaction{compEvents.length === 1 ? '' : 's'}
                               </span>
-                              <span className="text-sm">{c.company}</span>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-medium bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70">
-                                {compEvents.length} event{compEvents.length === 1 ? '' : 's'}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-dark/60 dark:text-light/60 mt-1 flex-wrap">
+                              <span className="flex items-center gap-1 font-mono text-[11px]">
+                                <Clock className="w-3 h-3 text-dark/40 dark:text-light/40" />
+                                Last active: {c.last_active_formatted || 'Recently'}
                               </span>
-                            </td>
-                            <td className="py-3.5 text-center text-dark/70 dark:text-light/70 font-mono">{c.sent}</td>
-                            <td className="py-3.5 text-center text-emerald-600 dark:text-emerald-400 font-bold font-mono">{c.opened}</td>
-                            <td className="py-3.5 text-center text-purple-600 dark:text-purple-400 font-bold font-mono">{c.resume_viewed}</td>
-                            <td className="py-3.5 text-center text-amber-600 dark:text-amber-400 font-bold font-mono">{c.clicks}</td>
-                            <td className="py-3.5 text-dark/60 dark:text-light/60 font-mono text-[11px]">{c.last_active_formatted}</td>
-                            <td className="py-3.5 text-right font-medium">
-                              <span className="text-xs text-primary dark:text-primaryDark hover:underline inline-flex items-center gap-1">
-                                {isExpanded ? 'Hide' : 'View'} ({compEvents.length})
+                              <span>•</span>
+                              <span className="text-[11px] font-medium text-dark/80 dark:text-light/80">
+                                {leadRecruiter}
                               </span>
-                            </td>
-                          </tr>
+                              {track && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60 font-mono">
+                                    {track}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
 
-                          {/* Nested Interaction Details Accordion */}
-                          {isExpanded && (
-                            <tr className="bg-transparent">
-                              <td colSpan={7} className="p-0 border-none">
-                                <div className="mx-2 mb-4 p-4 rounded-2xl bg-dark/[0.02] dark:bg-light/[0.02] border border-dark/10 dark:border-light/10">
-                                  <div className="flex items-center justify-between mb-3 text-xs">
-                                    <span className="font-semibold text-dark/70 dark:text-light/70 font-mono flex items-center gap-1.5">
-                                      <Building2 className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
-                                      <span>Interactions for {c.company}</span>
-                                    </span>
-                                    <span className="text-[11px] text-dark/50 dark:text-light/50 font-mono">
-                                      {compEvents.length} recorded event{compEvents.length === 1 ? '' : 's'}
-                                    </span>
-                                  </div>
+                        {/* Right: Metric Chips & Expand Trigger */}
+                        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+                          {/* Sent Chip */}
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs font-mono">
+                            <Mail className="w-3.5 h-3.5 text-dark/50 dark:text-light/50" />
+                            <span className="text-dark/60 dark:text-light/60">Sent:</span>
+                            <span className="font-bold text-dark dark:text-light">{c.sent}</span>
+                          </div>
 
-                                  {compEvents.length === 0 ? (
-                                    <div className="text-center py-4 text-xs text-dark/50 dark:text-light/50 font-medium">
-                                      No interaction events recorded yet for this company.
+                          {/* Opened Chip */}
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono">
+                            <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-emerald-600/70 dark:text-emerald-400/70">Opened:</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">{c.opened}</span>
+                          </div>
+
+                          {/* Resume Chip */}
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs font-mono">
+                            <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                            <span className="text-purple-600/70 dark:text-purple-400/70">Resume:</span>
+                            <span className="font-bold text-purple-600 dark:text-purple-400">{c.resume_viewed}</span>
+                          </div>
+
+                          {/* Clicks Chip */}
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-xs font-mono">
+                            <MousePointerClick className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
+                            <span className="text-cyan-600/70 dark:text-cyan-400/70">Clicks:</span>
+                            <span className="font-bold text-cyan-600 dark:text-cyan-400">{c.clicks}</span>
+                          </div>
+
+                          {/* Chevron Accordion Trigger */}
+                          <div className="flex items-center gap-1 pl-2 text-xs font-semibold text-primary dark:text-primaryDark">
+                            <span>{isExpanded ? 'Hide' : 'Inspect'}</span>
+                            <ChevronDown
+                              className={`w-4 h-4 transition-transform duration-200 ${
+                                isExpanded ? 'rotate-180' : ''
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Body (Expanded Sub-view) */}
+                      {isExpanded && (
+                        <div className="px-5 sm:px-6 pb-6 pt-3 border-t border-dark/10 dark:border-light/10 bg-dark/[0.015] dark:bg-light/[0.015]">
+                          {/* Sub-header Bar: Recruiter & Mode Switcher */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-2.5 mb-5 border-b border-dark/5 dark:border-light/5">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1 rounded-lg bg-primary/10 text-primary dark:text-primaryDark">
+                                <User className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="text-xs font-semibold text-dark/80 dark:text-light/80">
+                                Recruiter Activity: {leadRecruiter}
+                              </span>
+                            </div>
+
+                            {/* View Sub-mode Selector: Journey vs Data Grid */}
+                            <div className="inline-flex rounded-xl p-0.5 bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCardMode(c.company, 'timeline');
+                                }}
+                                className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                                  cardMode === 'timeline'
+                                    ? 'bg-light dark:bg-dark text-dark dark:text-light font-bold shadow-xs'
+                                    : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                                }`}
+                              >
+                                Activity Journey
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCardMode(c.company, 'table');
+                                }}
+                                className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                                  cardMode === 'table'
+                                    ? 'bg-light dark:bg-dark text-dark dark:text-light font-bold shadow-xs'
+                                    : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                                }`}
+                              >
+                                Data Grid
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Sub-mode 1: Activity Journey (Timeline) */}
+                          {cardMode === 'timeline' ? (
+                            compEvents.length === 0 ? (
+                              <div className="text-center py-6 text-xs text-dark/50 dark:text-light/50">
+                                No interactions recorded yet for this company.
+                              </div>
+                            ) : (
+                              <div className="relative pl-6 sm:pl-8 space-y-3.5 before:absolute before:left-2.5 sm:before:left-3.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-dark/10 dark:before:bg-light/10">
+                                {compEvents.map((evt, idx) => {
+                                  const visuals = getEventVisuals(evt);
+                                  return (
+                                    <div key={`${evt.token}-${evt.ts}-${idx}`} className="relative group">
+                                      {/* Node dot on the line */}
+                                      <div
+                                        className={`absolute -left-6 sm:-left-8 top-2.5 w-2.5 h-2.5 rounded-full border-2 border-light dark:border-dark transition-transform group-hover:scale-125 shadow-xs ${visuals.dotColor}`}
+                                      />
+
+                                      {/* Interactive Event Item */}
+                                      <div className="p-3.5 rounded-2xl bg-light/80 dark:bg-dark/80 border border-dark/10 dark:border-light/10 backdrop-blur-xs hover:border-primary/40 dark:hover:border-primaryDark/40 transition-all shadow-xs">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <span
+                                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${visuals.badgeStyle}`}
+                                            >
+                                              {visuals.label}
+                                            </span>
+                                            <span className="text-xs font-semibold text-dark dark:text-light">
+                                              {visuals.description}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-2 text-[11px] font-mono text-dark/50 dark:text-light/50 shrink-0">
+                                            <span className="text-dark/80 dark:text-light/80 font-medium">
+                                              {formatRelativeTime(evt.ts)}
+                                            </span>
+                                            <span>•</span>
+                                            <span>{evt.ist_time || evt.ts}</span>
+                                          </div>
+                                        </div>
+
+                                        {/* Detail Meta Row */}
+                                        <div className="flex items-center gap-3 text-[11px] text-dark/60 dark:text-light/60 font-mono mt-2 pt-2 border-t border-dark/5 dark:border-light/5 flex-wrap">
+                                          <span className="flex items-center gap-1">
+                                            <MapPin className="w-3 h-3 text-dark/40 dark:text-light/40" />
+                                            {formatLocation(evt.city, evt.country)}
+                                          </span>
+                                          <span>•</span>
+                                          <span>IP: {evt.ip_trunc || 'IP redacted'}</span>
+                                          {evt.slug && (
+                                            <>
+                                              <span>•</span>
+                                              <span className="font-semibold text-primary dark:text-primaryDark">
+                                                Slug: /{evt.slug}
+                                              </span>
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
                                     </div>
-                                  ) : (
-                                    <div className="overflow-x-auto">
-                                      <table className="w-full text-left text-xs">
-                                        <thead>
-                                          <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono text-[11px]">
-                                            <th className="pb-2.5 font-semibold">Recruiter &amp; Track</th>
-                                            <th className="pb-2.5 font-semibold">Event &amp; Class</th>
-                                            <th className="pb-2.5 font-semibold">Detail</th>
-                                            <th className="pb-2.5 font-semibold">Location &amp; IP</th>
-                                            <th className="pb-2.5 font-semibold text-right">Time (IST)</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-dark/5 dark:divide-light/5">
-                                          {compEvents.map((evt, eIdx) => {
-                                            const { badgeStyle, label } = getEventBadge(evt);
-                                            return (
-                                              <tr
-                                                key={`${evt.token}-${evt.ts}-${eIdx}`}
-                                                className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors"
-                                              >
-                                                <td className="py-2.5">
-                                                  <div className="font-medium text-dark/90 dark:text-light/90">
-                                                    {evt.recipient || 'No email'}
-                                                  </div>
-                                                  {evt.track && (
-                                                    <span className="inline-block mt-0.5 text-[9px] px-1.5 py-0.5 bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 rounded-full font-medium">
-                                                      {evt.track}
-                                                    </span>
-                                                  )}
-                                                </td>
+                                  );
+                                })}
+                              </div>
+                            )
+                          ) : (
+                            /* Sub-mode 2: Data Grid (Clean Table without repeating recruiter) */
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left text-xs">
+                                <thead>
+                                  <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono text-[11px]">
+                                    <th className="pb-2.5 font-semibold">Event &amp; Class</th>
+                                    <th className="pb-2.5 font-semibold">Action &amp; Detail</th>
+                                    <th className="pb-2.5 font-semibold">Location &amp; IP</th>
+                                    <th className="pb-2.5 font-semibold text-right">Time (IST)</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-dark/5 dark:divide-light/5">
+                                  {compEvents.map((evt, eIdx) => {
+                                    const visuals = getEventVisuals(evt);
+                                    return (
+                                      <tr
+                                        key={`${evt.token}-${evt.ts}-${eIdx}`}
+                                        className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors"
+                                      >
+                                        <td className="py-3">
+                                          <span
+                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${visuals.badgeStyle}`}
+                                          >
+                                            {visuals.label}
+                                          </span>
+                                        </td>
 
-                                                <td className="py-2.5">
-                                                  <span
-                                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeStyle}`}
-                                                  >
-                                                    {label}
-                                                  </span>
-                                                </td>
+                                        <td className="py-3 font-medium text-dark/90 dark:text-light/90">
+                                          <div>{visuals.description}</div>
+                                          {evt.slug && (
+                                            <div className="text-[11px] font-mono text-primary dark:text-primaryDark mt-0.5">
+                                              Slug: /{evt.slug}
+                                            </div>
+                                          )}
+                                        </td>
 
-                                                <td className="py-2.5 font-medium text-dark/80 dark:text-light/80">
-                                                  {evt.slug ? (
-                                                    <span className="font-mono text-primary dark:text-primaryDark">
-                                                      /{evt.slug}
-                                                    </span>
-                                                  ) : evt.dwell_ms ? (
-                                                    <span>{Math.round(evt.dwell_ms / 1000)}s visible</span>
-                                                  ) : (
-                                                    <span className="text-dark/40 dark:text-light/40">—</span>
-                                                  )}
-                                                </td>
+                                        <td className="py-3 font-mono text-xs">
+                                          <div className="text-dark/80 dark:text-light/80 font-medium">
+                                            {formatLocation(evt.city, evt.country)}
+                                          </div>
+                                          <div className="text-[10px] text-dark/50 dark:text-light/50">
+                                            {evt.ip_trunc || 'IP redacted'}
+                                          </div>
+                                        </td>
 
-                                                <td className="py-2.5">
-                                                  <div className="text-dark/80 dark:text-light/80 font-medium">
-                                                    {formatLocation(evt.city, evt.country)}
-                                                  </div>
-                                                  <div className="text-[10px] font-mono text-dark/50 dark:text-light/50">
-                                                    {evt.ip_trunc || 'IP redacted'}
-                                                  </div>
-                                                </td>
-
-                                                <td className="py-2.5 font-mono text-dark/60 dark:text-light/60 text-[11px] text-right">
-                                                  {evt.ist_time || evt.ts}
-                                                </td>
-                                              </tr>
-                                            );
-                                          })}
-                                        </tbody>
-                                      </table>
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
+                                        <td className="py-3 font-mono text-right text-[11px]">
+                                          <div className="text-dark/90 dark:text-light/90 font-medium">
+                                            {formatRelativeTime(evt.ts)}
+                                          </div>
+                                          <div className="text-dark/50 dark:text-light/50 text-[10px]">
+                                            {evt.ist_time || evt.ts}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
                           )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              /* Flat Chronological Feed View */
+              /* Flat Chronological Feed View with Rich Action Descriptions */
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono">
                       <th className="pb-3 font-semibold">Recruiter &amp; Company</th>
                       <th className="pb-3 font-semibold">Event &amp; Class</th>
-                      <th className="pb-3 font-semibold">Detail</th>
+                      <th className="pb-3 font-semibold">Action &amp; Detail</th>
                       <th className="pb-3 font-semibold">Location &amp; IP</th>
                       <th className="pb-3 font-semibold text-right">Time (IST)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-dark/5 dark:divide-light/5">
                     {recentEvents.map((evt, idx) => {
-                      const { badgeStyle, label } = getEventBadge(evt);
+                      const visuals = getEventVisuals(evt);
                       return (
                         <tr
                           key={`${evt.token}-${evt.ts}-${idx}`}
@@ -886,11 +1086,11 @@ export default function OutreachTelemetry({ initialAuth }) {
                             <div className="font-bold text-dark dark:text-light">
                               {evt.company || 'Unknown Org'}
                             </div>
-                            <div className="text-[11px] text-dark/60 dark:text-light/60">
+                            <div className="text-[11px] text-dark/60 dark:text-light/60 font-mono">
                               {evt.recipient || 'No email'}
                             </div>
                             {evt.track && (
-                              <span className="inline-block mt-0.5 text-[10px] px-2 py-0.5 bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 rounded-full font-medium">
+                              <span className="inline-block mt-1 text-[10px] px-2 py-0.5 bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 rounded-full font-medium">
                                 {evt.track}
                               </span>
                             )}
@@ -898,21 +1098,18 @@ export default function OutreachTelemetry({ initialAuth }) {
 
                           <td className="py-3.5">
                             <span
-                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold border ${badgeStyle}`}
+                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold border ${visuals.badgeStyle}`}
                             >
-                              {label}
+                              {visuals.label}
                             </span>
                           </td>
 
-                          <td className="py-3.5 text-dark/80 dark:text-light/80 font-medium">
+                          <td className="py-3.5 font-medium text-dark/90 dark:text-light/90">
+                            <div>{visuals.description}</div>
                             {evt.slug && (
-                              <span className="font-mono text-primary dark:text-primaryDark">
-                                /{evt.slug}
-                              </span>
-                            )}
-                            {evt.dwell_ms && <span>{Math.round(evt.dwell_ms / 1000)}s visible</span>}
-                            {!evt.slug && !evt.dwell_ms && (
-                              <span className="text-dark/40 dark:text-light/40">—</span>
+                              <div className="text-[11px] font-mono text-primary dark:text-primaryDark mt-0.5">
+                                Slug: /{evt.slug}
+                              </div>
                             )}
                           </td>
 
@@ -926,7 +1123,12 @@ export default function OutreachTelemetry({ initialAuth }) {
                           </td>
 
                           <td className="py-3.5 font-mono text-dark/60 dark:text-light/60 text-[11px] text-right">
-                            {evt.ist_time || evt.ts}
+                            <div className="text-dark/90 dark:text-light/90 font-medium">
+                              {formatRelativeTime(evt.ts)}
+                            </div>
+                            <div className="text-dark/50 dark:text-light/50 text-[10px]">
+                              {evt.ist_time || evt.ts}
+                            </div>
                           </td>
                         </tr>
                       );
