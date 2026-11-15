@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { verifyToken } from '../../../lib/mail/token.js';
+import { verifyToken, verifyAdminSession, isSenderEmail } from '../../../lib/mail/token.js';
 import { truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
 import { k, hgetall, hincrby, hset, lpush, expire, get, exists, set } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
@@ -45,8 +45,12 @@ export default async function handler(req, res) {
     const region = req.headers['x-vercel-ip-country-region'] || '';
     const city = decodeCity(req.headers['x-vercel-ip-city']);
 
-    // Record telemetry directly
-    if (msg && Object.keys(msg).length > 0 && msg.status !== 'voided') {
+    // Record telemetry directly (unless admin session is active or recipient matches sender)
+    const isAdmin = verifyAdminSession(req);
+    const recipientEmail = msg ? (msg.recipient_email || msg.recipient || '') : '';
+    const isSender = isSenderEmail(recipientEmail);
+
+    if (!isAdmin && !isSender && msg && Object.keys(msg).length > 0 && msg.status !== 'voided') {
       const currentOpens = Number(msg.opens || 0);
       const newOpens = currentOpens > 0 ? currentOpens : 1;
 

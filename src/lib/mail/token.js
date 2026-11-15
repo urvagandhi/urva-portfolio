@@ -118,3 +118,38 @@ export function verifyAdminSession(req) {
   }
   return verifyAdminSessionToken(match[1]);
 }
+
+/**
+ * Sender / owner email addresses that must NEVER be registered or recorded in tracking telemetry.
+ */
+export const SENDER_EMAILS = Object.freeze([
+  'urvagandhi24@gmail.com',
+  'study.urva@gmail.com',
+  '23bce078@nirmauni.ac.in'
+]);
+
+/**
+ * Checks whether an email matches any sender/owner email address.
+ *
+ * @param {string} email Email address to check
+ * @returns {boolean} True if email belongs to the sender/owner
+ */
+export function isSenderEmail(email) {
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+  const normalised = email.trim().toLowerCase();
+  if (SENDER_EMAILS.some((s) => s.toLowerCase() === normalised)) {
+    return true;
+  }
+  const contactReceiver = (process.env.CONTACT_RECEIVER_EMAIL || '').trim().toLowerCase();
+  if (contactReceiver && normalised === contactReceiver) {
+    return true;
+  }
+  const brevoSender = (process.env.BREVO_SENDER_EMAIL || '').trim().toLowerCase();
+  if (brevoSender && normalised === brevoSender) {
+    return true;
+  }
+  return false;
+}
+

@@ -1,5 +1,6 @@
-import { verifyToken } from '../../../lib/mail/token.js';
+import { verifyToken, verifyAdminSession, isSenderEmail } from '../../../lib/mail/token.js';
 import { classifyClient, truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
+import { isGoogleWorkspaceDomain } from '../../../lib/mail/domain-mx.js';
 import { k, get, set, del, incr, hgetall, hincrby, hset, lpush, expire } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
 
@@ -27,6 +28,11 @@ export default async function handler(req, res) {
     return res.status(200).send(PIXEL_BUFFER);
   }
 
+  // Pass-through: if admin is logged into telemetry portal, do not log or alert
+  if (verifyAdminSession(req)) {
+    return res.status(200).send(PIXEL_BUFFER);
+  }
+
   try {
     const msg = await hgetall(k(`mail:m:${t}`));
 
@@ -35,8 +41,24 @@ export default async function handler(req, res) {
       return res.status(200).send(PIXEL_BUFFER);
     }
 
+    const recipientEmail = msg.recipient_email || msg.recipient || '';
+
+    // Ignore events if recipient email matches sender address
+    if (isSenderEmail(recipientEmail)) {
+      return res.status(200).send(PIXEL_BUFFER);
+    }
+
     const ua = req.headers['user-agent'] || '';
     const clientClass = classifyClient(ua);
+
+    // Filter Sent-Folder opens: if request arrives from GoogleImageProxy but recipient domain
+    // does not use Google Workspace (e.g. uses Outlook/Exchange), this is the sender viewing Sent Mail.
+    if (clientClass === 'gmail_proxy') {
+      const isRecipientGoogle = await isGoogleWorkspaceDomain(recipientEmail);
+      if (!isRecipientGoogle) {
+        return res.status(200).send(PIXEL_BUFFER);
+      }
+    }
     const forwardedFor = req.headers['x-forwarded-for'];
     const rawIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (req.socket?.remoteAddress || '');
     const ipTrunc = truncateIp(rawIp);

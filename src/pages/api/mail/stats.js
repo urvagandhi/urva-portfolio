@@ -59,10 +59,10 @@ export default async function handler(req, res) {
     });
   }
 
-  // Check 8-second memory cache to protect Redis quota (bypass with ?force=true)
+  // In-memory cache to protect Redis quota (default 30 seconds, bypass with ?force=true)
   const force = req.query.force === 'true';
   const nowMs = Date.now();
-  if (!force && memoryStatsCache.data && (nowMs - memoryStatsCache.cachedAt < 8000)) {
+  if (!force && memoryStatsCache.data && (nowMs - memoryStatsCache.cachedAt < 30000)) {
     res.setHeader('X-Stats-Cache', 'HIT');
     return res.status(200).json(memoryStatsCache.data);
   }
