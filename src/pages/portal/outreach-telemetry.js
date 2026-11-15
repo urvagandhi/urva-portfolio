@@ -175,13 +175,15 @@ export default function OutreachTelemetry({ initialAuth }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch telemetry statistics (silent mode skips loading spinner for seamless background updates)
-  const fetchStats = useCallback(async (isSilent = false) => {
+  // Fetch telemetry statistics (silent mode skips loading spinner; force bypasses server memory cache)
+  const fetchStats = useCallback(async (isSilent = false, isForce = false) => {
     const silent = typeof isSilent === 'boolean' ? isSilent : false;
+    const force = typeof isForce === 'boolean' ? isForce : false;
     if (!silent) setLoadingStats(true);
     setStatsError('');
     try {
-      const res = await fetch('/api/mail/stats');
+      const url = force ? '/api/mail/stats?force=true' : '/api/mail/stats';
+      const res = await fetch(url);
       if (res.status === 401 || res.status === 404) {
         setIsAuthenticated(false);
         setStats(null);
@@ -199,13 +201,13 @@ export default function OutreachTelemetry({ initialAuth }) {
     }
   }, []);
 
-  // Explicit user-triggered refresh with guaranteed visual spin feedback
+  // Explicit user-triggered refresh with guaranteed visual spin feedback and cache bypass
   const handleManualRefresh = async () => {
     if (isManualRefreshing || loadingStats) return;
     setIsManualRefreshing(true);
     const start = Date.now();
     try {
-      await fetchStats(false);
+      await fetchStats(false, true);
     } finally {
       const elapsed = Date.now() - start;
       const minSpinMs = 600;
@@ -216,7 +218,7 @@ export default function OutreachTelemetry({ initialAuth }) {
     }
   };
 
-  // Real-time automatic polling every 2.5 seconds from DB
+  // Real-time automatic polling every 15 seconds from DB (preserves Upstash Redis quota)
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchStats(false);
@@ -224,7 +226,7 @@ export default function OutreachTelemetry({ initialAuth }) {
     const interval = setInterval(() => {
       if (typeof document !== 'undefined' && document.hidden) return;
       fetchStats(true);
-    }, 2500);
+    }, 15000);
 
     return () => clearInterval(interval);
   }, [isAuthenticated, fetchStats]);
@@ -754,7 +756,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                             onClick={() => toggleCompany(c.company)}
                             className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors cursor-pointer group"
                           >
-                            <td className="py-3.5 font-bold text-dark dark:text-light flex items-center gap-2">
+                            <td className="py-3.5 font-bold text-dark dark:text-light flex items-center gap-2 flex-wrap">
                               <span className="p-1 rounded-md bg-dark/5 dark:bg-light/5 group-hover:bg-primary/10 transition-colors">
                                 {isExpanded ? (
                                   <ChevronDown className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
@@ -766,6 +768,15 @@ export default function OutreachTelemetry({ initialAuth }) {
                               <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-medium bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70">
                                 {compEvents.length} event{compEvents.length === 1 ? '' : 's'}
                               </span>
+                              {c.is_security_scanner && (
+                                <span
+                                  className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 inline-flex items-center gap-1"
+                                  title={c.scanner_note || 'Automated Email Security Gateway'}
+                                >
+                                  <Shield className="w-3 h-3 text-blue-500" />
+                                  <span>Scanner</span>
+                                </span>
+                              )}
                             </td>
                             <td className="py-3.5 text-center text-dark/70 dark:text-light/70 font-mono">{c.sent}</td>
                             <td className="py-3.5 text-center text-emerald-600 dark:text-emerald-400 font-bold font-mono">{c.opened}</td>
@@ -806,6 +817,15 @@ export default function OutreachTelemetry({ initialAuth }) {
                                       {compEvents.length} recorded event{compEvents.length === 1 ? '' : 's'}
                                     </span>
                                   </div>
+
+                                  {c.is_security_scanner && (
+                                    <div className="mb-3.5 p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-[11px] flex items-center gap-2">
+                                      <Shield className="w-4 h-4 shrink-0 text-blue-500" />
+                                      <span>
+                                        <strong>Enterprise Email Security Gateway Detected:</strong> Links were automatically pre-screened in seconds across cloud scanner IPs (e.g. Proofpoint / SafeLinks) upon email arrival.
+                                      </span>
+                                    </div>
+                                  )}
 
                                   {compEvents.length === 0 ? (
                                     <div className="text-center py-4 text-xs text-dark/50 dark:text-light/50 font-medium">

@@ -3,6 +3,12 @@ import { k, smembers, pipeline } from '../../../lib/mail/redis.js';
 import { formatIstTimestamp } from '../../../lib/mail/telegram.js';
 import { decodeCity } from '../../../lib/mail/classifier.js';
 
+// In-memory stats cache to prevent Upstash Redis quota exhaustion on polling
+let memoryStatsCache = {
+  data: null,
+  cachedAt: 0
+};
+
 /**
  * Calculates a quantitative recruiter engagement score based on interaction depth.
  *
@@ -53,6 +59,14 @@ export default async function handler(req, res) {
     });
   }
 
+  // Check 8-second memory cache to protect Redis quota (bypass with ?force=true)
+  const force = req.query.force === 'true';
+  const nowMs = Date.now();
+  if (!force && memoryStatsCache.data && (nowMs - memoryStatsCache.cachedAt < 8000)) {
+    res.setHeader('X-Stats-Cache', 'HIT');
+    return res.status(200).json(memoryStatsCache.data);
+  }
+
   try {
     const tokens = await smembers(k('mail:index:messages'));
 
@@ -98,9 +112,14 @@ export default async function handler(req, res) {
         const clicks = Number(msg.clicks || 0);
         const downloads = Number(msg.downloads || 0);
         const dwellMs = Number(msg.total_dwell_ms || 0);
-        const lastEventAt = Number(msg.last_event_at || msg.created_at || 0);
+        
+        // Find most recent timestamp across all possible event records on the message hash
+        const msgLastEvent = Math.max(
+          Number(msg.last_event_at || 0),
+          Number(msg.last_opened_at || 0)
+        );
 
-        // Verification: If recipient clicked a link or viewed resume, email is definitively verified open
+        // Verification: If recipient clicked a link, viewed resume, or opened email
         const isOpened = opens > 0 || views > 0 || clicks > 0;
         if (isOpened) {
           verifiedOpens++;
@@ -119,7 +138,9 @@ export default async function handler(req, res) {
           resume_viewed: 0,
           clicks: 0,
           downloads: 0,
-          last_active: 0
+          last_active: 0,
+          first_sent: Number(msg.created_at || 0),
+          click_timestamps: []
         };
 
         existingComp.sent++;
@@ -127,10 +148,13 @@ export default async function handler(req, res) {
         existingComp.resume_viewed += views;
         existingComp.clicks += clicks;
         existingComp.downloads += downloads;
-        if (lastEventAt > existingComp.last_active) {
-          existingComp.last_active = lastEventAt;
+        if (msgLastEvent > existingComp.last_active) {
+          existingComp.last_active = msgLastEvent;
         }
-        companyMap.set(comp, existingComp);
+        const msgCreated = Number(msg.created_at || 0);
+        if (!existingComp.first_sent || (msgCreated > 0 && msgCreated < existingComp.first_sent)) {
+          existingComp.first_sent = msgCreated;
+        }
 
         // Collect interaction events
         const eventJsonList = Array.isArray(rawEventList) ? rawEventList : [];
@@ -145,9 +169,19 @@ export default async function handler(req, res) {
             parsed.city = parsed.city ? decodeCity(parsed.city) : '';
             parsed.ist_time = formatIstTimestamp(parsed.ts);
             parsed.engagement_score = computeEngagementScore(parsed);
+
+            const eventTs = Number(parsed.ts || 0);
+            if (eventTs > existingComp.last_active) {
+              existingComp.last_active = eventTs;
+            }
+            if (parsed.event === 'click' && eventTs > 0) {
+              existingComp.click_timestamps.push(eventTs);
+            }
+
             rawEvents.push(parsed);
           } catch (_) {}
         }
+        companyMap.set(comp, existingComp);
       }
 
       // Showcase link rankings from pipeline
@@ -162,9 +196,35 @@ export default async function handler(req, res) {
       }
     }
 
-    // Sort company rollups by last active timestamp
+    // Flag automated enterprise email security scanner behavior (e.g. Proofpoint, SafeLinks, Mimecast)
+    // Heuristic: >= 5 rapid link clicks executed within 120 seconds
+    for (const comp of companyMap.values()) {
+      const clickTimes = (comp.click_timestamps || []).sort((a, b) => a - b);
+      if (clickTimes.length >= 5) {
+        const spanMs = clickTimes[clickTimes.length - 1] - clickTimes[0];
+        if (spanMs <= 120000) {
+          comp.is_security_scanner = true;
+          comp.scanner_note = `Automated Email Security Gateway (Pre-screened ${clickTimes.length} links in ${Math.round(spanMs / 1000)}s)`;
+        }
+      }
+      delete comp.click_timestamps;
+    }
+
+    // Deterministic two-tier sorting:
+    // Tier 1: Companies with engagement (last_active > 0), ordered by last_active DESCENDING (most recent first)
+    // Tier 2: Pending companies (last_active === 0), ordered deterministically by company name
     const companyRollups = Array.from(companyMap.values())
-      .sort((a, b) => b.last_active - a.last_active)
+      .sort((a, b) => {
+        const aActive = a.last_active || 0;
+        const bActive = b.last_active || 0;
+        if (aActive > 0 && bActive > 0) {
+          if (bActive !== aActive) return bActive - aActive;
+          return a.company.localeCompare(b.company);
+        }
+        if (aActive > 0 && bActive === 0) return -1;
+        if (aActive === 0 && bActive > 0) return 1;
+        return a.company.localeCompare(b.company);
+      })
       .map(c => ({
         ...c,
         last_active_formatted: c.last_active > 0 ? formatIstTimestamp(c.last_active) : 'Pending'
@@ -176,7 +236,7 @@ export default async function handler(req, res) {
     const openRatePercent = totalSent > 0 ? Number(((verifiedOpens / totalSent) * 100).toFixed(1)) : 0;
     const avgDwellSeconds = totalResumeViews > 0 ? Math.round(totalDwellMs / totalResumeViews / 1000) : 0;
 
-    return res.status(200).json({
+    const responsePayload = {
       summary: {
         total_sent: totalSent,
         verified_opens: verifiedOpens,
@@ -189,7 +249,16 @@ export default async function handler(req, res) {
       slug_rankings: slugRankings,
       company_rollups: companyRollups,
       recent_events: rawEvents.slice(0, 50)
-    });
+    };
+
+    // Save to memory cache
+    memoryStatsCache = {
+      data: responsePayload,
+      cachedAt: Date.now()
+    };
+
+    res.setHeader('X-Stats-Cache', 'MISS');
+    return res.status(200).json(responsePayload);
   } catch (err) {
     console.error(`[MailTracker:Stats] Error aggregating statistics: ${err.message}`);
     res.setHeader('Content-Type', 'application/problem+json');
