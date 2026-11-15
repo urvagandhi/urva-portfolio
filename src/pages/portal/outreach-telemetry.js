@@ -21,7 +21,11 @@ import {
   Download,
   Clock,
   Shield,
-  Activity
+  Activity,
+  ChevronDown,
+  ChevronRight,
+  Building2,
+  Layers
 } from 'lucide-react';
 
 export { getServerSideProps } from '../../lib/mail/portal-gssp.js';
@@ -33,6 +37,33 @@ function formatLocation(city, country) {
     cleanCity = decodeURIComponent(cleanCity);
   } catch (_) {}
   return [cleanCity, country].filter(Boolean).join(', ') || 'Unknown';
+}
+
+// Helper to determine styling badge and label for interaction events
+function getEventBadge(evt) {
+  let badgeStyle = 'bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 border-dark/10 dark:border-light/10';
+  let label = evt.event;
+
+  if (evt.event === 'open') {
+    badgeStyle =
+      evt.client_class === 'apple_mpp'
+        ? 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400'
+        : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
+    label = `Open (${evt.client_class || 'direct'})`;
+  } else if (evt.event === 'click') {
+    badgeStyle = 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400';
+    label = 'Showcase Click';
+  } else if (evt.event === 'resume_view') {
+    badgeStyle = 'bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400';
+    label = 'Resume View';
+  } else if (evt.event === 'download' || evt.event === 'resume_download') {
+    badgeStyle = 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400';
+    label = 'Resume Download';
+  } else if (evt.event === 'beacon_dwell') {
+    label = 'Active Dwell';
+  }
+
+  return { badgeStyle, label };
 }
 
 // Helper to compute mathematically authentic sparklines from real event timestamps
@@ -85,6 +116,29 @@ export default function OutreachTelemetry({ initialAuth }) {
   const [loadingStats, setLoadingStats] = useState(false);
   const [statsError, setStatsError] = useState('');
   const [currentTimeIst, setCurrentTimeIst] = useState('');
+
+  // Company accordion toggle state (default: all expanded) and view mode switch
+  const [collapsedCompanies, setCollapsedCompanies] = useState({});
+  const [feedViewMode, setFeedViewMode] = useState('company'); // 'company' | 'flat'
+
+  const toggleCompany = (companyName) => {
+    setCollapsedCompanies((prev) => ({
+      ...prev,
+      [companyName]: !prev[companyName]
+    }));
+  };
+
+  const expandAll = () => {
+    setCollapsedCompanies({});
+  };
+
+  const collapseAll = (companies) => {
+    const next = {};
+    (companies || []).forEach((c) => {
+      next[c.company] = true;
+    });
+    setCollapsedCompanies(next);
+  };
 
   // Update IST clock every second
   useEffect(() => {
@@ -521,114 +575,271 @@ export default function OutreachTelemetry({ initialAuth }) {
             );
           })()}
 
-          {/* Middle 2-Column Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full mb-8">
-            {/* Column 1: Showcase Leaderboard */}
-            <div className="p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-dark dark:text-light flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-primary dark:text-primaryDark" />
-                  <span>Showcase Link Leaderboard</span>
-                </h3>
-                <span className="text-xs text-dark/60 dark:text-light/60 font-mono">10 Slugs</span>
-              </div>
-
-              {slugRankings.length === 0 ? (
-                <div className="text-center py-10 text-xs text-dark/50 dark:text-light/50 font-medium">
-                  No project clicks recorded yet.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {slugRankings.map((item) => {
-                    const maxClicks = Math.max(...slugRankings.map((s) => s.clicks), 1);
-                    const pct = Math.round((item.clicks / maxClicks) * 100);
-                    return (
-                      <div key={item.slug} className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-mono font-semibold text-dark/90 dark:text-light/90">
-                            {item.slug}
-                          </span>
-                          <span className="font-bold text-primary dark:text-primaryDark">
-                            {item.clicks} click{item.clicks === 1 ? '' : 's'}
-                          </span>
-                        </div>
-                        <div className="w-full bg-dark/5 dark:bg-light/10 rounded-full h-2 overflow-hidden">
-                          <div
-                            className="bg-primary dark:bg-primaryDark h-2 rounded-full transition-all duration-500"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Column 2: Company Rollup */}
-            <div className="p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-col">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-dark dark:text-light flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-emerald-500" />
-                  <span>Company-Level Rollup</span>
-                </h3>
-                <span className="text-xs text-dark/60 dark:text-light/60 font-mono">
-                  {companyRollups.length} Organisation{companyRollups.length === 1 ? '' : 's'}
-                </span>
-              </div>
-
-              {companyRollups.length === 0 ? (
-                <div className="text-center py-10 text-xs text-dark/50 dark:text-light/50 font-medium my-auto">
-                  No company outreach registered yet.
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono">
-                        <th className="pb-3 font-semibold">Company</th>
-                        <th className="pb-3 font-semibold">Sent</th>
-                        <th className="pb-3 font-semibold">Opened</th>
-                        <th className="pb-3 font-semibold">Resume</th>
-                        <th className="pb-3 font-semibold">Clicks</th>
-                        <th className="pb-3 font-semibold">Last Active</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-dark/5 dark:divide-light/5">
-                      {companyRollups.map((c) => (
-                        <tr key={c.company} className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors">
-                          <td className="py-3 font-bold text-dark dark:text-light">{c.company}</td>
-                          <td className="py-3 text-dark/70 dark:text-light/70">{c.sent}</td>
-                          <td className="py-3 text-emerald-600 dark:text-emerald-400 font-bold">{c.opened}</td>
-                          <td className="py-3 text-purple-600 dark:text-purple-400 font-bold">{c.resume_viewed}</td>
-                          <td className="py-3 text-amber-600 dark:text-amber-400 font-bold">{c.clicks}</td>
-                          <td className="py-3 text-dark/60 dark:text-light/60 font-mono text-[11px]">{c.last_active_formatted}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Bottom Feed */}
-          <div className="p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl w-full">
+          {/* Showcase Link Leaderboard */}
+          <div className="p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl w-full mb-8">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-dark dark:text-light flex items-center gap-2">
-                <ArrowUpRight className="w-5 h-5 text-primary dark:text-primaryDark" />
-                <span>Real-Time Recruiter Engagement Feed</span>
+                <Activity className="w-5 h-5 text-primary dark:text-primaryDark" />
+                <span>Showcase Link Leaderboard</span>
               </h3>
               <span className="text-xs text-dark/60 dark:text-light/60 font-mono">
-                {recentEvents.length} interaction{recentEvents.length === 1 ? '' : 's'}
+                {slugRankings.length} Slugs Tracked
               </span>
             </div>
 
-            {recentEvents.length === 0 ? (
-              <div className="text-center py-12 text-xs text-dark/50 dark:text-light/50 font-medium">
-                No recruiter interactions recorded yet. Telemetry will stream in real time.
+            {slugRankings.length === 0 ? (
+              <div className="text-center py-6 text-xs text-dark/50 dark:text-light/50 font-medium">
+                No project clicks recorded yet.
               </div>
             ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3.5">
+                {slugRankings.map((item) => {
+                  const maxClicks = Math.max(...slugRankings.map((s) => s.clicks), 1);
+                  const pct = Math.round((item.clicks / maxClicks) * 100);
+                  return (
+                    <div key={item.slug} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono font-semibold text-dark/90 dark:text-light/90">
+                          {item.slug}
+                        </span>
+                        <span className="font-bold text-primary dark:text-primaryDark">
+                          {item.clicks} click{item.clicks === 1 ? '' : 's'}
+                        </span>
+                      </div>
+                      <div className="w-full bg-dark/5 dark:bg-light/10 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-primary dark:bg-primaryDark h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Unified Company-Wise Outreach & Recruiter Engagement Hub */}
+          <div className="p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-dark dark:text-light flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-primary dark:text-primaryDark" />
+                  <span>Company-Wise Recruiter Engagement</span>
+                </h3>
+                <p className="text-xs text-dark/60 dark:text-light/60 font-mono mt-0.5">
+                  {companyRollups.length} Organisation{companyRollups.length === 1 ? '' : 's'} · {recentEvents.length} Total Interaction{recentEvents.length === 1 ? '' : 's'}
+                </p>
+              </div>
+
+              {/* View mode toggle and expand/collapse controls */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="inline-flex rounded-xl p-1 bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs font-medium">
+                  <button
+                    type="button"
+                    onClick={() => setFeedViewMode('company')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      feedViewMode === 'company'
+                        ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
+                        : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
+                    }`}
+                  >
+                    Company View
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFeedViewMode('flat')}
+                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                      feedViewMode === 'flat'
+                        ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
+                        : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
+                    }`}
+                  >
+                    Flat Stream
+                  </button>
+                </div>
+
+                {feedViewMode === 'company' && companyRollups.length > 0 && (
+                  <div className="inline-flex rounded-xl border border-dark/10 dark:border-light/10 overflow-hidden text-xs">
+                    <button
+                      type="button"
+                      onClick={() => expandAll()}
+                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors"
+                      title="Expand all companies"
+                    >
+                      Expand All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => collapseAll(companyRollups)}
+                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors border-l border-dark/10 dark:border-light/10"
+                      title="Collapse all companies"
+                    >
+                      Collapse All
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {companyRollups.length === 0 ? (
+              <div className="text-center py-12 text-xs text-dark/50 dark:text-light/50 font-medium">
+                No company outreach registered yet. Telemetry will stream in real time.
+              </div>
+            ) : feedViewMode === 'company' ? (
+              /* Grouped Company Rollup Table with Expandable Accordion */
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono">
+                      <th className="pb-3 font-semibold">Company</th>
+                      <th className="pb-3 font-semibold text-center">Sent</th>
+                      <th className="pb-3 font-semibold text-center">Opened</th>
+                      <th className="pb-3 font-semibold text-center">Resume</th>
+                      <th className="pb-3 font-semibold text-center">Clicks</th>
+                      <th className="pb-3 font-semibold">Last Active</th>
+                      <th className="pb-3 font-semibold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-dark/5 dark:divide-light/5">
+                    {companyRollups.map((c) => {
+                      const isExpanded = !collapsedCompanies[c.company];
+                      const compEvents = recentEvents.filter(
+                        (e) => (e.company || 'Unknown Organisation') === c.company
+                      );
+
+                      return (
+                        <React.Fragment key={c.company}>
+                          <tr
+                            onClick={() => toggleCompany(c.company)}
+                            className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors cursor-pointer group"
+                          >
+                            <td className="py-3.5 font-bold text-dark dark:text-light flex items-center gap-2">
+                              <span className="p-1 rounded-md bg-dark/5 dark:bg-light/5 group-hover:bg-primary/10 transition-colors">
+                                {isExpanded ? (
+                                  <ChevronDown className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
+                                ) : (
+                                  <ChevronRight className="w-3.5 h-3.5 text-dark/50 dark:text-light/50" />
+                                )}
+                              </span>
+                              <span className="text-sm">{c.company}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-medium bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70">
+                                {compEvents.length} event{compEvents.length === 1 ? '' : 's'}
+                              </span>
+                            </td>
+                            <td className="py-3.5 text-center text-dark/70 dark:text-light/70 font-mono">{c.sent}</td>
+                            <td className="py-3.5 text-center text-emerald-600 dark:text-emerald-400 font-bold font-mono">{c.opened}</td>
+                            <td className="py-3.5 text-center text-purple-600 dark:text-purple-400 font-bold font-mono">{c.resume_viewed}</td>
+                            <td className="py-3.5 text-center text-amber-600 dark:text-amber-400 font-bold font-mono">{c.clicks}</td>
+                            <td className="py-3.5 text-dark/60 dark:text-light/60 font-mono text-[11px]">{c.last_active_formatted}</td>
+                            <td className="py-3.5 text-right font-medium">
+                              <span className="text-xs text-primary dark:text-primaryDark hover:underline inline-flex items-center gap-1">
+                                {isExpanded ? 'Hide' : 'View'} ({compEvents.length})
+                              </span>
+                            </td>
+                          </tr>
+
+                          {/* Nested Interaction Details Accordion */}
+                          {isExpanded && (
+                            <tr className="bg-transparent">
+                              <td colSpan={7} className="p-0 border-none">
+                                <div className="mx-2 mb-4 p-4 rounded-2xl bg-dark/[0.02] dark:bg-light/[0.02] border border-dark/10 dark:border-light/10">
+                                  <div className="flex items-center justify-between mb-3 text-xs">
+                                    <span className="font-semibold text-dark/70 dark:text-light/70 font-mono flex items-center gap-1.5">
+                                      <Building2 className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
+                                      <span>Interactions for {c.company}</span>
+                                    </span>
+                                    <span className="text-[11px] text-dark/50 dark:text-light/50 font-mono">
+                                      {compEvents.length} recorded event{compEvents.length === 1 ? '' : 's'}
+                                    </span>
+                                  </div>
+
+                                  {compEvents.length === 0 ? (
+                                    <div className="text-center py-4 text-xs text-dark/50 dark:text-light/50 font-medium">
+                                      No interaction events recorded yet for this company.
+                                    </div>
+                                  ) : (
+                                    <div className="overflow-x-auto">
+                                      <table className="w-full text-left text-xs">
+                                        <thead>
+                                          <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono text-[11px]">
+                                            <th className="pb-2.5 font-semibold">Recruiter &amp; Track</th>
+                                            <th className="pb-2.5 font-semibold">Event &amp; Class</th>
+                                            <th className="pb-2.5 font-semibold">Detail</th>
+                                            <th className="pb-2.5 font-semibold">Location &amp; IP</th>
+                                            <th className="pb-2.5 font-semibold text-right">Time (IST)</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-dark/5 dark:divide-light/5">
+                                          {compEvents.map((evt, eIdx) => {
+                                            const { badgeStyle, label } = getEventBadge(evt);
+                                            return (
+                                              <tr
+                                                key={`${evt.token}-${evt.ts}-${eIdx}`}
+                                                className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors"
+                                              >
+                                                <td className="py-2.5">
+                                                  <div className="font-medium text-dark/90 dark:text-light/90">
+                                                    {evt.recipient || 'No email'}
+                                                  </div>
+                                                  {evt.track && (
+                                                    <span className="inline-block mt-0.5 text-[9px] px-1.5 py-0.5 bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 rounded-full font-medium">
+                                                      {evt.track}
+                                                    </span>
+                                                  )}
+                                                </td>
+
+                                                <td className="py-2.5">
+                                                  <span
+                                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeStyle}`}
+                                                  >
+                                                    {label}
+                                                  </span>
+                                                </td>
+
+                                                <td className="py-2.5 font-medium text-dark/80 dark:text-light/80">
+                                                  {evt.slug ? (
+                                                    <span className="font-mono text-primary dark:text-primaryDark">
+                                                      /{evt.slug}
+                                                    </span>
+                                                  ) : evt.dwell_ms ? (
+                                                    <span>{Math.round(evt.dwell_ms / 1000)}s visible</span>
+                                                  ) : (
+                                                    <span className="text-dark/40 dark:text-light/40">—</span>
+                                                  )}
+                                                </td>
+
+                                                <td className="py-2.5">
+                                                  <div className="text-dark/80 dark:text-light/80 font-medium">
+                                                    {formatLocation(evt.city, evt.country)}
+                                                  </div>
+                                                  <div className="text-[10px] font-mono text-dark/50 dark:text-light/50">
+                                                    {evt.ip_trunc || 'IP redacted'}
+                                                  </div>
+                                                </td>
+
+                                                <td className="py-2.5 font-mono text-dark/60 dark:text-light/60 text-[11px] text-right">
+                                                  {evt.ist_time || evt.ts}
+                                                </td>
+                                              </tr>
+                                            );
+                                          })}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              /* Flat Chronological Feed View */
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
@@ -642,25 +853,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                   </thead>
                   <tbody className="divide-y divide-dark/5 dark:divide-light/5">
                     {recentEvents.map((evt, idx) => {
-                      let badgeStyle =
-                        'bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 border-dark/10 dark:border-light/10';
-
-                      if (evt.event === 'open') {
-                        badgeStyle =
-                          evt.client_class === 'apple_mpp'
-                            ? 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400'
-                            : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
-                      } else if (evt.event === 'click') {
-                        badgeStyle =
-                          'bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400';
-                      } else if (evt.event === 'resume_view') {
-                        badgeStyle =
-                          'bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400';
-                      } else if (evt.event === 'download' || evt.event === 'resume_download') {
-                        badgeStyle =
-                          'bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400';
-                      }
-
+                      const { badgeStyle, label } = getEventBadge(evt);
                       return (
                         <tr
                           key={`${evt.token}-${evt.ts}-${idx}`}
@@ -684,12 +877,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                             <span
                               className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold border ${badgeStyle}`}
                             >
-                              {evt.event === 'open' && `Open (${evt.client_class || 'direct'})`}
-                              {evt.event === 'click' && 'Showcase Click'}
-                              {evt.event === 'resume_view' && 'Resume View'}
-                              {evt.event === 'beacon_dwell' && 'Active Dwell'}
-                              {(evt.event === 'download' || evt.event === 'resume_download') &&
-                                'Resume Download'}
+                              {label}
                             </span>
                           </td>
 
