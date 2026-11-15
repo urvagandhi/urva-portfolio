@@ -1,6 +1,7 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
   siteUrl: process.env.SITE_URL || "https://urvagandhi.tech",
+  exclude: ["/portal*", "/api/mail*"],
   generateRobotsTxt: true,
   generateIndexSitemap: false,
   changefreq: "weekly",

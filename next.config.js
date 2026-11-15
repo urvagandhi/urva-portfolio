@@ -64,6 +64,25 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: "/portal/:path*",
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value: "noindex, nofollow, noarchive",
+          },
+        ],
+      },
+      {
+        source: "/api/mail/pdf",
+        headers: [
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self' data: blob:; frame-ancestors 'self' *;",
+          },
+        ],
+      },
     ];
   },
 

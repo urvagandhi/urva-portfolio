@@ -1,3 +1,5 @@
+import { escapeHtml } from "../../lib/mail/classifier.js";
+
 export default async function handler(req, res) {
   res.setHeader("RateLimit-Limit", "60");
   res.setHeader("RateLimit-Remaining", "59");
@@ -46,6 +48,13 @@ export default async function handler(req, res) {
     timeZone: "Asia/Kolkata",
   });
 
+  // Sanitise user inputs to neutralise HTML injection
+  const safeName = escapeHtml(name);
+  const safeEmail = escapeHtml(email);
+  const safeSubject = escapeHtml(inquirySubject);
+  const safeCompany = escapeHtml(inquiryCompany);
+  const safeMessage = escapeHtml(message);
+
   // 100% Responsive System Light / Dark Adaptive HTML Email Template
   const htmlContent = `
   <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -55,7 +64,7 @@ export default async function handler(req, res) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <meta name="supported-color-schemes" content="light dark" />
-    <title>Portfolio Inquiry from ${name}</title>
+    <title>Portfolio Inquiry from ${safeName}</title>
     <style type="text/css">
       :root {
         color-scheme: light dark;
@@ -263,22 +272,22 @@ export default async function handler(req, res) {
       <div class="container">
         <div class="header">
           <div class="sub-head">Urva Gandhi Portfolio</div>
-          <h1 class="title">New Inquiry: ${inquirySubject}</h1>
+          <h1 class="title">New Inquiry: ${safeSubject}</h1>
         </div>
 
         <div class="body">
           <table class="grid-table">
             <tr>
               <td class="label">Sender</td>
-              <td class="val">${name} (<a href="mailto:${email}">${email}</a>)</td>
+              <td class="val">${safeName} (<a href="mailto:${encodeURIComponent(email)}">${safeEmail}</a>)</td>
             </tr>
             <tr>
               <td class="label">Inquiry Type</td>
-              <td class="val">${inquirySubject}</td>
+              <td class="val">${safeSubject}</td>
             </tr>
             <tr>
               <td class="label">Organization</td>
-              <td class="val">${inquiryCompany}</td>
+              <td class="val">${safeCompany}</td>
             </tr>
             <tr>
               <td class="label">Time</td>
@@ -287,18 +296,18 @@ export default async function handler(req, res) {
           </table>
 
           <div class="msg-title">Message</div>
-          <div class="msg-box">${message}</div>
+          <div class="msg-box">${safeMessage}</div>
 
           <div class="cta-bar">
-            <a href="mailto:${email}?subject=Re:%20${encodeURIComponent(inquirySubject)}%20-%20Urva%20Gandhi" class="btn">
-              Reply to ${name}
+            <a href="mailto:${encodeURIComponent(email)}?subject=Re:%20${encodeURIComponent(inquirySubject)}%20-%20Urva%20Gandhi" class="btn">
+              Reply to ${safeName}
             </a>
           </div>
         </div>
 
         <div class="footer">
           Received via <a href="https://urvagandhi.tech">urvagandhi.tech</a> portfolio contact system.<br/>
-          Sender: <a href="mailto:${email}">${email}</a>
+          Sender: <a href="mailto:${encodeURIComponent(email)}">${safeEmail}</a>
         </div>
       </div>
     </div>

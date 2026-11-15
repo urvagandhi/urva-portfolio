@@ -1166,6 +1166,7 @@ export function proxy(req) {
       pathname.startsWith("/api") ||
       pathname.startsWith("/v1") ||
       pathname.startsWith("/images") ||
+      pathname.startsWith("/portal") ||
       pathname === "/favicon.ico" ||
       pathname.startsWith("/resumes");
 
@@ -1212,6 +1213,16 @@ The requested path \`${pathname}\` does not exist on Urva Gandhi's Portfolio.
     "/api/contact",
     "/api/mcp",
     "/api/openapi.json",
+    "/api/mail/register",
+    "/api/mail/void",
+    "/api/mail/pixel",
+    "/api/mail/link",
+    "/api/mail/doc",
+    "/api/mail/pdf",
+    "/api/mail/beacon",
+    "/api/mail/status",
+    "/api/mail/auth",
+    "/api/mail/stats",
     "/api/keys",
     "/api/sandbox",
     "/v1/leetcode",
