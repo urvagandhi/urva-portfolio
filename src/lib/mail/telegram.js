@@ -43,17 +43,28 @@ export function formatUserAgent(ua) {
   if (trimmed.startsWith('curl/')) return `curl CLI (${trimmed.split(' ')[0]})`;
 
   let browser = '';
-  if (trimmed.includes('Edg/')) browser = 'Edge';
-  else if (trimmed.includes('Chrome/') && !trimmed.includes('Edg/')) browser = 'Chrome';
-  else if (trimmed.includes('Firefox/')) browser = 'Firefox';
-  else if (trimmed.includes('Safari/') && !trimmed.includes('Chrome/')) browser = 'Safari';
+  if (trimmed.includes('Edg/')) {
+    const match = trimmed.match(/Edg\/(\d+)/);
+    browser = match ? `Edge ${match[1]}` : 'Edge';
+  } else if (trimmed.includes('Chrome/') || trimmed.includes('CriOS/')) {
+    const match = trimmed.match(/(?:Chrome|CriOS)\/(\d+)/);
+    browser = match ? `Chrome ${match[1]}` : 'Chrome';
+  } else if (trimmed.includes('Firefox/') || trimmed.includes('FxiOS/')) {
+    const match = trimmed.match(/(?:Firefox|FxiOS)\/(\d+)/);
+    browser = match ? `Firefox ${match[1]}` : 'Firefox';
+  } else if (trimmed.includes('Safari/') && trimmed.includes('Version/')) {
+    const match = trimmed.match(/Version\/(\d+)/);
+    browser = match ? `Safari ${match[1]}` : 'Safari';
+  } else if (trimmed.includes('Safari/')) {
+    browser = 'Safari';
+  }
 
   let os = '';
-  if (trimmed.includes('Macintosh') || trimmed.includes('Mac OS X')) os = 'macOS';
-  else if (trimmed.includes('Windows NT')) os = 'Windows';
-  else if (trimmed.includes('iPhone')) os = 'iPhone';
+  if (trimmed.includes('iPhone')) os = 'iPhone';
   else if (trimmed.includes('iPad')) os = 'iPad';
   else if (trimmed.includes('Android')) os = 'Android';
+  else if (trimmed.includes('Macintosh') || trimmed.includes('Mac OS X')) os = 'macOS';
+  else if (trimmed.includes('Windows NT')) os = 'Windows';
   else if (trimmed.includes('Linux')) os = 'Linux';
 
   if (browser && os) return `${browser} on ${os}`;
@@ -130,12 +141,13 @@ export function buildAlertMessage(params = {}) {
 
   return `${previewPrefix}<b>${icon} ${headerTag} · ${company}</b>${debounceSuffix}
 
-👤 <b>Recruiter:</b> ${recipient}
-🎯 <b>Track:</b> ${trackLabel}
-📌 <b>Detail:</b> ${detail}
-📍 <b>Location:</b> ${location} (IP: ${ip})
-💻 <b>Client:</b> ${clientSummary}
-⏱ <b>Time:</b> ${timestamp}`;
+- <b>Recruiter:</b> ${recipient}
+- <b>Company:</b> ${company}
+- <b>Track:</b> ${trackLabel}
+- <b>Detail:</b> ${detail}
+- <b>Location:</b> ${location} (IP: ${ip})
+- <b>Client:</b> ${clientSummary}
+- <b>Time:</b> ${timestamp}`;
 }
 
 /**

@@ -325,8 +325,11 @@ async function runUnitTests() {
         assert.equal(msg.includes('Email Opened (Gmail Proxy)'), true, 'Must include header tag');
         assert.equal(msg.includes('repeated in last 5m'), true, 'Must include debounce counter');
         assert.equal(msg.includes('Akamai'), true, 'Must include company name');
+        assert.equal(msg.includes('- <b>Company:</b> Akamai'), true, 'Must include specific company field with bullet');
+        assert.equal(msg.includes('- <b>Recruiter:</b> Sarah Jenkins (sjenkins@akamai.com)'), true, 'Must include recruiter bullet');
         assert.equal(msg.includes('AI/ML Track'), true, 'Must include track');
         assert.equal(msg.includes('Google Image Proxy (Gmail)'), true, 'Must format User-Agent cleanly');
+        assert.equal(msg.includes('👤'), false, 'Must not include line emojis');
       } finally {
         process.env.VERCEL_ENV = origEnv;
       }
