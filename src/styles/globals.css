@@ -491,3 +491,30 @@ body {
     animation: logo-meteor 3.2s linear infinite;
   }
 }
+
+/* Ensure standard native mouse pointer across all administrative /portal/* routes */
+.portal-page,
+.portal-page * {
+  cursor: auto !important;
+}
+
+.portal-page a,
+.portal-page button,
+.portal-page [role="button"],
+.portal-page input[type="button"],
+.portal-page input[type="submit"],
+.portal-page select {
+  cursor: pointer !important;
+}
+
+.portal-page input[type="text"],
+.portal-page input[type="password"],
+.portal-page input[type="email"],
+.portal-page textarea {
+  cursor: text !important;
+}
+
+.portal-page button:disabled,
+.portal-page input:disabled {
+  cursor: not-allowed !important;
+}

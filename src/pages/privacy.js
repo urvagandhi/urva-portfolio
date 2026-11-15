@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   Cookie,
   Server,
+  Send,
 } from "lucide-react";
 
 export default function PrivacyPolicy() {
@@ -220,7 +221,68 @@ export default function PrivacyPolicy() {
               </div>
             </div>
 
-            {/* Section 5: Contact */}
+            {/* Section 5: Recruitment Outreach Telemetry */}
+            <div className="relative p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl overflow-hidden">
+              <BorderBeam
+                size={200}
+                duration={12}
+                delay={12}
+                colorFrom="#58E6D9"
+                colorTo="#8B5CF6"
+              />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
+                  <Send className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-dark dark:text-light">
+                    5. Recruitment Outreach Telemetry
+                  </h2>
+                  <div className="text-xs text-dark/60 dark:text-light/60">
+                    Privacy-focused engagement tracking for candidate outreach
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-sm text-dark/80 dark:text-light/80 leading-relaxed font-medium">
+                <div>
+                  Direct candidate outreach emails dispatched to prospective employers include lightweight, privacy-conscious telemetry endpoints hosted under{" "}
+                  <code className="font-mono bg-dark/10 dark:bg-light/10 px-2 py-0.5 rounded text-xs font-bold text-primary dark:text-primaryDark">
+                    /api/mail/*
+                  </code>
+                  . This infrastructure operates strictly for candidate engagement verification, email deliverability confirmation and portfolio showcase navigation.
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-2 text-dark dark:text-light">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <span>
+                      <strong>IP Truncation &amp; Anonymisation:</strong> Recruiter IP addresses are permanently truncated to 3 octets (e.g. <code className="font-mono text-xs">192.168.1.xxx</code>) before persistence, preventing individual identification.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-dark dark:text-light">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <span>
+                      <strong>Zero Recipient Cookies:</strong> No tracking cookies, browser storage tokens or persistent device fingerprints are deposited on recipient devices.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-dark dark:text-light">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <span>
+                      <strong>Strict Data Retention:</strong> Interaction records carry an automated 60-day Time-To-Live (TTL) and tailored resume binaries expire after 180 days, after which data is purged permanently.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-dark dark:text-light">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <span>
+                      <strong>Regulatory Compliance:</strong> Architected in compliance with India&apos;s Digital Personal Data Protection (DPDP) Act 2023 principles of purpose limitation and data minimisation, alongside European Data Protection Board (EDPB) Guidelines 2/2023.
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 6: Contact */}
             <div className="p-8 sm:p-6 xs:p-4 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl flex flex-row items-center sm:flex-col sm:items-start justify-between gap-6 flex-wrap">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-primary/10 dark:bg-primaryDark/20 text-primary dark:text-primaryDark border border-primary/20 flex-shrink-0">

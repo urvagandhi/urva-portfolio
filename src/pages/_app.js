@@ -38,6 +38,16 @@ export default function App({ Component, pageProps }) {
   const [mounted, setMounted] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
 
+  const isPortal =
+    router.pathname.startsWith("/portal") || router.asPath.startsWith("/portal");
+
+  React.useEffect(() => {
+    if (isPortal) {
+      document.documentElement.classList.remove("animate-ui-cursor-none");
+      document.body?.classList.remove("animate-ui-cursor-none");
+    }
+  }, [isPortal]);
+
   React.useEffect(() => {
     setMounted(true);
 
@@ -170,7 +180,7 @@ export default function App({ Component, pageProps }) {
       </AnimatePresence>
 
       <main
-        className={`${montserrat.variable} font-mont bg-light dark:bg-dark w-full min-h-screen h-full relative overflow-clip`}
+        className={`${montserrat.variable} font-mont bg-light dark:bg-dark w-full min-h-screen h-full relative overflow-clip ${isPortal ? "portal-page" : ""}`}
       >
         {/* Global Interactive Particles Background */}
         {mounted && (
@@ -188,8 +198,8 @@ export default function App({ Component, pageProps }) {
           className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-purple-500 to-cyan-500 dark:from-primaryDark dark:via-cyan-400 dark:to-primaryDark origin-left z-[100]"
           style={{ scaleX: scrollYProgress }}
         />
-        {/* Global custom cursor */}
-        {mounted && !loading && <CustomCursor />}
+        {/* Global custom cursor (disabled for /portal/* to use normal mouse pointer) */}
+        {mounted && !loading && !isPortal && <CustomCursor />}
 
         <NavBar />
         <AnimatePresence initial={false} mode="wait">
