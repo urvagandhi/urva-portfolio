@@ -1,7 +1,7 @@
 import { verifyToken } from '../../../lib/mail/token.js';
 import { resolveDestination } from '../../../lib/mail/allowlist.js';
 import { truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
-import { k, hgetall, hincrby, hset, lpush, expire, zincrby } from '../../../lib/mail/redis.js';
+import { k, hgetall, hincrby, hset, lpush, expire, zincrby, incr, sadd, smembers, get, set } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
 
 /**
@@ -93,21 +93,64 @@ export default async function handler(req, res) {
       await lpush(k(`mail:events:${t}`), eventPayload);
       await expire(k(`mail:events:${t}`), 5184000);
 
-      // Clicks are never debounced — dispatch immediate push alert
-      await dispatchTelegramAlert({
-        eventType: 'link_click',
-        recipientName: msg.recipient_name,
-        recipientEmail: msg.recipient_email || msg.recipient,
-        company: msg.company,
-        track: msg.track,
-        detail: `Clicked slug: ${slug} (Click #${updatedClicks}) → ${destUrl}`,
-        ua,
-        country,
-        region,
-        city,
-        ipTrunc,
-        timestamp: now
-      });
+      // Rate-limit automated email security scanners while preserving human Ctrl-clicks
+      // A human recruiter using Ctrl-click to open multiple tabs typically opens 2 to 4 links from a single IP.
+      // An enterprise scanner systematically opens 8 to 20 links, often across multiple cloud datacenter IPs.
+      const burstKey = k(`mail:burst:click:${t}`);
+      const ipSetKey = k(`mail:burst:ips:${t}`);
+
+      const burstCount = await incr(burstKey);
+      if (burstCount === 1) {
+        await expire(burstKey, 45); // 45-second sliding window
+      }
+
+      await sadd(ipSetKey, ipTrunc || 'unknown');
+      if (burstCount === 1) {
+        await expire(ipSetKey, 45);
+      }
+      const ipMembers = await smembers(ipSetKey);
+      const isMultiIp = Array.isArray(ipMembers) && ipMembers.length >= 2;
+
+      // Allow up to 4 clicks from the same IP (accommodates human recruiter Ctrl-clicking multiple links)
+      if (burstCount <= 4 && !isMultiIp) {
+        await dispatchTelegramAlert({
+          eventType: 'link_click',
+          recipientName: msg.recipient_name,
+          recipientEmail: msg.recipient_email || msg.recipient,
+          company: msg.company,
+          track: msg.track,
+          detail: `Clicked slug: ${slug} (Click #${updatedClicks}) → ${destUrl}`,
+          ua,
+          country,
+          region,
+          city,
+          ipTrunc,
+          timestamp: now
+        });
+      } else if (burstCount === 5 || (burstCount >= 3 && isMultiIp)) {
+        // Triggered only on genuine automated security scanner behavior:
+        // Either >= 5 links visited in under 45s, OR multiple distinct IP addresses scanning simultaneously
+        const scannerKey = k(`mail:scanner:alerted:${t}`);
+        const alreadyAlerted = await get(scannerKey);
+        if (!alreadyAlerted) {
+          await set(scannerKey, '1', { ex: 300 }); // Alert at most once per 5 minutes per token
+          await dispatchTelegramAlert({
+            eventType: 'scanner_burst',
+            recipientName: msg.recipient_name,
+            recipientEmail: msg.recipient_email || msg.recipient,
+            company: msg.company,
+            track: msg.track,
+            detail: `Automated security gateway scanner detected (${burstCount}+ links pre-screened in seconds). Subsequent link click alerts suppressed to protect Telegram inbox.`,
+            ua: 'Automated Security Scanner',
+            country,
+            region,
+            city,
+            ipTrunc,
+            timestamp: now
+          });
+        }
+      }
+      // For higher counts: completely suppressed on Telegram to protect inbox from scanner floods
     }
   } catch (err) {
     console.warn(`[MailTracker:Link] Fail-open error handled: ${err.message}`);
