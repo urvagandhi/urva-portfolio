@@ -140,7 +140,8 @@ export default async function handler(req, res) {
           downloads: 0,
           last_active: 0,
           first_sent: Number(msg.created_at || 0),
-          click_timestamps: []
+          click_timestamps: [],
+          events: []
         };
 
         existingComp.sent++;
@@ -178,6 +179,7 @@ export default async function handler(req, res) {
               existingComp.click_timestamps.push(eventTs);
             }
 
+            existingComp.events.push(parsed);
             rawEvents.push(parsed);
           } catch (_) {}
         }
@@ -225,10 +227,14 @@ export default async function handler(req, res) {
         if (aActive === 0 && bActive > 0) return 1;
         return a.company.localeCompare(b.company);
       })
-      .map(c => ({
-        ...c,
-        last_active_formatted: c.last_active > 0 ? formatIstTimestamp(c.last_active) : 'Pending'
-      }));
+      .map(c => {
+        const sortedEvents = (c.events || []).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        return {
+          ...c,
+          events: sortedEvents,
+          last_active_formatted: c.last_active > 0 ? formatIstTimestamp(c.last_active) : 'Pending'
+        };
+      });
 
     // Sort events reverse-chronologically
     rawEvents.sort((a, b) => (b.ts || 0) - (a.ts || 0));

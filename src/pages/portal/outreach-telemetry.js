@@ -746,9 +746,11 @@ export default function OutreachTelemetry({ initialAuth }) {
                   <tbody className="divide-y divide-dark/5 dark:divide-light/5">
                     {companyRollups.map((c) => {
                       const isExpanded = !collapsedCompanies[c.company];
-                      const compEvents = recentEvents.filter(
-                        (e) => (e.company || 'Unknown Organisation') === c.company
-                      );
+                      const compEvents = (Array.isArray(c.events) && c.events.length > 0)
+                        ? c.events
+                        : recentEvents.filter(
+                            (e) => (e.company || 'Unknown Organisation') === c.company
+                          );
 
                       return (
                         <React.Fragment key={c.company}>
