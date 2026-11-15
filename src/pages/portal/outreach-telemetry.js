@@ -114,6 +114,7 @@ export default function OutreachTelemetry({ initialAuth }) {
 
   const [stats, setStats] = useState(null);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const [statsError, setStatsError] = useState('');
   const [currentTimeIst, setCurrentTimeIst] = useState('');
 
@@ -159,7 +160,8 @@ export default function OutreachTelemetry({ initialAuth }) {
 
   // Fetch telemetry statistics (silent mode skips loading spinner for seamless background updates)
   const fetchStats = useCallback(async (isSilent = false) => {
-    if (!isSilent) setLoadingStats(true);
+    const silent = typeof isSilent === 'boolean' ? isSilent : false;
+    if (!silent) setLoadingStats(true);
     setStatsError('');
     try {
       const res = await fetch('/api/mail/stats');
@@ -174,11 +176,28 @@ export default function OutreachTelemetry({ initialAuth }) {
       const data = await res.json();
       setStats(data);
     } catch (err) {
-      if (!isSilent) setStatsError(err.message || 'Failed to load telemetry metrics');
+      if (!silent) setStatsError(err.message || 'Failed to load telemetry metrics');
     } finally {
-      if (!isSilent) setLoadingStats(false);
+      if (!silent) setLoadingStats(false);
     }
   }, []);
+
+  // Explicit user-triggered refresh with guaranteed visual spin feedback
+  const handleManualRefresh = async () => {
+    if (isManualRefreshing || loadingStats) return;
+    setIsManualRefreshing(true);
+    const start = Date.now();
+    try {
+      await fetchStats(false);
+    } finally {
+      const elapsed = Date.now() - start;
+      const minSpinMs = 600;
+      if (elapsed < minSpinMs) {
+        await new Promise((resolve) => setTimeout(resolve, minSpinMs - elapsed));
+      }
+      setIsManualRefreshing(false);
+    }
+  };
 
   // Real-time automatic polling every 2.5 seconds from DB
   useEffect(() => {
@@ -385,13 +404,17 @@ export default function OutreachTelemetry({ initialAuth }) {
               </div>
 
               <button
-                onClick={fetchStats}
-                disabled={loadingStats}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark dark:text-light border border-dark/10 dark:border-light/10 transition-colors font-medium cursor-pointer"
+                onClick={handleManualRefresh}
+                disabled={isManualRefreshing || loadingStats}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark dark:text-light border border-dark/10 dark:border-light/10 transition-colors font-medium cursor-pointer disabled:opacity-70"
                 title="Refresh Metrics"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingStats ? 'animate-spin' : ''}`} />
-                <span>Refresh</span>
+                <RefreshCw
+                  className={`w-3.5 h-3.5 transition-transform ${
+                    isManualRefreshing || loadingStats ? 'animate-spin text-primary dark:text-primaryDark' : ''
+                  }`}
+                />
+                <span>{isManualRefreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
 
               <button
