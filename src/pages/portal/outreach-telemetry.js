@@ -39,6 +39,23 @@ function formatLocation(city, country) {
   return [cleanCity, country].filter(Boolean).join(', ') || 'Unknown';
 }
 
+// Helper to compute relative elapsed time from timestamp (e.g. 'Just now', '2m ago')
+function formatRelativeTime(ts) {
+  if (!ts) return '';
+  const num = typeof ts === 'number' ? ts : Number(ts);
+  if (Number.isNaN(num) || num <= 0) return '';
+  const now = Date.now();
+  const diffSec = Math.floor((now - num) / 1000);
+  if (diffSec < 15) return 'Just now';
+  if (diffSec < 60) return `${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
+
 // Helper to determine styling badge and label for interaction events
 function getEventBadge(evt) {
   let badgeStyle = 'bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 border-dark/10 dark:border-light/10';
@@ -678,7 +695,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                         : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
                     }`}
                   >
-                    Flat Stream
+                    All Events
                   </button>
                 </div>
 
@@ -754,7 +771,20 @@ export default function OutreachTelemetry({ initialAuth }) {
                             <td className="py-3.5 text-center text-emerald-600 dark:text-emerald-400 font-bold font-mono">{c.opened}</td>
                             <td className="py-3.5 text-center text-purple-600 dark:text-purple-400 font-bold font-mono">{c.resume_viewed}</td>
                             <td className="py-3.5 text-center text-amber-600 dark:text-amber-400 font-bold font-mono">{c.clicks}</td>
-                            <td className="py-3.5 text-dark/60 dark:text-light/60 font-mono text-[11px]">{c.last_active_formatted}</td>
+                            <td className="py-3.5 font-mono text-left">
+                              {c.last_active > 0 ? (
+                                <div>
+                                  <div className="font-semibold text-xs text-dark/90 dark:text-light/90">
+                                    {formatRelativeTime(c.last_active)}
+                                  </div>
+                                  <div className="text-[10px] text-dark/50 dark:text-light/50">
+                                    {c.last_active_formatted}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-dark/40 dark:text-light/40 text-xs">Pending</span>
+                              )}
+                            </td>
                             <td className="py-3.5 text-right font-medium">
                               <span className="text-xs text-primary dark:text-primaryDark hover:underline inline-flex items-center gap-1">
                                 {isExpanded ? 'Hide' : 'View'} ({compEvents.length})
@@ -841,8 +871,13 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                   </div>
                                                 </td>
 
-                                                <td className="py-2.5 font-mono text-dark/60 dark:text-light/60 text-[11px] text-right">
-                                                  {evt.ist_time || evt.ts}
+                                                <td className="py-2.5 font-mono text-right">
+                                                  <div className="font-semibold text-xs text-dark/90 dark:text-light/90">
+                                                    {formatRelativeTime(evt.ts)}
+                                                  </div>
+                                                  <div className="text-[10px] text-dark/50 dark:text-light/50">
+                                                    {evt.ist_time || evt.ts}
+                                                  </div>
                                                 </td>
                                               </tr>
                                             );
@@ -925,8 +960,13 @@ export default function OutreachTelemetry({ initialAuth }) {
                             </div>
                           </td>
 
-                          <td className="py-3.5 font-mono text-dark/60 dark:text-light/60 text-[11px] text-right">
-                            {evt.ist_time || evt.ts}
+                          <td className="py-3.5 font-mono text-right">
+                            <div className="font-semibold text-xs text-dark/90 dark:text-light/90">
+                              {formatRelativeTime(evt.ts)}
+                            </div>
+                            <div className="text-[10px] text-dark/50 dark:text-light/50">
+                              {evt.ist_time || evt.ts}
+                            </div>
                           </td>
                         </tr>
                       );
