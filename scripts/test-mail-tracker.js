@@ -537,7 +537,7 @@ async function runIntegrationTests() {
   await hset(k(`mail:m:${activeTestToken}`), {
     token: activeTestToken,
     recipient_name: 'Test Recruiter',
-    recipient_email: 'study.urva@gmail.com',
+    recipient_email: 'recruiter@enterprise-corp.com',
     company: 'Test Org',
     track: 'AI/ML',
     custom_msg_id: activeCustomMsgId,
@@ -814,7 +814,7 @@ async function runIntegrationTests() {
       // Active message should be present
       const entry = res.body[activeCustomMsgId];
       assert.equal(typeof entry, 'object', 'Active message must be present in map');
-      assert.equal(entry.recipient, 'study.urva@gmail.com');
+      assert.equal(entry.recipient, 'recruiter@enterprise-corp.com');
       assert.equal(entry.company, 'Test Org');
       assert.equal(entry.opens, 2);
       assert.equal(entry.clicks, 1);

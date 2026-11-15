@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { generateToken } from '../../../lib/mail/token.js';
+import { generateToken, isSenderEmail } from '../../../lib/mail/token.js';
 import { ALLOWED_SLUGS } from '../../../lib/mail/allowlist.js';
 import { k, set, exists, expire, pipeline } from '../../../lib/mail/redis.js';
 
@@ -80,6 +80,18 @@ export default async function handler(req, res) {
       title: 'Bad Request',
       status: 400,
       detail: 'Mandatory fields: recipient_email, company, track, and custom_msg_id.',
+      instance: '/api/mail/register'
+    });
+  }
+
+  // Reject registration for sender/owner email addresses
+  if (isSenderEmail(targetEmail)) {
+    res.setHeader('Content-Type', 'application/problem+json');
+    return res.status(400).json({
+      type: 'https://urvagandhi.tech/docs/errors/invalid-parameters',
+      title: 'Bad Request',
+      status: 400,
+      detail: 'Registration is not permitted for sender email addresses.',
       instance: '/api/mail/register'
     });
   }

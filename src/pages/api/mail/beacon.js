@@ -1,4 +1,4 @@
-import { verifyToken } from '../../../lib/mail/token.js';
+import { verifyToken, verifyAdminSession, isSenderEmail } from '../../../lib/mail/token.js';
 import { truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
 import { k, hgetall, hincrby, hset, lpush, expire, exists, set, get } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
@@ -31,11 +31,21 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
+  // Pass-through: if admin is logged in, do not record beacon events or send alerts
+  if (verifyAdminSession(req)) {
+    return res.status(204).end();
+  }
+
   try {
     const msg = await hgetall(k(`mail:m:${t}`));
 
     // Only process events if message exists and is not voided
     if (msg && Object.keys(msg).length > 0 && msg.status !== 'voided') {
+      const recipientEmail = msg.recipient_email || msg.recipient || '';
+      if (isSenderEmail(recipientEmail)) {
+        return res.status(204).end();
+      }
+
       const ua = req.headers['user-agent'] || '';
       const forwardedFor = req.headers['x-forwarded-for'];
       const rawIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (req.socket?.remoteAddress || '');

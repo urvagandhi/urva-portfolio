@@ -1,4 +1,4 @@
-import { verifyToken } from '../../../lib/mail/token.js';
+import { verifyToken, verifyAdminSession, isSenderEmail } from '../../../lib/mail/token.js';
 import { resolveDestination } from '../../../lib/mail/allowlist.js';
 import { truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
 import { k, hgetall, hincrby, hset, lpush, expire, zincrby, incr, sadd, smembers, get, set } from '../../../lib/mail/redis.js';
@@ -38,11 +38,25 @@ export default async function handler(req, res) {
     return res.status(302).end();
   }
 
+  // Pass-through: if admin is logged into telemetry portal, execute redirect immediately without logging
+  if (verifyAdminSession(req)) {
+    res.setHeader('Location', destUrl);
+    res.setHeader('Cache-Control', 'no-store, private');
+    return res.status(302).end();
+  }
+
   try {
     const msg = await hgetall(k(`mail:m:${t}`));
 
     // Only record clicks if message exists and is not voided
     if (msg && Object.keys(msg).length > 0 && msg.status !== 'voided') {
+      const recipientEmail = msg.recipient_email || msg.recipient || '';
+      if (isSenderEmail(recipientEmail)) {
+        res.setHeader('Location', destUrl);
+        res.setHeader('Cache-Control', 'no-store, private');
+        return res.status(302).end();
+      }
+
       const ua = req.headers['user-agent'] || '';
       const forwardedFor = req.headers['x-forwarded-for'];
       const rawIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (req.socket?.remoteAddress || '');

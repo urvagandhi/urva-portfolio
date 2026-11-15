@@ -219,17 +219,10 @@ export default function OutreachTelemetry({ initialAuth }) {
     }
   };
 
-  // Real-time automatic polling every 15 seconds from DB (preserves Upstash Redis quota)
+  // Initial load only; automatic interval polling disabled to preserve Upstash Redis quota
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchStats(false);
-
-    const interval = setInterval(() => {
-      if (typeof document !== 'undefined' && document.hidden) return;
-      fetchStats(true);
-    }, 15000);
-
-    return () => clearInterval(interval);
   }, [isAuthenticated, fetchStats]);
 
   // Handle passkey login
@@ -964,6 +957,18 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                     </span>
                                                   ) : evt.dwell_ms ? (
                                                     <span>{Math.round(evt.dwell_ms / 1000)}s visible</span>
+                                                  ) : evt.event === 'open' ? (
+                                                    <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
+                                                      Email Opened
+                                                    </span>
+                                                  ) : evt.event === 'resume_view' ? (
+                                                    <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
+                                                      {evt.session_num ? `Session #${evt.session_num}` : 'Web Resume'}
+                                                    </span>
+                                                  ) : evt.event === 'resume_download' || evt.event === 'download' ? (
+                                                    <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
+                                                      {evt.download_num ? `Download #${evt.download_num}` : 'PDF Download'}
+                                                    </span>
                                                   ) : (
                                                     <span className="text-dark/40 dark:text-light/40">—</span>
                                                   )}
@@ -1053,7 +1058,22 @@ export default function OutreachTelemetry({ initialAuth }) {
                               </span>
                             )}
                             {evt.dwell_ms && <span>{Math.round(evt.dwell_ms / 1000)}s visible</span>}
-                            {!evt.slug && !evt.dwell_ms && (
+                            {!evt.slug && !evt.dwell_ms && evt.event === 'open' && (
+                              <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
+                                Email Opened
+                              </span>
+                            )}
+                            {!evt.slug && !evt.dwell_ms && evt.event === 'resume_view' && (
+                              <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
+                                {evt.session_num ? `Session #${evt.session_num}` : 'Web Resume'}
+                              </span>
+                            )}
+                            {!evt.slug && !evt.dwell_ms && (evt.event === 'resume_download' || evt.event === 'download') && (
+                              <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
+                                {evt.download_num ? `Download #${evt.download_num}` : 'PDF Download'}
+                              </span>
+                            )}
+                            {!evt.slug && !evt.dwell_ms && evt.event !== 'open' && evt.event !== 'resume_view' && evt.event !== 'resume_download' && evt.event !== 'download' && (
                               <span className="text-dark/40 dark:text-light/40">—</span>
                             )}
                           </td>
