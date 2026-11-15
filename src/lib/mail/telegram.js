@@ -38,6 +38,9 @@ export function formatIstTimestamp(date = new Date()) {
 export function formatUserAgent(ua) {
   if (!ua || typeof ua !== 'string') return 'Unknown client';
   const trimmed = ua.trim();
+  if (trimmed.includes('Automated Security Scanner') || trimmed.includes('Security Scanner')) {
+    return 'Automated Security Scanner';
+  }
   if (trimmed === 'Mozilla/5.0') return 'Apple Mail Privacy Proxy';
   if (trimmed.includes('GoogleImageProxy')) return 'Google Image Proxy (Gmail)';
   if (trimmed.startsWith('curl/')) return `curl CLI (${trimmed.split(' ')[0]})`;
@@ -115,6 +118,9 @@ export function buildAlertMessage(params = {}) {
   } else if (params.eventType === 'link_click') {
     icon = '🔗';
     headerTag = 'Link Clicked';
+  } else if (params.eventType === 'scanner_burst') {
+    icon = '🛡️';
+    headerTag = 'Security Gateway Pre-scan';
   } else if (params.eventType === 'resume_view') {
     icon = '📄';
     headerTag = 'Resume Viewed';

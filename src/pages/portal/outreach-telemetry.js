@@ -138,6 +138,7 @@ export default function OutreachTelemetry({ initialAuth }) {
   // Company accordion toggle state (default: all expanded) and view mode switch
   const [collapsedCompanies, setCollapsedCompanies] = useState({});
   const [feedViewMode, setFeedViewMode] = useState('company'); // 'company' | 'flat'
+  const [companyFilter, setCompanyFilter] = useState('all'); // 'all' | 'opened' | 'unopened'
 
   const toggleCompany = (companyName) => {
     setCollapsedCompanies((prev) => ({
@@ -380,6 +381,19 @@ export default function OutreachTelemetry({ initialAuth }) {
   const slugRankings = stats?.slug_rankings || [];
   const companyRollups = stats?.company_rollups || [];
   const recentEvents = stats?.recent_events || [];
+
+  const openedCompanies = companyRollups.filter(
+    (c) => (c.opened > 0 || c.resume_viewed > 0 || c.clicks > 0 || c.last_active > 0)
+  );
+  const unopenedCompanies = companyRollups.filter(
+    (c) => !(c.opened > 0 || c.resume_viewed > 0 || c.clicks > 0 || c.last_active > 0)
+  );
+
+  const displayedCompanies = companyFilter === 'opened'
+    ? openedCompanies
+    : companyFilter === 'unopened'
+    ? unopenedCompanies
+    : companyRollups;
 
   return (
     <>
@@ -663,24 +677,91 @@ export default function OutreachTelemetry({ initialAuth }) {
 
           {/* Unified Company-Wise Outreach & Recruiter Engagement Hub */}
           <div className="p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
               <div>
                 <h3 className="text-lg font-bold text-dark dark:text-light flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-primary dark:text-primaryDark" />
                   <span>Company-Wise Recruiter Engagement</span>
                 </h3>
                 <p className="text-xs text-dark/60 dark:text-light/60 font-mono mt-0.5">
-                  {companyRollups.length} Organisation{companyRollups.length === 1 ? '' : 's'} · {recentEvents.length} Total Interaction{recentEvents.length === 1 ? '' : 's'}
+                  {displayedCompanies.length} of {companyRollups.length} Organisation{companyRollups.length === 1 ? '' : 's'} · {recentEvents.length} Total Interaction{recentEvents.length === 1 ? '' : 's'}
                 </p>
               </div>
 
-              {/* View mode toggle and expand/collapse controls */}
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* Segregation Tabs + View mode toggle and expand/collapse controls */}
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {/* Segregation Filter Tabs */}
+                {feedViewMode === 'company' && (
+                  <div className="inline-flex rounded-xl p-1 bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs font-medium">
+                    <button
+                      type="button"
+                      onClick={() => setCompanyFilter('all')}
+                      className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                        companyFilter === 'all'
+                          ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
+                          : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
+                      }`}
+                    >
+                      <span>ALL</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                        companyFilter === 'all'
+                          ? 'bg-light/20 text-light dark:bg-dark/20 dark:text-dark'
+                          : 'bg-dark/10 dark:bg-light/10 text-dark/70 dark:text-light/70'
+                      }`}>
+                        {companyRollups.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCompanyFilter('opened')}
+                      className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                        companyFilter === 'opened'
+                          ? 'bg-emerald-600 text-light dark:bg-emerald-500 dark:text-dark font-bold shadow-sm'
+                          : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
+                      }`}
+                      title="Sent and opened emails"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                      <span>Sent &amp; Opened</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                        companyFilter === 'opened'
+                          ? 'bg-light/20 text-light dark:bg-dark/20 dark:text-dark'
+                          : 'bg-dark/10 dark:bg-light/10 text-dark/70 dark:text-light/70'
+                      }`}>
+                        {openedCompanies.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCompanyFilter('unopened')}
+                      className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                        companyFilter === 'unopened'
+                          ? 'bg-amber-600 text-light dark:bg-amber-500 dark:text-dark font-bold shadow-sm'
+                          : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
+                      }`}
+                      title="Sent but not yet opened"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+                      <span>Sent but Not Open</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                        companyFilter === 'unopened'
+                          ? 'bg-light/20 text-light dark:bg-dark/20 dark:text-dark'
+                          : 'bg-dark/10 dark:bg-light/10 text-dark/70 dark:text-light/70'
+                      }`}>
+                        {unopenedCompanies.length}
+                      </span>
+                    </button>
+                  </div>
+                )}
+
+                {/* View mode toggle (Company View vs All Events) */}
                 <div className="inline-flex rounded-xl p-1 bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs font-medium">
                   <button
                     type="button"
                     onClick={() => setFeedViewMode('company')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                       feedViewMode === 'company'
                         ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
                         : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
@@ -691,7 +772,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                   <button
                     type="button"
                     onClick={() => setFeedViewMode('flat')}
-                    className={`px-3 py-1.5 rounded-lg transition-all ${
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                       feedViewMode === 'flat'
                         ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
                         : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
@@ -701,20 +782,20 @@ export default function OutreachTelemetry({ initialAuth }) {
                   </button>
                 </div>
 
-                {feedViewMode === 'company' && companyRollups.length > 0 && (
+                {feedViewMode === 'company' && displayedCompanies.length > 0 && (
                   <div className="inline-flex rounded-xl border border-dark/10 dark:border-light/10 overflow-hidden text-xs">
                     <button
                       type="button"
                       onClick={() => expandAll()}
-                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors"
+                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors cursor-pointer"
                       title="Expand all companies"
                     >
                       Expand All
                     </button>
                     <button
                       type="button"
-                      onClick={() => collapseAll(companyRollups)}
-                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors border-l border-dark/10 dark:border-light/10"
+                      onClick={() => collapseAll(displayedCompanies)}
+                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors border-l border-dark/10 dark:border-light/10 cursor-pointer"
                       title="Collapse all companies"
                     >
                       Collapse All
@@ -724,9 +805,13 @@ export default function OutreachTelemetry({ initialAuth }) {
               </div>
             </div>
 
-            {companyRollups.length === 0 ? (
+            {displayedCompanies.length === 0 ? (
               <div className="text-center py-12 text-xs text-dark/50 dark:text-light/50 font-medium">
-                No company outreach registered yet. Telemetry will stream in real time.
+                {companyFilter === 'opened'
+                  ? 'No opened outreach recorded yet.'
+                  : companyFilter === 'unopened'
+                  ? 'All outreach emails have been opened!'
+                  : 'No company outreach registered yet. Telemetry will stream in real time.'}
               </div>
             ) : feedViewMode === 'company' ? (
               /* Grouped Company Rollup Table with Expandable Accordion */
@@ -744,7 +829,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-dark/5 dark:divide-light/5">
-                    {companyRollups.map((c) => {
+                    {displayedCompanies.map((c) => {
                       const isExpanded = !collapsedCompanies[c.company];
                       const compEvents = (Array.isArray(c.events) && c.events.length > 0)
                         ? c.events
