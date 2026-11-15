@@ -725,20 +725,20 @@ async function runIntegrationTests() {
     }
   );
 
-  // IT-13: /api/mail/beacon dwell and download ingestion
+  // IT-13: /api/mail/beacon 30m session grouping, dwell and download ingestion
   await testCase(
     'IT-13',
-    '/api/mail/beacon | POST ingests resume view, dwell duration and download events',
+    '/api/mail/beacon | POST enforces 30m session grouping for views, accumulates dwell and throttles downloads',
     async () => {
-      // 1. Ingest resume_view
+      // 1. Ingest initial resume_view (Session #1)
       const { req: req1, res: res1 } = createMockReqRes({
         method: 'POST',
-        body: JSON.stringify({ t: activeTestToken, event: 'resume_view' })
+        body: JSON.stringify({ t: activeTestToken, event: 'resume_view', sid: 'sess_test_1' })
       });
       await beaconHandler(req1, res1);
       assert.equal(res1.statusCode, 204);
 
-      // 2. Ingest beacon_dwell
+      // 2. Ingest beacon_dwell (should accumulate in hash without adding event rows)
       const { req: req2, res: res2 } = createMockReqRes({
         method: 'POST',
         body: JSON.stringify({ t: activeTestToken, event: 'beacon_dwell', dwell_ms: 32000 })
@@ -759,16 +759,31 @@ async function runIntegrationTests() {
       assert.equal(Number(msg.total_dwell_ms), 32000, 'Dwell ms must accumulate 32000');
       assert.equal(Number(msg.downloads), 1, 'Downloads must increment to 1');
 
-      // 4. Test debounce suppression: rapid duplicate resume_view should not double increment
+      // 4. Test session grouping: subsequent resume_view in same 30m session must NOT increment views
       const { req: req4, res: res4 } = createMockReqRes({
         method: 'POST',
-        body: JSON.stringify({ t: activeTestToken, event: 'resume_view' })
+        body: JSON.stringify({ t: activeTestToken, event: 'resume_view', sid: 'sess_test_1' })
       });
       await beaconHandler(req4, res4);
       assert.equal(res4.statusCode, 204);
 
       const msgAfterDup = await hgetall(k(`mail:m:${activeTestToken}`));
-      assert.equal(Number(msgAfterDup.resume_views), 1, 'Duplicate resume view within debounce must be suppressed');
+      assert.equal(Number(msgAfterDup.resume_views), 1, 'Same-session view must be grouped under Session #1 without increment');
+
+      // 5. Test download session grouping: repeated download in same session must be de-duplicated
+      const { req: req5, res: res5 } = createMockReqRes({
+        method: 'POST',
+        body: JSON.stringify({ t: activeTestToken, event: 'resume_download' })
+      });
+      await beaconHandler(req5, res5);
+      assert.equal(res5.statusCode, 204);
+
+      const msgAfterDupDl = await hgetall(k(`mail:m:${activeTestToken}`));
+      assert.equal(Number(msgAfterDupDl.downloads), 1, 'Downloads in same session window must remain 1');
+
+      const events = await lrange(k(`mail:events:${activeTestToken}`), 0, -1);
+      const downloadEvents = events.map(e => JSON.parse(e)).filter(e => e.event === 'resume_download');
+      assert.equal(downloadEvents.length, 1, 'Only one download event logged to feed per session window');
     }
   );
 
