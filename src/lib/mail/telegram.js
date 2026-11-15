@@ -30,6 +30,55 @@ export function formatIstTimestamp(date = new Date()) {
 }
 
 /**
+ * Formats raw User-Agent headers into human-readable browser and operating system summaries.
+ *
+ * @param {string} ua Raw User-Agent string
+ * @returns {string} Clean, readable client summary
+ */
+export function formatUserAgent(ua) {
+  if (!ua || typeof ua !== 'string') return 'Unknown client';
+  const trimmed = ua.trim();
+  if (trimmed === 'Mozilla/5.0') return 'Apple Mail Privacy Proxy';
+  if (trimmed.includes('GoogleImageProxy')) return 'Google Image Proxy (Gmail)';
+  if (trimmed.startsWith('curl/')) return `curl CLI (${trimmed.split(' ')[0]})`;
+
+  let browser = '';
+  if (trimmed.includes('Edg/')) browser = 'Edge';
+  else if (trimmed.includes('Chrome/') && !trimmed.includes('Edg/')) browser = 'Chrome';
+  else if (trimmed.includes('Firefox/')) browser = 'Firefox';
+  else if (trimmed.includes('Safari/') && !trimmed.includes('Chrome/')) browser = 'Safari';
+
+  let os = '';
+  if (trimmed.includes('Macintosh') || trimmed.includes('Mac OS X')) os = 'macOS';
+  else if (trimmed.includes('Windows NT')) os = 'Windows';
+  else if (trimmed.includes('iPhone')) os = 'iPhone';
+  else if (trimmed.includes('iPad')) os = 'iPad';
+  else if (trimmed.includes('Android')) os = 'Android';
+  else if (trimmed.includes('Linux')) os = 'Linux';
+
+  if (browser && os) return `${browser} on ${os}`;
+  if (browser) return browser;
+  if (os) return os;
+  return trimmed.length > 50 ? `${trimmed.substring(0, 47)}...` : trimmed;
+}
+
+/**
+ * Formats the technical role track into a human-readable title.
+ *
+ * @param {string} track Technical track identifier
+ * @returns {string} Human-friendly track title
+ */
+export function formatTrack(track) {
+  if (!track || typeof track !== 'string') return 'Software Engineer';
+  const t = track.toLowerCase().trim();
+  if (t === 'generic' || t === 'swe') return 'Software Engineer (generic)';
+  if (t === 'java') return 'Java Backend';
+  if (t === 'ai') return 'AI / ML Engineer';
+  if (t === 'intern') return 'Software Intern';
+  return track;
+}
+
+/**
  * Builds the HTML alert message payload following the formal specification.
  *
  * @param {Object} params Interaction and candidate parameters
@@ -39,29 +88,35 @@ export function buildAlertMessage(params = {}) {
   const isPreview = process.env.VERCEL_ENV && process.env.VERCEL_ENV !== 'production';
   const previewPrefix = isPreview ? '<b>[PREVIEW]</b> ' : '';
 
-  let headerTag = '[Outreach Interaction]';
+  let headerTag = 'Outreach Interaction';
+  let icon = '⚡';
   if (params.eventType === 'open') {
     if (params.clientClass === 'apple_mpp') {
-      headerTag = '[⚠️ Probable Apple MPP Prefetch]';
+      icon = '⚠️';
+      headerTag = 'Apple MPP Prefetch';
     } else if (params.clientClass === 'gmail_proxy') {
-      headerTag = '[Gmail Proxy Open]';
+      icon = '✉️';
+      headerTag = 'Email Opened (Gmail Proxy)';
     } else {
-      headerTag = '[Direct Open (Unclassified)]';
+      icon = '✉️';
+      headerTag = 'Email Opened';
     }
   } else if (params.eventType === 'link_click') {
-    headerTag = '[Link Clicked]';
+    icon = '🔗';
+    headerTag = 'Link Clicked';
   } else if (params.eventType === 'resume_view') {
-    headerTag = '[Resume Viewed]';
+    icon = '📄';
+    headerTag = 'Resume Viewed';
   } else if (params.eventType === 'resume_download' || params.eventType === 'download') {
-    headerTag = '[Resume Downloaded]';
+    icon = '📥';
+    headerTag = 'Resume Downloaded';
   }
 
   const debounceSuffix = params.debounceCount && Number(params.debounceCount) > 0
-    ? ` <i>(+${params.debounceCount} repeated opens in last 5m)</i>`
+    ? ` <i>(+${params.debounceCount} repeated in last 5m)</i>`
     : '';
 
   const timestamp = formatIstTimestamp(params.timestamp || Date.now());
-  const candidateTrack = params.track ? `Urva Gandhi | ${params.track}` : 'Urva Gandhi';
   const recipient = params.recipientName
     ? `${params.recipientName} (${params.recipientEmail || 'No email'})`
     : (params.recipientEmail || 'Unknown recipient');
@@ -70,17 +125,17 @@ export function buildAlertMessage(params = {}) {
   const cleanCity = params.city ? decodeCity(params.city) : '';
   const location = [cleanCity, params.region, params.country].filter(Boolean).join(', ') || 'Unknown location';
   const ip = params.ipTrunc || 'Unknown IP';
-  const ua = params.ua || 'Unknown client';
+  const clientSummary = formatUserAgent(params.ua);
+  const trackLabel = formatTrack(params.track);
 
-  return `${previewPrefix}<b>${headerTag}</b>${debounceSuffix}
+  return `${previewPrefix}<b>${icon} ${headerTag} · ${company}</b>${debounceSuffix}
 
-<b>Candidate & Track:</b> ${candidateTrack}
-<b>Recipient:</b> ${recipient}
-<b>Company:</b> ${company}
-<b>Detail:</b> ${detail}
-<b>Location:</b> ${location} (IP: ${ip})
-<b>Client:</b> <code>${ua}</code>
-<b>Timestamp:</b> ${timestamp}`;
+👤 <b>Recruiter:</b> ${recipient}
+🎯 <b>Track:</b> ${trackLabel}
+📌 <b>Detail:</b> ${detail}
+📍 <b>Location:</b> ${location} (IP: ${ip})
+💻 <b>Client:</b> ${clientSummary}
+⏱ <b>Time:</b> ${timestamp}`;
 }
 
 /**

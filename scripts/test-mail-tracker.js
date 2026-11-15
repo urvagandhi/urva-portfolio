@@ -322,10 +322,11 @@ async function runUnitTests() {
         });
 
         assert.equal(msg.includes('<b>[PREVIEW]</b>'), true, 'Must include [PREVIEW] prefix');
-        assert.equal(msg.includes('[Gmail Proxy Open]'), true, 'Must include header tag');
-        assert.equal(msg.includes('(+2 repeated opens in last 5m)'), true, 'Must include debounce counter');
+        assert.equal(msg.includes('Email Opened (Gmail Proxy)'), true, 'Must include header tag');
+        assert.equal(msg.includes('repeated in last 5m'), true, 'Must include debounce counter');
         assert.equal(msg.includes('Akamai'), true, 'Must include company name');
-        assert.equal(msg.includes('Urva Gandhi | AI/ML Track'), true, 'Must include candidate and track');
+        assert.equal(msg.includes('AI/ML Track'), true, 'Must include track');
+        assert.equal(msg.includes('Google Image Proxy (Gmail)'), true, 'Must format User-Agent cleanly');
       } finally {
         process.env.VERCEL_ENV = origEnv;
       }
