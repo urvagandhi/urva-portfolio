@@ -1,6 +1,7 @@
 import { verifyAdminSession } from '../../../lib/mail/token.js';
 import { k, smembers, pipeline } from '../../../lib/mail/redis.js';
 import { formatIstTimestamp } from '../../../lib/mail/telegram.js';
+import { decodeCity } from '../../../lib/mail/classifier.js';
 
 /**
  * Calculates a quantitative recruiter engagement score based on interaction depth.
@@ -140,6 +141,7 @@ export default async function handler(req, res) {
             parsed.company = msg.company;
             parsed.recipient = msg.recipient_email || msg.recipient;
             parsed.track = msg.track;
+            parsed.city = parsed.city ? decodeCity(parsed.city) : '';
             parsed.ist_time = formatIstTimestamp(parsed.ts);
             parsed.engagement_score = computeEngagementScore(parsed);
             rawEvents.push(parsed);

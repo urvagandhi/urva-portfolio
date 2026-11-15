@@ -1,5 +1,5 @@
 import { verifyToken } from '../../../lib/mail/token.js';
-import { classifyClient, truncateIp } from '../../../lib/mail/classifier.js';
+import { classifyClient, truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
 import { k, get, set, del, incr, hgetall, hincrby, hset, lpush, expire } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
 
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     const ipTrunc = truncateIp(rawIp);
     const country = req.headers['x-vercel-ip-country'] || '';
     const region = req.headers['x-vercel-ip-country-region'] || '';
-    const city = req.headers['x-vercel-ip-city'] || '';
+    const city = decodeCity(req.headers['x-vercel-ip-city']);
     const now = Date.now();
 
     // Persist open event to Redis hash and event log

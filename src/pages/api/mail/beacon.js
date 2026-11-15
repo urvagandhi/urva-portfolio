@@ -1,6 +1,6 @@
 import { verifyToken } from '../../../lib/mail/token.js';
-import { truncateIp } from '../../../lib/mail/classifier.js';
-import { k, hgetall, hincrby, hset, lpush, expire } from '../../../lib/mail/redis.js';
+import { truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
+import { k, hgetall, hincrby, hset, lpush, expire, exists, set } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
 
 /**
@@ -39,10 +39,17 @@ export default async function handler(req, res) {
       const ipTrunc = truncateIp(rawIp);
       const country = req.headers['x-vercel-ip-country'] || '';
       const region = req.headers['x-vercel-ip-country-region'] || '';
-      const city = req.headers['x-vercel-ip-city'] || '';
+      const city = decodeCity(req.headers['x-vercel-ip-city']);
       const now = Date.now();
 
       if (event === 'resume_view') {
+        const lastViewKey = k(`mail:debounce:${t}:view`);
+        const isRecent = await exists(lastViewKey);
+        if (isRecent) {
+          return res.status(204).end();
+        }
+        await set(lastViewKey, '1', { ex: 5 });
+
         const updatedViews = await hincrby(k(`mail:m:${t}`), 'resume_views', 1);
         await hset(k(`mail:m:${t}`), {
           last_event_at: now,
@@ -89,6 +96,13 @@ export default async function handler(req, res) {
           await expire(k(`mail:events:${t}`), 5184000);
         }
       } else if (event === 'resume_download') {
+        const lastDownloadKey = k(`mail:debounce:${t}:download`);
+        const isRecent = await exists(lastDownloadKey);
+        if (isRecent) {
+          return res.status(204).end();
+        }
+        await set(lastDownloadKey, '1', { ex: 5 });
+
         const updatedDownloads = await hincrby(k(`mail:m:${t}`), 'downloads', 1);
         const eventData = JSON.stringify({
           event: 'resume_download',

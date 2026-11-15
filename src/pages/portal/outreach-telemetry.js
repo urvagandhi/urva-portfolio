@@ -26,6 +26,15 @@ import {
 
 export { getServerSideProps } from '../../lib/mail/portal-gssp.js';
 
+// Helper to format and decode geographic locations gracefully
+function formatLocation(city, country) {
+  let cleanCity = city || '';
+  try {
+    cleanCity = decodeURIComponent(cleanCity);
+  } catch (_) {}
+  return [cleanCity, country].filter(Boolean).join(', ') || 'Unknown';
+}
+
 // Helper to compute mathematically authentic sparklines from real event timestamps
 function computeRealSparkline(events, filterFn) {
   const filtered = (events || [])
@@ -711,7 +720,7 @@ export default function OutreachTelemetry({ initialAuth }) {
 
                           <td className="py-3.5">
                             <div className="text-dark/80 dark:text-light/80 font-medium">
-                              {[evt.city, evt.country].filter(Boolean).join(', ') || 'Unknown'}
+                              {formatLocation(evt.city, evt.country)}
                             </div>
                             <div className="text-[11px] font-mono text-dark/50 dark:text-light/50">
                               {evt.ip_trunc || 'IP redacted'}

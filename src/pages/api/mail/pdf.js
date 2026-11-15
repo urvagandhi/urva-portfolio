@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { verifyToken } from '../../../lib/mail/token.js';
-import { truncateIp } from '../../../lib/mail/classifier.js';
-import { k, hgetall, hincrby, hset, lpush, expire, get } from '../../../lib/mail/redis.js';
+import { truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
+import { k, hgetall, hincrby, hset, lpush, expire, get, exists, set } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
 
 /**
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
     const ipTrunc = truncateIp(rawIp);
     const country = req.headers['x-vercel-ip-country'] || '';
     const region = req.headers['x-vercel-ip-country-region'] || '';
-    const city = req.headers['x-vercel-ip-city'] || '';
+    const city = decodeCity(req.headers['x-vercel-ip-city']);
 
     // Record telemetry directly
     if (msg && Object.keys(msg).length > 0 && msg.status !== 'voided') {
@@ -51,35 +51,40 @@ export default async function handler(req, res) {
       const newOpens = currentOpens > 0 ? currentOpens : 1;
 
       if (isDownload) {
-        const updatedDownloads = await hincrby(k(`mail:m:${t}`), 'downloads', 1);
-        await hset(k(`mail:m:${t}`), { last_event_at: now, opens: newOpens });
+        const lastDownloadKey = k(`mail:debounce:${t}:download`);
+        const isRecent = await exists(lastDownloadKey);
+        if (!isRecent) {
+          await set(lastDownloadKey, '1', { ex: 5 });
+          const updatedDownloads = await hincrby(k(`mail:m:${t}`), 'downloads', 1);
+          await hset(k(`mail:m:${t}`), { last_event_at: now, opens: newOpens });
 
-        const eventData = JSON.stringify({
-          event: 'resume_download',
-          ts: now,
-          ua,
-          ip_trunc: ipTrunc,
-          country,
-          region,
-          city
-        });
-        await lpush(k(`mail:events:${t}`), eventData);
-        await expire(k(`mail:events:${t}`), 5184000);
+          const eventData = JSON.stringify({
+            event: 'resume_download',
+            ts: now,
+            ua,
+            ip_trunc: ipTrunc,
+            country,
+            region,
+            city
+          });
+          await lpush(k(`mail:events:${t}`), eventData);
+          await expire(k(`mail:events:${t}`), 5184000);
 
-        dispatchTelegramAlert({
-          eventType: 'download',
-          recipientName: msg.recipient_name,
-          recipientEmail: msg.recipient_email || msg.recipient,
-          company: msg.company,
-          track: msg.track,
-          detail: `Direct PDF resume downloaded (Download #${updatedDownloads})`,
-          ua,
-          country,
-          region,
-          city,
-          ipTrunc,
-          timestamp: now
-        }).catch(() => {});
+          dispatchTelegramAlert({
+            eventType: 'resume_download',
+            recipientName: msg.recipient_name,
+            recipientEmail: msg.recipient_email || msg.recipient,
+            company: msg.company,
+            track: msg.track,
+            detail: `Direct PDF resume downloaded (Download #${updatedDownloads})`,
+            ua,
+            country,
+            region,
+            city,
+            ipTrunc,
+            timestamp: now
+          }).catch(() => {});
+        }
       }
     }
 
