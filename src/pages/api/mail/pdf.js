@@ -51,16 +51,19 @@ export default async function handler(req, res) {
       const newOpens = currentOpens > 0 ? currentOpens : 1;
 
       if (isDownload) {
-        const lastDownloadKey = k(`mail:debounce:${t}:download`);
-        const isRecent = await exists(lastDownloadKey);
-        if (!isRecent) {
-          await set(lastDownloadKey, '1', { ex: 5 });
+        // Session-grouped download alert (max 1 alert & count increment per 30m window)
+        const downloadSessionKey = k(`mail:session:${t}:download`);
+        const alreadyDownloadedInSession = await exists(downloadSessionKey);
+
+        if (!alreadyDownloadedInSession) {
+          await set(downloadSessionKey, '1', { ex: 1800 }); // 30-minute session window
           const updatedDownloads = await hincrby(k(`mail:m:${t}`), 'downloads', 1);
           await hset(k(`mail:m:${t}`), { last_event_at: now, opens: newOpens });
 
           const eventData = JSON.stringify({
             event: 'resume_download',
             ts: now,
+            download_num: updatedDownloads,
             ua,
             ip_trunc: ipTrunc,
             country,

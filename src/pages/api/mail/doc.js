@@ -101,11 +101,22 @@ export default async function handler(req, res) {
   <script>
     (function() {
       const TOKEN = "${t}";
+      const SESS_STORAGE_KEY = 'outreach_sess_' + TOKEN;
+      let sessionId = null;
+      try {
+        sessionId = sessionStorage.getItem(SESS_STORAGE_KEY);
+        if (!sessionId) {
+          sessionId = 'sess_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+          sessionStorage.setItem(SESS_STORAGE_KEY, sessionId);
+        }
+      } catch (_) {
+        sessionId = 'sess_' + Math.random().toString(36).substring(2, 10);
+      }
+
       let visibleStartTime = document.visibilityState === 'visible' ? Date.now() : null;
-      let accumulatedDwellMs = 0;
 
       function sendPayload(data) {
-        const payload = JSON.stringify(Object.assign({ t: TOKEN }, data));
+        const payload = JSON.stringify(Object.assign({ t: TOKEN, sid: sessionId }, data));
         let sent = false;
         if (navigator.sendBeacon) {
           try {

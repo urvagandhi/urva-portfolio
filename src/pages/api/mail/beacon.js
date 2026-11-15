@@ -1,7 +1,10 @@
 import { verifyToken } from '../../../lib/mail/token.js';
 import { truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
-import { k, hgetall, hincrby, hset, lpush, expire, exists, set } from '../../../lib/mail/redis.js';
+import { k, hgetall, hincrby, hset, lpush, expire, exists, set, get } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
+
+// Industry-standard 30-minute rolling session inactivity window (DocSend / GA4 standard)
+const SESSION_TTL_SEC = 1800;
 
 /**
  * Telemetry Beacon Endpoint.
@@ -21,7 +24,7 @@ export default async function handler(req, res) {
     }
   }
 
-  const { t, event, dwell_ms } = payload || {};
+  const { t, event, dwell_ms, sid } = payload || {};
 
   // Fail-open: immediate 204 No Content if token is missing or invalid
   if (!t || typeof t !== 'string' || !verifyToken(t)) {
@@ -43,12 +46,18 @@ export default async function handler(req, res) {
       const now = Date.now();
 
       if (event === 'resume_view') {
-        const lastViewKey = k(`mail:debounce:${t}:view`);
-        const isRecent = await exists(lastViewKey);
-        if (isRecent) {
+        const sessionKey = k(`mail:session:${t}:resume`);
+        const activeSession = await get(sessionKey);
+
+        if (activeSession) {
+          // Ongoing active session (within 30m window): extend rolling window, update last_event_at
+          await expire(sessionKey, SESSION_TTL_SEC);
+          await hset(k(`mail:m:${t}`), { last_event_at: now });
           return res.status(204).end();
         }
-        await set(lastViewKey, '1', { ex: 5 });
+
+        // New session initiated! (First view, or return visit after 30+ minutes of inactivity)
+        await set(sessionKey, sid || 'active_session', { ex: SESSION_TTL_SEC });
 
         const updatedViews = await hincrby(k(`mail:m:${t}`), 'resume_views', 1);
         await hset(k(`mail:m:${t}`), {
@@ -59,6 +68,8 @@ export default async function handler(req, res) {
         const eventData = JSON.stringify({
           event: 'resume_view',
           ts: now,
+          session_id: sid || '',
+          session_num: updatedViews,
           ua,
           ip_trunc: ipTrunc,
           country,
@@ -69,13 +80,17 @@ export default async function handler(req, res) {
         await lpush(k(`mail:events:${t}`), eventData);
         await expire(k(`mail:events:${t}`), 5184000);
 
+        const sessionDetail = updatedViews > 1
+          ? `Web resume viewed (Session #${updatedViews} — Returning Recruiter)`
+          : `Web resume viewed (Session #1)`;
+
         await dispatchTelegramAlert({
           eventType: 'resume_view',
           recipientName: msg.recipient_name,
           recipientEmail: msg.recipient_email || msg.recipient,
           company: msg.company,
           track: msg.track,
-          detail: `Web resume viewed (Session #${updatedViews})`,
+          detail: sessionDetail,
           ua,
           country,
           region,
@@ -86,27 +101,26 @@ export default async function handler(req, res) {
       } else if (event === 'beacon_dwell' || dwell_ms) {
         const ms = Number(dwell_ms || 0);
         if (ms > 0) {
+          // Accumulate dwell duration into message hash and refresh active session window
           await hincrby(k(`mail:m:${t}`), 'total_dwell_ms', ms);
-          const eventData = JSON.stringify({
-            event: 'beacon_dwell',
-            ts: now,
-            dwell_ms: ms
-          });
-          await lpush(k(`mail:events:${t}`), eventData);
-          await expire(k(`mail:events:${t}`), 5184000);
+          await expire(k(`mail:session:${t}:resume`), SESSION_TTL_SEC);
+          await hset(k(`mail:m:${t}`), { last_event_at: now });
         }
       } else if (event === 'resume_download') {
-        const lastDownloadKey = k(`mail:debounce:${t}:download`);
-        const isRecent = await exists(lastDownloadKey);
-        if (isRecent) {
+        const downloadSessionKey = k(`mail:session:${t}:download`);
+        const alreadyDownloadedInSession = await exists(downloadSessionKey);
+
+        if (alreadyDownloadedInSession) {
           return res.status(204).end();
         }
-        await set(lastDownloadKey, '1', { ex: 5 });
 
+        await set(downloadSessionKey, '1', { ex: SESSION_TTL_SEC });
         const updatedDownloads = await hincrby(k(`mail:m:${t}`), 'downloads', 1);
+
         const eventData = JSON.stringify({
           event: 'resume_download',
           ts: now,
+          download_num: updatedDownloads,
           ua,
           ip_trunc: ipTrunc,
           country,

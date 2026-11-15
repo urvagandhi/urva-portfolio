@@ -137,6 +137,7 @@ export default async function handler(req, res) {
         for (const item of eventJsonList) {
           try {
             const parsed = typeof item === 'string' ? JSON.parse(item) : item;
+            if (parsed.event === 'beacon_dwell') continue; // Skip continuous dwell ticks from milestone feed
             parsed.token = token;
             parsed.company = msg.company;
             parsed.recipient = msg.recipient_email || msg.recipient;
