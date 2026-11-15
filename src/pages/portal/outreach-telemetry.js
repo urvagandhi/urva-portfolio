@@ -637,26 +637,13 @@ export default function OutreachTelemetry({ initialAuth }) {
                       <th className="pb-3 font-semibold">Event &amp; Class</th>
                       <th className="pb-3 font-semibold">Detail</th>
                       <th className="pb-3 font-semibold">Location &amp; IP</th>
-                      <th className="pb-3 font-semibold">Time (IST)</th>
-                      <th className="pb-3 font-semibold text-right">Score</th>
+                      <th className="pb-3 font-semibold text-right">Time (IST)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-dark/5 dark:divide-light/5">
                     {recentEvents.map((evt, idx) => {
                       let badgeStyle =
                         'bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 border-dark/10 dark:border-light/10';
-                      let scoreStyle = 'bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60';
-
-                      if (evt.engagement_score >= 8) {
-                        scoreStyle =
-                          'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
-                      } else if (evt.engagement_score >= 3) {
-                        scoreStyle =
-                          'bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400';
-                      } else if (evt.engagement_score >= 1) {
-                        scoreStyle =
-                          'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
-                      }
 
                       if (evt.event === 'open') {
                         badgeStyle =
@@ -727,16 +714,8 @@ export default function OutreachTelemetry({ initialAuth }) {
                             </div>
                           </td>
 
-                          <td className="py-3.5 font-mono text-dark/60 dark:text-light/60 text-[11px]">
+                          <td className="py-3.5 font-mono text-dark/60 dark:text-light/60 text-[11px] text-right">
                             {evt.ist_time || evt.ts}
-                          </td>
-
-                          <td className="py-3.5 text-right">
-                            <span
-                              className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-bold ${scoreStyle}`}
-                            >
-                              +{evt.engagement_score}
-                            </span>
                           </td>
                         </tr>
                       );
