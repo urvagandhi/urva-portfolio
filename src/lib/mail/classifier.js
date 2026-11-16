@@ -1,24 +1,34 @@
 /**
- * Classifies inbound HTTP User-Agent headers into distinct telemetry categories.
+ * Classifies inbound HTTP telemetry requests into distinct telemetry categories.
+ * Evaluates User-Agent, Autonomous System Number (ASN from Vercel edge), and Via headers dynamically.
  *
  * @param {string} userAgent Inbound User-Agent header string
+ * @param {string|number} [asNumber] BGP Autonomous System Number (e.g. 15169 for Google, 13335 for Apple Relay)
+ * @param {string} [via] Inbound Via proxy header string
  * @returns {'apple_mpp'|'gmail_proxy'|'direct_unclassified'} Classified client category
  */
-export function classifyClient(userAgent) {
-  if (!userAgent || typeof userAgent !== 'string') {
-    return 'direct_unclassified';
-  }
+export function classifyClient(userAgent, asNumber = '', via = '') {
+  const trimmed = typeof userAgent === 'string' ? userAgent.trim() : '';
+  const asn = String(asNumber || '').trim();
+  const viaHeader = typeof via === 'string' ? via.toLowerCase() : '';
 
-  const trimmed = userAgent.trim();
-
-  // Bare Mozilla/5.0 indicates Apple Mail Privacy Protection (MPP) prefetch
-  if (trimmed === 'Mozilla/5.0') {
-    return 'apple_mpp';
-  }
-
-  // Google image proxy caching indicates Gmail web or mobile client
-  if (trimmed.includes('GoogleImageProxy')) {
+  // Google image proxy / Google Cloud Autonomous System (AS15169 Google LLC, AS36492 Google Cloud)
+  if (
+    trimmed.includes('GoogleImageProxy') ||
+    asn === '15169' ||
+    asn === '36492' ||
+    viaHeader.includes('google')
+  ) {
     return 'gmail_proxy';
+  }
+
+  // Bare Mozilla/5.0 or Apple/Cloudflare Private Relay Autonomous System (AS13335 Cloudflare, AS714 Apple Inc.)
+  if (
+    trimmed === 'Mozilla/5.0' ||
+    asn === '13335' ||
+    asn === '714'
+  ) {
+    return 'apple_mpp';
   }
 
   return 'direct_unclassified';
@@ -26,21 +36,44 @@ export function classifyClient(userAgent) {
 
 /**
  * Detects whether an inbound request or event originated from a known privacy relay or image proxy.
+ * Checks dynamically using client category, BGP routing metadata (ASN), User-Agent, or proxy headers.
  *
  * @param {string} userAgent Inbound User-Agent header
- * @param {string} [ip] Inbound IP address
+ * @param {string} [ip] Inbound IP address (legacy fallback for historical records)
+ * @param {string|number} [asNumber] Autonomous System Number from BGP network routing
+ * @param {string} [via] Inbound Via proxy header
  * @returns {boolean} True if privacy proxy
  */
-export function isPrivacyProxy(userAgent, ip = '') {
-  const cls = classifyClient(userAgent);
+export function isPrivacyProxy(userAgent, ip = '', asNumber = '', via = '') {
+  const cls = classifyClient(userAgent, asNumber, via);
   if (cls === 'gmail_proxy' || cls === 'apple_mpp') return true;
+
+  const asn = String(asNumber || '').trim();
+  if (asn === '15169' || asn === '36492' || asn === '13335' || asn === '714') {
+    return true;
+  }
+
+  if (via && typeof via === 'string' && via.toLowerCase().includes('google')) {
+    return true;
+  }
+
+  if (userAgent && typeof userAgent === 'string') {
+    const ua = userAgent.toLowerCase();
+    if (ua.includes('googleimageproxy') || ua.includes('apple-mpp')) {
+      return true;
+    }
+  }
+
+  // Historical fallback for older records in datastore prior to ASN header logging
   if (!ip || typeof ip !== 'string') return false;
   const cleaned = ip.trim();
   return (
     cleaned.startsWith('66.249.') ||
     cleaned.startsWith('209.85.') ||
     cleaned.startsWith('66.102.') ||
-    cleaned.startsWith('108.177.')
+    cleaned.startsWith('108.177.') ||
+    cleaned.startsWith('17.') ||
+    cleaned.startsWith('104.28.')
   );
 }
 

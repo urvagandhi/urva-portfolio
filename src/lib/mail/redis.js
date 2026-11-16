@@ -14,6 +14,10 @@ export function k(keyName) {
   if (!keyName || typeof keyName !== 'string') {
     return keyName;
   }
+  // When USE_PROD_REDIS_SYNC is set to 'true', local development directly queries live production keys
+  if (process.env.USE_PROD_REDIS_SYNC === 'true') {
+    return keyName.replace(/^preview:/, '');
+  }
   const env = process.env.VERCEL_ENV || process.env.NODE_ENV || 'development';
   if (env !== 'production') {
     if (keyName.startsWith('preview:')) {

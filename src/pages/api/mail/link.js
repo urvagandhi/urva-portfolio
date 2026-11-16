@@ -59,6 +59,8 @@ export default async function handler(req, res) {
       }
 
       const ua = req.headers['user-agent'] || '';
+      const asNumber = req.headers['x-vercel-ip-as-number'] || '';
+      const via = req.headers['via'] || '';
       const forwardedFor = req.headers['x-forwarded-for'];
       const rawIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (req.socket?.remoteAddress || '');
       const ipTrunc = truncateIp(rawIp);
@@ -86,6 +88,8 @@ export default async function handler(req, res) {
           client_class: 'direct_unclassified',
           ua,
           ip_trunc: ipTrunc,
+          as_number: asNumber,
+          via,
           country,
           region,
           city
@@ -100,6 +104,8 @@ export default async function handler(req, res) {
         dest_url: destUrl,
         ua,
         ip_trunc: ipTrunc,
+        as_number: asNumber,
+        via,
         country,
         region,
         city

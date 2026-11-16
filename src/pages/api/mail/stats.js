@@ -171,6 +171,7 @@ export default async function handler(req, res) {
           last_active: 0,
           first_sent: Number(msg.created_at || 0),
           recipients: [],
+          active_attempts: [],
           click_timestamps: [],
           events: []
         };
@@ -178,6 +179,20 @@ export default async function handler(req, res) {
         if (recipientEmail && !existingComp.recipients.includes(recipientEmail)) {
           existingComp.recipients.push(recipientEmail);
         }
+
+        existingComp.active_attempts.push({
+          token,
+          recipient: recipientEmail,
+          name: msg.recipient_name || '',
+          track: msg.track || '',
+          status: msg.status,
+          opens,
+          views,
+          clicks,
+          downloads,
+          created_at: Number(msg.created_at || 0),
+          created_at_formatted: formatIstTimestamp(Number(msg.created_at || 0))
+        });
 
         existingComp.sent++;
         if (isOpened) existingComp.opened++;
@@ -252,12 +267,85 @@ export default async function handler(req, res) {
       );
       if (priorQuarantined.length > 0) {
         comp.prior_quarantined = priorQuarantined.map((b) => ({
+          token: b.token,
           recipient: b.recipient,
+          name: b.name,
+          track: b.track,
           status: b.status,
           reason: b.reason,
           date_formatted: b.bounced_at_formatted
         }));
       }
+
+      // Assemble unified chronological outreach delivery journey (failed + active attempts)
+      const allAttempts = [];
+      for (const pq of priorQuarantined) {
+        allAttempts.push({
+          token: pq.token,
+          recipient: pq.recipient,
+          name: pq.name,
+          track: pq.track,
+          status: pq.status,
+          is_active: false,
+          reason: pq.reason,
+          created_at: pq.bounced_at,
+          created_at_formatted: pq.bounced_at_formatted,
+          opens: 0,
+          clicks: 0,
+          resume_views: 0
+        });
+      }
+      for (const act of (comp.active_attempts || [])) {
+        allAttempts.push({
+          token: act.token,
+          recipient: act.recipient,
+          name: act.name,
+          track: act.track,
+          status: act.status,
+          is_active: true,
+          reason: null,
+          created_at: act.created_at,
+          created_at_formatted: act.created_at_formatted,
+          opens: act.opens,
+          clicks: act.clicks,
+          resume_views: act.views
+        });
+      }
+      allAttempts.sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
+      comp.attempts_journey = allAttempts.map((att, idx) => ({
+        step: idx + 1,
+        ...att
+      }));
+
+      // Classify outreach journey type and dynamic UI badge
+      const retryCount = priorQuarantined.length;
+      const activeCount = (comp.recipients || []).length;
+      if (retryCount > 0) {
+        comp.journey_type = 'retry_success';
+        comp.journey_badge = {
+          type: 'retry_success',
+          label: `${retryCount} Retried`,
+          variant: 'amber',
+          tooltip: `${retryCount} prior failed attempt(s) replaced by current active recipient`
+        };
+      } else if (activeCount > 1) {
+        comp.journey_type = 'multi_contact';
+        comp.journey_badge = {
+          type: 'multi_contact',
+          label: `${activeCount} Contacts`,
+          variant: 'blue',
+          tooltip: `${activeCount} active recruiter contacts reached at this company`
+        };
+      } else {
+        comp.journey_type = 'single';
+        comp.journey_badge = {
+          type: 'single',
+          label: 'Direct',
+          variant: 'emerald',
+          tooltip: 'Direct delivery on first attempt'
+        };
+      }
+      delete comp.active_attempts;
     }
 
     // Deterministic two-tier sorting:
@@ -293,6 +381,36 @@ export default async function handler(req, res) {
     // Sort blocked companies reverse-chronologically
     blockedCompanies.sort((a, b) => (b.bounced_at || 0) - (a.bounced_at || 0));
 
+    // Group quarantined companies (companies where ALL attempts failed)
+    const quarantinedCompanyMap = new Map();
+    for (const b of blockedCompanies) {
+      const cName = b.company || 'Unknown Organisation';
+      const existing = quarantinedCompanyMap.get(cName) || {
+        company: cName,
+        total_attempts: 0,
+        last_bounced_at: 0,
+        attempts: []
+      };
+      existing.total_attempts++;
+      if ((b.bounced_at || 0) > existing.last_bounced_at) {
+        existing.last_bounced_at = b.bounced_at || 0;
+      }
+      existing.attempts.push(b);
+      quarantinedCompanyMap.set(cName, existing);
+    }
+    const quarantinedCompanies = Array.from(quarantinedCompanyMap.values())
+      .map(qc => ({
+        ...qc,
+        attempts: qc.attempts
+          .sort((a, b) => (a.bounced_at || 0) - (b.bounced_at || 0))
+          .map((att, idx) => ({
+            step: idx + 1,
+            ...att
+          })),
+        last_bounced_at_formatted: formatIstTimestamp(qc.last_bounced_at)
+      }))
+      .sort((a, b) => (b.last_bounced_at || 0) - (a.last_bounced_at || 0));
+
     const responsePayload = {
       summary: {
         total_sent: totalSent,
@@ -310,6 +428,7 @@ export default async function handler(req, res) {
       slug_rankings: slugRankings,
       company_rollups: companyRollups,
       blocked_companies: blockedCompanies,
+      quarantined_companies: quarantinedCompanies,
       recent_events: rawEvents.slice(0, 50)
     };
 

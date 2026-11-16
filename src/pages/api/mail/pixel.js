@@ -49,9 +49,11 @@ export default async function handler(req, res) {
     }
 
     const ua = req.headers['user-agent'] || '';
-    const clientClass = classifyClient(ua);
+    const asNumber = req.headers['x-vercel-ip-as-number'] || '';
+    const via = req.headers['via'] || '';
+    const clientClass = classifyClient(ua, asNumber, via);
 
-    // Filter Sent-Folder opens: if request arrives from GoogleImageProxy but recipient domain
+    // Filter Sent-Folder opens: if request arrives from GoogleImageProxy/Google ASN but recipient domain
     // does not use Google Workspace (e.g. uses Outlook/Exchange), this is the sender viewing Sent Mail.
     if (clientClass === 'gmail_proxy') {
       const isRecipientGoogle = await isGoogleWorkspaceDomain(recipientEmail);
@@ -81,6 +83,8 @@ export default async function handler(req, res) {
       client_class: clientClass,
       ua,
       ip_trunc: ipTrunc,
+      as_number: asNumber,
+      via,
       country,
       region,
       city

@@ -25,24 +25,42 @@ import {
   Activity,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
+  ChevronUp,
   Building2,
-  Layers
+  Layers,
+  Users,
+  Copy,
+  Check,
+  ExternalLink,
+  ArrowDown
 } from 'lucide-react';
 
 export { getServerSideProps } from '../../lib/mail/portal-gssp.js';
 
-// Helper to format and decode geographic locations gracefully, masking privacy proxies
-function formatLocation(city, country, clientClass, ip = '') {
+// Helper to format and decode geographic locations gracefully, masking privacy proxies dynamically
+function formatLocation(city, country, clientClass, ip = '', asNumber = '', via = '') {
+  const asn = String(asNumber || '').trim();
+  const viaHeader = typeof via === 'string' ? via.toLowerCase() : '';
+
   const isGoogleProxy =
     clientClass === 'gmail_proxy' ||
+    asn === '15169' ||
+    asn === '36492' ||
+    viaHeader.includes('google') ||
     (ip && (ip.startsWith('66.249.') || ip.startsWith('209.85.') || ip.startsWith('66.102.') || ip.startsWith('108.177.')));
-  const isAppleRelay = clientClass === 'apple_mpp';
+
+  const isAppleRelay =
+    clientClass === 'apple_mpp' ||
+    asn === '13335' ||
+    asn === '714' ||
+    (ip && (ip.startsWith('17.') || ip.startsWith('104.28.')));
 
   if (isGoogleProxy) {
     return {
       text: 'Google Proxy (IP Masked)',
       isProxy: true,
-      tooltip: 'GoogleImageProxy routed image fetch through Google Cloud data center to protect recipient privacy. Real IP is masked.'
+      tooltip: 'GoogleImageProxy / AS15169 routed image fetch through Google Cloud data center to protect recipient privacy. Real IP is masked.'
     };
   }
 
@@ -50,7 +68,7 @@ function formatLocation(city, country, clientClass, ip = '') {
     return {
       text: 'Apple Relay (IP Masked)',
       isProxy: true,
-      tooltip: 'Apple Mail Privacy Protection (MPP) pre-fetched image via Apple Privacy Relay network. Real IP is masked.'
+      tooltip: 'Apple Mail Privacy Protection (MPP) / AS13335 pre-fetched image via Apple Privacy Relay network. Real IP is masked.'
     };
   }
 
@@ -58,7 +76,7 @@ function formatLocation(city, country, clientClass, ip = '') {
   try {
     cleanCity = decodeURIComponent(cleanCity);
   } catch (_) {}
-  const text = [cleanCity, country].filter(Boolean).join(', ') || 'Unknown';
+  const text = [cleanCity, country].filter(Boolean).join(', ') || 'Direct / Unknown';
   return {
     text,
     isProxy: false,
@@ -149,6 +167,194 @@ function computeRealSparkline(events, filterFn) {
   return { line, area, hasData: true };
 }
 
+// Helper to parse complex SMTP Diagnostic Status Notifications (DSNs) into structured tokens
+function parseDiagnostic(raw) {
+  if (!raw || typeof raw !== 'string') {
+    return {
+      code: null,
+      cleanMsg: 'Mailbox delivery rejected.',
+      helpUrl: null,
+      serverTrace: null,
+      raw: ''
+    };
+  }
+
+  let text = raw.trim();
+  const prefixMatch = text.match(/^(?:Bounced Email|Blocked Domain|Domain Block)\s*\(([\s\S]*)\)$/i);
+  if (prefixMatch) {
+    text = prefixMatch[1].trim();
+  }
+
+  let helpUrl = null;
+  const urlMatch = text.match(/(https?:\/\/[^\s\]\)]+)/i);
+  if (urlMatch) {
+    helpUrl = urlMatch[1];
+  }
+
+  let serverTrace = null;
+  const traceMatches = [...text.matchAll(/\[([A-Za-z0-9.\-_\s:T=]+)\]/g)];
+  if (traceMatches.length > 0) {
+    serverTrace = traceMatches.map((m) => m[1].trim()).join(' · ');
+  }
+
+  let code = null;
+  const codeMatch = text.match(/\b(5\d{2}(?:\s+\d+\.\d+(?:\.\d+)?)?)\b/);
+  if (codeMatch) {
+    code = codeMatch[1];
+  }
+
+  let cleanMsg = text;
+  if (code) {
+    cleanMsg = cleanMsg.replace(code, '');
+  }
+  if (helpUrl) {
+    cleanMsg = cleanMsg.replace(/For more information,? (?:see|go to)\s+https?:\/\/[^\s\]\)]+/gi, '');
+    cleanMsg = cleanMsg.replace(helpUrl, '');
+  }
+  cleanMsg = cleanMsg.replace(/For more information,? (?:see|go to)\s*$/gi, '');
+  cleanMsg = cleanMsg.replace(/\[[^\]]*\]/g, '');
+  cleanMsg = cleanMsg.replace(/\[.*$/g, '');
+  cleanMsg = cleanMsg.replace(/\s+/g, ' ').trim();
+  cleanMsg = cleanMsg.replace(/^[:\s\-]+|[:\s\-]+$/g, '');
+
+  if (!cleanMsg) {
+    if (code && code.includes('5.1.1')) {
+      cleanMsg = 'The email account that you tried to reach does not exist (NoSuchUser)';
+    } else if (code && code.includes('5.4.1')) {
+      cleanMsg = 'Recipient address rejected: Access denied (Enterprise tenant policy)';
+    } else if (code && code.includes('5.4.14')) {
+      cleanMsg = 'Hop count exceeded: Possible mail loop in mail router';
+    } else if (code && code.includes('5.4.310')) {
+      cleanMsg = 'Internal DNS domain not found on destination mail server';
+    } else if (code && code.includes('5.7.1')) {
+      cleanMsg = 'Relay access denied / recipient administrative restriction';
+    } else {
+      cleanMsg = 'Mailbox rejected transmission or address unreachable';
+    }
+  }
+
+  if (cleanMsg && !/[.!?]$/.test(cleanMsg)) {
+    cleanMsg += '.';
+  }
+
+  return { code, cleanMsg, helpUrl, serverTrace, raw };
+}
+
+// Reusable Pagination Component with Page Size Selector & Numbered Buttons
+function PaginationBar({
+  totalItems,
+  currentPage,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  itemLabel = 'records'
+}) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIdx = totalItems === 0 ? 0 : (safePage - 1) * pageSize + 1;
+  const endIdx = Math.min(safePage * pageSize, totalItems);
+
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages = [1];
+    if (safePage > 3) {
+      pages.push('ellipsis-1');
+    }
+    const start = Math.max(2, safePage - 1);
+    const end = Math.min(totalPages - 1, safePage + 1);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    if (safePage < totalPages - 2) {
+      pages.push('ellipsis-2');
+    }
+    pages.push(totalPages);
+    return pages;
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 mt-4 border-t border-dark/10 dark:border-light/10 text-xs">
+      {/* Left: Range info & Page Size Selector */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-dark/60 dark:text-light/60 font-mono">
+          Showing <span className="font-bold text-dark dark:text-light">{startIdx}</span> to{' '}
+          <span className="font-bold text-dark dark:text-light">{endIdx}</span> of{' '}
+          <span className="font-bold text-dark dark:text-light">{totalItems}</span> {itemLabel}
+        </span>
+
+        <div className="flex items-center gap-1.5 pl-2 sm:border-l sm:border-dark/10 sm:dark:border-light/10">
+          <span className="text-dark/50 dark:text-light/50 text-[11px]">Show:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            className="px-2 py-1 rounded-lg bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 font-mono text-dark dark:text-light text-xs focus:outline-none focus:border-primary dark:focus:border-primaryDark cursor-pointer"
+          >
+            {[10, 15, 25, 50, 100].map((sz) => (
+              <option key={sz} value={sz} className="bg-light dark:bg-dark text-dark dark:text-light">
+                {sz} per page
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Right: Page Navigation Buttons */}
+      <div className="flex items-center gap-1 self-center sm:self-auto">
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.max(1, safePage - 1))}
+          disabled={safePage <= 1}
+          className="px-2.5 py-1.5 rounded-lg border border-dark/10 dark:border-light/10 font-medium text-dark/70 dark:text-light/70 hover:bg-dark/5 dark:hover:bg-light/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer"
+          title="Previous Page"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+          <span className="hidden xs:inline">Prev</span>
+        </button>
+
+        <div className="flex items-center gap-1">
+          {getPageNumbers().map((p, pIdx) => {
+            if (typeof p === 'string') {
+              return (
+                <span key={`ell-${pIdx}`} className="px-1 text-dark/40 dark:text-light/40">
+                  …
+                </span>
+              );
+            }
+            const isActive = p === safePage;
+            return (
+              <button
+                key={p}
+                type="button"
+                onClick={() => onPageChange(p)}
+                className={`w-7 h-7 rounded-lg font-mono font-medium text-xs flex items-center justify-center transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-xs'
+                    : 'hover:bg-dark/5 dark:hover:bg-light/5 text-dark/70 dark:text-light/70'
+                }`}
+              >
+                {p}
+              </button>
+            );
+          })}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
+          disabled={safePage >= totalPages}
+          className="px-2.5 py-1.5 rounded-lg border border-dark/10 dark:border-light/10 font-medium text-dark/70 dark:text-light/70 hover:bg-dark/5 dark:hover:bg-light/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer"
+          title="Next Page"
+        >
+          <span className="hidden xs:inline">Next</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function OutreachTelemetry({ initialAuth }) {
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuth);
   const [passkey, setPasskey] = useState('');
@@ -166,6 +372,46 @@ export default function OutreachTelemetry({ initialAuth }) {
   const [collapsedCompanies, setCollapsedCompanies] = useState({});
   const [feedViewMode, setFeedViewMode] = useState('company'); // 'company' | 'flat' | 'blocked'
   const [companyFilter, setCompanyFilter] = useState('all'); // 'all' | 'opened' | 'unopened'
+
+  // Pagination states across views and sub-filters
+  const [pageSize, setPageSize] = useState(15);
+  const [pageCompany, setPageCompany] = useState(1);
+  const [pageFlat, setPageFlat] = useState(1);
+  const [pageBlocked, setPageBlocked] = useState(1);
+
+  // Expandable raw diagnostic logs toggle state
+  const [expandedDiagnostics, setExpandedDiagnostics] = useState({});
+  const [copiedEmail, setCopiedEmail] = useState('');
+
+  const toggleRawDiagnostic = (id) => {
+    setExpandedDiagnostics((prev) => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const handleCopy = (email) => {
+    if (!email) return;
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(email);
+        setCopiedEmail(email);
+        setTimeout(() => setCopiedEmail(''), 2000);
+      }
+    } catch (_) {}
+  };
+
+  const handleCompanyFilterChange = (filter) => {
+    setCompanyFilter(filter);
+    setPageCompany(1);
+  };
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setPageCompany(1);
+    setPageFlat(1);
+    setPageBlocked(1);
+  };
 
   const toggleCompany = (companyName) => {
     setCollapsedCompanies((prev) => ({
@@ -415,6 +661,20 @@ export default function OutreachTelemetry({ initialAuth }) {
     : companyFilter === 'unopened'
     ? unopenedCompanies
     : companyRollups;
+
+  // Sliced paginated datasets
+  const paginatedCompanies = displayedCompanies.slice(
+    (pageCompany - 1) * pageSize,
+    pageCompany * pageSize
+  );
+  const paginatedEvents = recentEvents.slice(
+    (pageFlat - 1) * pageSize,
+    pageFlat * pageSize
+  );
+  const paginatedBlocked = blockedCompaniesList.slice(
+    (pageBlocked - 1) * pageSize,
+    pageBlocked * pageSize
+  );
 
   return (
     <>
@@ -787,7 +1047,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                 <div className="inline-flex rounded-xl p-1 bg-dark/[0.03] dark:bg-light/[0.04] border border-dark/5 dark:border-light/5 text-xs">
                   <button
                     type="button"
-                    onClick={() => setCompanyFilter('all')}
+                    onClick={() => handleCompanyFilterChange('all')}
                     className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                       companyFilter === 'all'
                         ? 'bg-dark/10 text-dark dark:bg-light/15 dark:text-light font-bold shadow-sm'
@@ -806,7 +1066,7 @@ export default function OutreachTelemetry({ initialAuth }) {
 
                   <button
                     type="button"
-                    onClick={() => setCompanyFilter('opened')}
+                    onClick={() => handleCompanyFilterChange('opened')}
                     className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                       companyFilter === 'opened'
                         ? 'bg-emerald-500/20 text-emerald-700 dark:bg-emerald-500/30 dark:text-emerald-300 font-bold shadow-sm'
@@ -827,7 +1087,7 @@ export default function OutreachTelemetry({ initialAuth }) {
 
                   <button
                     type="button"
-                    onClick={() => setCompanyFilter('unopened')}
+                    onClick={() => handleCompanyFilterChange('unopened')}
                     className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                       companyFilter === 'unopened'
                         ? 'bg-amber-500/20 text-amber-800 dark:bg-amber-500/30 dark:text-amber-300 font-bold shadow-sm'
@@ -884,20 +1144,20 @@ export default function OutreachTelemetry({ initialAuth }) {
             ) : feedViewMode === 'company' ? (
               /* Grouped Company Rollup Table with Expandable Accordion */
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full text-left text-xs min-w-[760px]">
                   <thead>
                     <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono">
-                      <th className="pb-3 font-semibold">Company</th>
-                      <th className="pb-3 font-semibold text-center">Sent</th>
-                      <th className="pb-3 font-semibold text-center">Opened</th>
-                      <th className="pb-3 font-semibold text-center">Resume</th>
-                      <th className="pb-3 font-semibold text-center">Clicks</th>
-                      <th className="pb-3 font-semibold">Last Active</th>
-                      <th className="pb-3 font-semibold text-right">Actions</th>
+                      <th className="pb-3 pr-6 font-semibold min-w-[280px]">Company</th>
+                      <th className="pb-3 px-3 font-semibold text-center w-14">Sent</th>
+                      <th className="pb-3 px-3 font-semibold text-center w-16">Opened</th>
+                      <th className="pb-3 px-3 font-semibold text-center w-16">Resume</th>
+                      <th className="pb-3 px-3 font-semibold text-center w-14">Clicks</th>
+                      <th className="pb-3 px-4 font-semibold min-w-[130px]">Last Active</th>
+                      <th className="pb-3 pl-4 font-semibold text-right w-20">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-dark/5 dark:divide-light/5">
-                    {displayedCompanies.map((c) => {
+                    {paginatedCompanies.map((c) => {
                       const isExpanded = !collapsedCompanies[c.company];
                       const compEvents = (Array.isArray(c.events) && c.events.length > 0)
                         ? c.events
@@ -911,47 +1171,58 @@ export default function OutreachTelemetry({ initialAuth }) {
                             onClick={() => toggleCompany(c.company)}
                             className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors cursor-pointer group"
                           >
-                            <td className="py-3.5 font-bold text-dark dark:text-light flex items-center gap-2 flex-wrap">
-                              <span className="p-1 rounded-md bg-dark/5 dark:bg-light/5 group-hover:bg-primary/10 transition-colors">
-                                {isExpanded ? (
-                                  <ChevronDown className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
-                                ) : (
-                                  <ChevronRight className="w-3.5 h-3.5 text-dark/50 dark:text-light/50" />
+                            <td className="py-4 pr-6 font-bold text-dark dark:text-light">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="p-1 rounded-md bg-dark/5 dark:bg-light/5 group-hover:bg-primary/10 transition-colors shrink-0">
+                                  {isExpanded ? (
+                                    <ChevronDown className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
+                                  ) : (
+                                    <ChevronRight className="w-3.5 h-3.5 text-dark/50 dark:text-light/50" />
+                                  )}
+                                </span>
+                                <span className="text-sm font-semibold">{c.company}</span>
+                                {Array.isArray(c.recipients) && c.recipients.length > 0 && (
+                                  <span className="text-[11px] font-normal font-mono text-dark/60 dark:text-light/60">
+                                    ({c.recipients.join(', ')})
+                                  </span>
                                 )}
-                              </span>
-                              <span className="text-sm">{c.company}</span>
-                              {Array.isArray(c.recipients) && c.recipients.length > 0 && (
-                                <span className="text-[11px] font-normal font-mono text-dark/60 dark:text-light/60">
-                                  ({c.recipients.join(', ')})
+                                <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-medium bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70">
+                                  {compEvents.length} event{compEvents.length === 1 ? '' : 's'}
                                 </span>
-                              )}
-                              <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-medium bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70">
-                                {compEvents.length} event{compEvents.length === 1 ? '' : 's'}
-                              </span>
-                              {c.prior_quarantined && c.prior_quarantined.length > 0 && (
-                                <span
-                                  className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 inline-flex items-center gap-1"
-                                  title={`Prior attempt ${c.prior_quarantined.map(pq => `${pq.recipient} (${pq.status})`).join(', ')} was retried`}
-                                >
-                                  <AlertCircle className="w-3 h-3 text-amber-500" />
-                                  <span>{c.prior_quarantined.length} Retried</span>
-                                </span>
-                              )}
-                              {c.is_security_scanner && (
-                                <span
-                                  className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 inline-flex items-center gap-1"
-                                  title={c.scanner_note || 'Automated Email Security Gateway'}
-                                >
-                                  <Shield className="w-3 h-3 text-blue-500" />
-                                  <span>Scanner</span>
-                                </span>
-                              )}
+                                {c.journey_type === 'retry_success' && (
+                                  <span
+                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 inline-flex items-center gap-1"
+                                    title={`${c.prior_quarantined?.length || 1} prior failed attempt(s) replaced by active recipient`}
+                                  >
+                                    <AlertCircle className="w-3 h-3 text-amber-500" />
+                                    <span>{c.prior_quarantined?.length || 1} Retried</span>
+                                  </span>
+                                )}
+                                {c.journey_type === 'multi_contact' && (
+                                  <span
+                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 inline-flex items-center gap-1"
+                                    title={`${c.recipients?.length || 2} distinct recruiter contacts reached at this company`}
+                                  >
+                                    <Users className="w-3 h-3 text-blue-500" />
+                                    <span>{c.recipients?.length || 2} Contacts</span>
+                                  </span>
+                                )}
+                                {c.is_security_scanner && (
+                                  <span
+                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 inline-flex items-center gap-1"
+                                    title={c.scanner_note || 'Automated Email Security Gateway'}
+                                  >
+                                    <Shield className="w-3 h-3 text-purple-500" />
+                                    <span>Scanner</span>
+                                  </span>
+                                )}
+                              </div>
                             </td>
-                            <td className="py-3.5 text-center text-dark/70 dark:text-light/70 font-mono">{c.sent}</td>
-                            <td className="py-3.5 text-center text-emerald-600 dark:text-emerald-400 font-bold font-mono">{c.opened}</td>
-                            <td className="py-3.5 text-center text-purple-600 dark:text-purple-400 font-bold font-mono">{c.resume_viewed}</td>
-                            <td className="py-3.5 text-center text-amber-600 dark:text-amber-400 font-bold font-mono">{c.clicks}</td>
-                            <td className="py-3.5 font-mono text-left">
+                            <td className="py-4 px-3 text-center text-dark/70 dark:text-light/70 font-mono">{c.sent}</td>
+                            <td className="py-4 px-3 text-center text-emerald-600 dark:text-emerald-400 font-bold font-mono">{c.opened}</td>
+                            <td className="py-4 px-3 text-center text-purple-600 dark:text-purple-400 font-bold font-mono">{c.resume_viewed}</td>
+                            <td className="py-4 px-3 text-center text-amber-600 dark:text-amber-400 font-bold font-mono">{c.clicks}</td>
+                            <td className="py-4 px-4 font-mono text-left whitespace-nowrap">
                               {c.last_active > 0 ? (
                                 <div>
                                   <div className="font-semibold text-xs text-dark/90 dark:text-light/90">
@@ -965,7 +1236,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                                 <span className="text-dark/40 dark:text-light/40 text-xs">Pending</span>
                               )}
                             </td>
-                            <td className="py-3.5 text-right font-medium">
+                            <td className="py-4 pl-4 text-right font-medium whitespace-nowrap">
                               <span className="text-xs text-primary dark:text-primaryDark hover:underline inline-flex items-center gap-1">
                                 {isExpanded ? 'Hide' : 'View'} ({compEvents.length})
                               </span>
@@ -996,18 +1267,156 @@ export default function OutreachTelemetry({ initialAuth }) {
                                     </div>
                                   )}
 
-                                  {c.prior_quarantined && c.prior_quarantined.length > 0 && (
-                                    <div className="mb-3.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs">
-                                      <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-200">
-                                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                                        <span>Prior Outreach Replaced &amp; Retried:</span>
+                                  {/* Outreach Delivery Journey & Multi-Contact Stepper (Minimalist Timeline) */}
+                                  {c.attempts_journey && c.attempts_journey.length > 1 && (
+                                    <div className="mb-4 p-3.5 rounded-2xl bg-dark/[0.02] dark:bg-light/[0.02] border border-dark/10 dark:border-light/10 text-xs">
+                                      <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-dark/5 dark:border-light/5">
+                                        <div className="flex items-center gap-2">
+                                          <Clock className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
+                                          <span className="font-semibold text-dark/80 dark:text-light/80">
+                                            {c.journey_type === 'multi_contact' ? 'Multi-Contact Recruiter Outreach' : 'Delivery Journey'}
+                                          </span>
+                                          <span className="text-[10px] text-dark/40 dark:text-light/40 font-mono">
+                                            ({c.attempts_journey.length} steps)
+                                          </span>
+                                        </div>
+                                        <span className="text-[10px] font-mono text-dark/50 dark:text-light/50">
+                                          {c.journey_type === 'multi_contact' ? 'Multi-Contact' : 'Discovery Chain'}
+                                        </span>
                                       </div>
-                                      <div className="mt-1 space-y-1 text-[11px] text-dark/70 dark:text-light/70 font-mono">
-                                        {c.prior_quarantined.map((pq, pqIdx) => (
-                                          <div key={pqIdx}>
-                                            • <span className="line-through text-dark/50 dark:text-light/50">{pq.recipient}</span> ({pq.status === 'blocked' ? 'Domain Block' : 'Address Bounce: 550 5.1.1'}) was replaced by active recipient <span className="font-bold text-emerald-600 dark:text-emerald-400">{c.recipients?.join(', ') || 'current'}</span>.
-                                          </div>
-                                        ))}
+
+                                      <div className="space-y-2">
+                                        {c.attempts_journey.map((att, attIdx) => {
+                                          const isBlock = att.status === 'blocked';
+                                          const isVoid = att.status === 'voided';
+                                          const isFailed = !att.is_active;
+                                          const diag = isFailed ? parseDiagnostic(att.reason) : null;
+                                          const journeyRawKey = `journey-${att.token}-${attIdx}`;
+                                          const isRawExpanded = !!expandedDiagnostics[journeyRawKey];
+
+                                          return (
+                                            <div
+                                              key={`${att.token}-${attIdx}`}
+                                              className={`p-3 rounded-xl border transition-all ${
+                                                att.is_active
+                                                  ? 'bg-emerald-500/[0.03] border-emerald-500/20 dark:bg-emerald-500/[0.06]'
+                                                  : 'bg-dark/[0.02] dark:bg-light/[0.02] border-dark/10 dark:border-light/10'
+                                              }`}
+                                            >
+                                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                                                <div className="min-w-0 flex-1">
+                                                  {/* Recruiter Email & Status Badges Row */}
+                                                  <div className="flex items-center gap-2 flex-wrap">
+                                                    <span
+                                                      className={`w-4 h-4 rounded-full text-[9px] font-bold font-mono flex items-center justify-center shrink-0 ${
+                                                        att.is_active
+                                                          ? 'bg-emerald-500 text-white'
+                                                          : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/30'
+                                                      }`}
+                                                    >
+                                                      {att.is_active ? '✓' : att.step}
+                                                    </span>
+
+                                                    <span className={`font-mono text-xs font-semibold ${att.is_active ? 'text-dark dark:text-light' : 'text-dark/50 dark:text-light/50 line-through'}`}>
+                                                      {att.recipient}
+                                                    </span>
+
+                                                    <button
+                                                      type="button"
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleCopy(att.recipient);
+                                                      }}
+                                                      className="p-0.5 hover:bg-dark/10 dark:hover:bg-light/10 rounded transition-colors text-dark/40 dark:text-light/40 hover:text-dark dark:hover:text-light cursor-pointer"
+                                                      title="Copy recruiter email"
+                                                    >
+                                                      {copiedEmail === att.recipient ? (
+                                                        <Check className="w-3 h-3 text-emerald-500" />
+                                                      ) : (
+                                                        <Copy className="w-3 h-3" />
+                                                      )}
+                                                    </button>
+
+                                                    {att.track && (
+                                                      <span className="text-[9px] px-1.5 py-0.2 rounded font-mono uppercase bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60">
+                                                        {att.track}
+                                                      </span>
+                                                    )}
+
+                                                    <span
+                                                      className={`text-[9px] px-1.5 py-0.2 rounded font-medium ${
+                                                        att.is_active
+                                                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                          : isBlock
+                                                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                                                          : isVoid
+                                                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                                                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                      }`}
+                                                    >
+                                                      {att.is_active ? 'Active' : isBlock ? 'Blocked' : isVoid ? 'Voided' : 'Bounced'}
+                                                    </span>
+                                                  </div>
+
+                                                  {/* Details Row */}
+                                                  {att.is_active ? (
+                                                    <div className="mt-1 pl-6 flex items-center gap-2 flex-wrap font-mono text-[11px] text-emerald-600 dark:text-emerald-400">
+                                                      <span className="font-semibold">Delivered &amp; Active</span>
+                                                      <span className="text-dark/30 dark:text-light/30">·</span>
+                                                      <span className="text-dark/70 dark:text-light/70">{att.opens} opens</span>
+                                                      <span className="text-dark/70 dark:text-light/70">{att.clicks} clicks</span>
+                                                      <span className="text-dark/70 dark:text-light/70">{att.resume_views} resume view{att.resume_views === 1 ? '' : 's'}</span>
+                                                    </div>
+                                                  ) : (
+                                                    <div className="mt-1 pl-6 text-[11px] text-dark/70 dark:text-light/70">
+                                                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                                                        {diag?.code && (
+                                                          <span className="font-mono text-[10px] font-bold text-rose-600 dark:text-rose-400">
+                                                            [{diag.code}]
+                                                          </span>
+                                                        )}
+                                                        <span className="leading-snug">{diag?.cleanMsg}</span>
+                                                        {diag?.helpUrl && (
+                                                          <a
+                                                            href={diag.helpUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-0.5 font-mono text-[10px] text-primary dark:text-primaryDark hover:underline"
+                                                          >
+                                                            <span>Docs</span>
+                                                            <ExternalLink className="w-2.5 h-2.5" />
+                                                          </a>
+                                                        )}
+                                                        <button
+                                                          type="button"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            toggleRawDiagnostic(journeyRawKey);
+                                                          }}
+                                                          className="text-[10px] font-mono text-dark/40 dark:text-light/40 hover:text-dark dark:hover:text-light underline decoration-dotted cursor-pointer"
+                                                        >
+                                                          {isRawExpanded ? 'hide raw' : 'raw dsn'}
+                                                        </button>
+                                                      </div>
+
+                                                      {isRawExpanded && (
+                                                        <div className="mt-1.5 p-2 rounded-lg bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 font-mono text-[10px] text-dark/70 dark:text-light/70 break-all select-all">
+                                                          {diag?.raw}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  )}
+                                                </div>
+
+                                                {/* Timestamp */}
+                                                <div className="text-[10px] font-mono text-dark/40 dark:text-light/40 sm:text-right shrink-0 pl-6 sm:pl-0">
+                                                  <div>{formatRelativeTime(att.created_at)}</div>
+                                                  <div className="text-[9px] text-dark/30 dark:text-light/30">{att.created_at_formatted}</div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     </div>
                                   )}
@@ -1081,7 +1490,7 @@ export default function OutreachTelemetry({ initialAuth }) {
 
                                                 <td className="py-2.5">
                                                   {(() => {
-                                                    const loc = formatLocation(evt.city, evt.country, evt.client_class, evt.ip_trunc);
+                                                    const loc = formatLocation(evt.city, evt.country, evt.client_class, evt.ip_trunc, evt.as_number, evt.via);
                                                     return loc.isProxy ? (
                                                       <div>
                                                         <div
@@ -1132,90 +1541,211 @@ export default function OutreachTelemetry({ initialAuth }) {
                     })}
                   </tbody>
                 </table>
+                <PaginationBar
+                  totalItems={displayedCompanies.length}
+                  currentPage={pageCompany}
+                  pageSize={pageSize}
+                  onPageChange={setPageCompany}
+                  onPageSizeChange={handlePageSizeChange}
+                  itemLabel="organisations"
+                />
               </div>
             ) : feedViewMode === 'blocked' ? (
               /* View Mode 3: Blocked & Bounced Quarantine Feed */
               <div className="overflow-x-auto">
-                <div className="mb-4 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 shrink-0 text-rose-500" />
-                    <span>
-                      <strong>Quarantined Inactive Applications:</strong> {blockedCompaniesList.length} emails excluded from active outreach metrics due to enterprise tenant blocks or decommissioned mailboxes.
-                    </span>
+                <div className="mb-4 p-4 rounded-2xl bg-white/70 dark:bg-dark/40 backdrop-blur-md border border-dark/10 dark:border-light/10 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                      <Shield className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-dark dark:text-light">
+                        Quarantined Inactive Applications ({blockedCompaniesList.length})
+                      </div>
+                      <div className="text-[11px] text-dark/60 dark:text-light/60">
+                        Excluded from active engagement metrics due to decommissioned mailboxes or domain blocks.
+                      </div>
+                    </div>
                   </div>
-                  <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-700 dark:text-rose-300">
-                    {summary.total_blocked ?? 0} Blocked · {summary.total_bounced ?? 0} Bounced
-                  </span>
+                  <div className="flex items-center gap-2 font-mono text-[11px]">
+                    <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-300 font-semibold border border-rose-500/20">
+                      {summary.total_blocked ?? 0} Blocked
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300 font-semibold border border-amber-500/20">
+                      {summary.total_bounced ?? 0} Bounced
+                    </span>
+                    {summary.total_voided > 0 && (
+                      <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/20">
+                        {summary.total_voided} Retried
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {blockedCompaniesList.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-dark/50 dark:text-light/50 font-medium">
+                  <div className="text-center py-12 text-xs text-dark/50 dark:text-light/50 font-medium">
                     No blocked or bounced emails found in database.
                   </div>
                 ) : (
-                  <table className="w-full text-left text-xs">
+                  <>
+                    <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono text-[11px]">
                         <th className="pb-3 font-semibold">Company &amp; Recruiter</th>
-                        <th className="pb-3 font-semibold">Category</th>
-                        <th className="pb-3 font-semibold">Reason / Server Response</th>
+                        <th className="pb-3 font-semibold">Classification</th>
+                        <th className="pb-3 font-semibold">Server Diagnostic Response</th>
                         <th className="pb-3 font-semibold text-right">Identified Time (IST)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-dark/5 dark:divide-light/5">
-                      {blockedCompaniesList.map((item, idx) => (
-                        <tr
-                          key={`${item.token}-${idx}`}
-                          className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors"
-                        >
-                          <td className="py-3.5">
-                            <div className="font-bold text-dark dark:text-light">
-                              {item.company}
-                            </div>
-                            <div className="text-[11px] text-dark/60 dark:text-light/60">
-                              {item.recipient}
-                            </div>
-                            {item.track && (
-                              <span className="inline-block mt-0.5 text-[9px] px-1.5 py-0.5 bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 rounded-full font-medium">
-                                {item.track}
-                              </span>
-                            )}
-                          </td>
+                      {(() => {
+                        const activeCompanyNames = new Set(companyRollups.map(c => (c.company || '').toLowerCase().trim()));
+                        const companyFailCounts = {};
+                        for (const b of blockedCompaniesList) {
+                          const norm = (b.company || '').toLowerCase().trim();
+                          companyFailCounts[norm] = (companyFailCounts[norm] || 0) + 1;
+                        }
 
-                          <td className="py-3.5">
-                            <span
-                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                item.status === 'blocked'
-                                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
-                                  : item.status === 'voided'
-                                  ? 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400'
-                                  : 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
-                              }`}
+                        return paginatedBlocked.map((item, idx) => {
+                          const normName = (item.company || '').toLowerCase().trim();
+                          const hasActive = activeCompanyNames.has(normName);
+                          const failCount = companyFailCounts[normName] || 1;
+                          const diag = parseDiagnostic(item.reason);
+                          const isRawExpanded = !!expandedDiagnostics[item.token];
+
+                          return (
+                            <tr
+                              key={`${item.token}-${idx}`}
+                              className="hover:bg-dark/[0.02] dark:hover:bg-light/[0.02] transition-colors"
                             >
-                              {item.status === 'blocked'
-                                ? 'Domain Block'
-                                : item.status === 'voided'
-                                ? 'Deleted / Retried'
-                                : 'Address Bounce'}
-                            </span>
-                          </td>
+                              <td className="py-3.5 pr-4">
+                                <div className="font-bold text-dark dark:text-light flex items-center gap-1.5 flex-wrap">
+                                  <span>{item.company}</span>
+                                  {hasActive ? (
+                                    <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 rounded-full font-mono font-medium">
+                                      ✓ Retried &amp; Active
+                                    </span>
+                                  ) : failCount > 1 ? (
+                                    <span className="text-[9px] px-2 py-0.5 bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/25 rounded-full font-mono font-medium">
+                                      {failCount} Attempts Failed
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-[11px] text-dark/60 dark:text-light/60 font-mono">
+                                    {item.recipient}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopy(item.recipient);
+                                    }}
+                                    className="p-1 hover:bg-dark/10 dark:hover:bg-light/10 rounded transition-colors text-dark/40 dark:text-light/40 hover:text-dark dark:hover:text-light cursor-pointer"
+                                    title="Copy recruiter email"
+                                  >
+                                    {copiedEmail === item.recipient ? (
+                                      <Check className="w-3 h-3 text-emerald-500" />
+                                    ) : (
+                                      <Copy className="w-3 h-3" />
+                                    )}
+                                  </button>
+                                </div>
+                                {item.track && (
+                                  <span className="inline-block mt-1 text-[9px] px-1.5 py-0.2 bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60 rounded font-mono uppercase tracking-wider">
+                                    {item.track}
+                                  </span>
+                                )}
+                              </td>
 
-                          <td className="py-3.5 text-xs text-dark/70 dark:text-light/70 max-w-md">
-                            <div className="line-clamp-2 font-mono text-[11px]" title={item.reason}>
-                              {item.reason}
-                            </div>
-                          </td>
+                              <td className="py-3.5 pr-4 whitespace-nowrap">
+                                <span
+                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                    item.status === 'blocked'
+                                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+                                      : item.status === 'voided'
+                                      ? 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400'
+                                      : 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                                  }`}
+                                >
+                                  {item.status === 'blocked'
+                                    ? 'Domain Block'
+                                    : item.status === 'voided'
+                                    ? 'Voided for Retry'
+                                    : 'Address Bounce'}
+                                </span>
+                              </td>
 
-                          <td className="py-3.5 font-mono text-right text-xs text-dark/70 dark:text-light/70">
-                            <div>{formatRelativeTime(item.bounced_at)}</div>
-                            <div className="text-[10px] text-dark/50 dark:text-light/50">
-                              {item.bounced_at_formatted}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                              <td className="py-3.5 pr-4 text-xs">
+                                <div className="space-y-1.5 max-w-xl">
+                                  <div className="flex items-start gap-2 flex-wrap">
+                                    {diag.code && (
+                                      <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/25 shrink-0">
+                                        {diag.code}
+                                      </span>
+                                    )}
+                                    <span className="text-xs font-medium text-dark/90 dark:text-light/90 leading-relaxed">
+                                      {diag.cleanMsg}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-3 pt-0.5 flex-wrap">
+                                    {diag.helpUrl && (
+                                      <a
+                                        href={diag.helpUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-[11px] font-mono text-primary dark:text-primaryDark hover:underline cursor-pointer"
+                                      >
+                                        <span>
+                                          {diag.helpUrl.includes('google')
+                                            ? 'Google Help Guide'
+                                            : diag.helpUrl.includes('aka.ms') || diag.helpUrl.includes('microsoft')
+                                            ? 'Microsoft DSN Guide'
+                                            : 'Vendor Help Guide'}
+                                        </span>
+                                        <ExternalLink className="w-2.5 h-2.5" />
+                                      </a>
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleRawDiagnostic(item.token)}
+                                      className="text-[10px] font-mono text-dark/50 dark:text-light/50 hover:text-dark dark:hover:text-light underline decoration-dotted transition-colors cursor-pointer"
+                                    >
+                                      {isRawExpanded ? '▲ Hide raw server DSN' : '▼ Raw server DSN log'}
+                                    </button>
+                                  </div>
+
+                                  {isRawExpanded && (
+                                    <div className="mt-2 p-2.5 rounded-xl bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 font-mono text-[10px] text-dark/80 dark:text-light/80 break-all select-all leading-relaxed">
+                                      {diag.raw}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+
+                              <td className="py-3.5 font-mono text-right text-xs text-dark/70 dark:text-light/70 whitespace-nowrap">
+                                <div className="font-semibold text-dark/90 dark:text-light/90">{formatRelativeTime(item.bounced_at)}</div>
+                                <div className="text-[10px] text-dark/45 dark:text-light/45">
+                                  {item.bounced_at_formatted}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()}
                     </tbody>
                   </table>
+                    <PaginationBar
+                      totalItems={blockedCompaniesList.length}
+                      currentPage={pageBlocked}
+                      pageSize={pageSize}
+                      onPageChange={setPageBlocked}
+                      onPageSizeChange={handlePageSizeChange}
+                      itemLabel="quarantined records"
+                    />
+                  </>
                 )}
               </div>
             ) : (
@@ -1232,7 +1762,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-dark/5 dark:divide-light/5">
-                    {recentEvents.map((evt, idx) => {
+                    {paginatedEvents.map((evt, idx) => {
                       const { badgeStyle, label } = getEventBadge(evt);
                       return (
                         <tr
@@ -1290,7 +1820,7 @@ export default function OutreachTelemetry({ initialAuth }) {
 
                           <td className="py-3.5">
                             {(() => {
-                              const loc = formatLocation(evt.city, evt.country, evt.client_class, evt.ip_trunc);
+                              const loc = formatLocation(evt.city, evt.country, evt.client_class, evt.ip_trunc, evt.as_number, evt.via);
                               return loc.isProxy ? (
                                 <div>
                                   <div
@@ -1330,6 +1860,14 @@ export default function OutreachTelemetry({ initialAuth }) {
                     })}
                   </tbody>
                 </table>
+                <PaginationBar
+                  totalItems={recentEvents.length}
+                  currentPage={pageFlat}
+                  pageSize={pageSize}
+                  onPageChange={setPageFlat}
+                  onPageSizeChange={handlePageSizeChange}
+                  itemLabel="interaction events"
+                />
               </div>
             )}
           </div>
