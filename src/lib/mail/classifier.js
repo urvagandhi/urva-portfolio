@@ -25,6 +25,26 @@ export function classifyClient(userAgent) {
 }
 
 /**
+ * Detects whether an inbound request or event originated from a known privacy relay or image proxy.
+ *
+ * @param {string} userAgent Inbound User-Agent header
+ * @param {string} [ip] Inbound IP address
+ * @returns {boolean} True if privacy proxy
+ */
+export function isPrivacyProxy(userAgent, ip = '') {
+  const cls = classifyClient(userAgent);
+  if (cls === 'gmail_proxy' || cls === 'apple_mpp') return true;
+  if (!ip || typeof ip !== 'string') return false;
+  const cleaned = ip.trim();
+  return (
+    cleaned.startsWith('66.249.') ||
+    cleaned.startsWith('209.85.') ||
+    cleaned.startsWith('66.102.') ||
+    cleaned.startsWith('108.177.')
+  );
+}
+
+/**
  * Truncates IP addresses for data minimisation under DPDP Act 2023 and GDPR guidelines.
  * IPv4: 192.168.1.145 -> 192.168.1.xxx
  * IPv6: 2001:db8:85a3::8a2e -> 2001:db8:85a3:xxxx

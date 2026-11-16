@@ -160,6 +160,7 @@ export default async function handler(req, res) {
 
         // Group by company
         const comp = msg.company || 'Unknown Organisation';
+        const recipientEmail = msg.recipient_email || msg.recipient || '';
         const existingComp = companyMap.get(comp) || {
           company: comp,
           sent: 0,
@@ -169,9 +170,14 @@ export default async function handler(req, res) {
           downloads: 0,
           last_active: 0,
           first_sent: Number(msg.created_at || 0),
+          recipients: [],
           click_timestamps: [],
           events: []
         };
+
+        if (recipientEmail && !existingComp.recipients.includes(recipientEmail)) {
+          existingComp.recipients.push(recipientEmail);
+        }
 
         existingComp.sent++;
         if (isOpened) existingComp.opened++;
@@ -239,6 +245,19 @@ export default async function handler(req, res) {
         }
       }
       delete comp.click_timestamps;
+
+      // Cross-link any quarantined/bounced prior attempts for the same company
+      const priorQuarantined = blockedCompanies.filter(
+        (b) => (b.company || '').toLowerCase().trim() === comp.company.toLowerCase().trim()
+      );
+      if (priorQuarantined.length > 0) {
+        comp.prior_quarantined = priorQuarantined.map((b) => ({
+          recipient: b.recipient,
+          status: b.status,
+          reason: b.reason,
+          date_formatted: b.bounced_at_formatted
+        }));
+      }
     }
 
     // Deterministic two-tier sorting:

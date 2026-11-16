@@ -31,13 +31,39 @@ import {
 
 export { getServerSideProps } from '../../lib/mail/portal-gssp.js';
 
-// Helper to format and decode geographic locations gracefully
-function formatLocation(city, country) {
+// Helper to format and decode geographic locations gracefully, masking privacy proxies
+function formatLocation(city, country, clientClass, ip = '') {
+  const isGoogleProxy =
+    clientClass === 'gmail_proxy' ||
+    (ip && (ip.startsWith('66.249.') || ip.startsWith('209.85.') || ip.startsWith('66.102.') || ip.startsWith('108.177.')));
+  const isAppleRelay = clientClass === 'apple_mpp';
+
+  if (isGoogleProxy) {
+    return {
+      text: 'Google Proxy (IP Masked)',
+      isProxy: true,
+      tooltip: 'GoogleImageProxy routed image fetch through Google Cloud data center to protect recipient privacy. Real IP is masked.'
+    };
+  }
+
+  if (isAppleRelay) {
+    return {
+      text: 'Apple Relay (IP Masked)',
+      isProxy: true,
+      tooltip: 'Apple Mail Privacy Protection (MPP) pre-fetched image via Apple Privacy Relay network. Real IP is masked.'
+    };
+  }
+
   let cleanCity = city || '';
   try {
     cleanCity = decodeURIComponent(cleanCity);
   } catch (_) {}
-  return [cleanCity, country].filter(Boolean).join(', ') || 'Unknown';
+  const text = [cleanCity, country].filter(Boolean).join(', ') || 'Unknown';
+  return {
+    text,
+    isProxy: false,
+    tooltip: null
+  };
 }
 
 // Helper to compute relative elapsed time from timestamp (e.g. 'Just now', '2m ago')
@@ -894,9 +920,23 @@ export default function OutreachTelemetry({ initialAuth }) {
                                 )}
                               </span>
                               <span className="text-sm">{c.company}</span>
+                              {Array.isArray(c.recipients) && c.recipients.length > 0 && (
+                                <span className="text-[11px] font-normal font-mono text-dark/60 dark:text-light/60">
+                                  ({c.recipients.join(', ')})
+                                </span>
+                              )}
                               <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-medium bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70">
                                 {compEvents.length} event{compEvents.length === 1 ? '' : 's'}
                               </span>
+                              {c.prior_quarantined && c.prior_quarantined.length > 0 && (
+                                <span
+                                  className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 inline-flex items-center gap-1"
+                                  title={`Prior attempt ${c.prior_quarantined.map(pq => `${pq.recipient} (${pq.status})`).join(', ')} was retried`}
+                                >
+                                  <AlertCircle className="w-3 h-3 text-amber-500" />
+                                  <span>{c.prior_quarantined.length} Retried</span>
+                                </span>
+                              )}
                               {c.is_security_scanner && (
                                 <span
                                   className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 inline-flex items-center gap-1"
@@ -953,6 +993,22 @@ export default function OutreachTelemetry({ initialAuth }) {
                                       <span>
                                         <strong>Enterprise Email Security Gateway Detected:</strong> Links were automatically pre-screened in seconds across cloud scanner IPs (e.g. Proofpoint / SafeLinks) upon email arrival.
                                       </span>
+                                    </div>
+                                  )}
+
+                                  {c.prior_quarantined && c.prior_quarantined.length > 0 && (
+                                    <div className="mb-3.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs">
+                                      <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-200">
+                                        <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                                        <span>Prior Outreach Replaced &amp; Retried:</span>
+                                      </div>
+                                      <div className="mt-1 space-y-1 text-[11px] text-dark/70 dark:text-light/70 font-mono">
+                                        {c.prior_quarantined.map((pq, pqIdx) => (
+                                          <div key={pqIdx}>
+                                            • <span className="line-through text-dark/50 dark:text-light/50">{pq.recipient}</span> ({pq.status === 'blocked' ? 'Domain Block' : 'Address Bounce: 550 5.1.1'}) was replaced by active recipient <span className="font-bold text-emerald-600 dark:text-emerald-400">{c.recipients?.join(', ') || 'current'}</span>.
+                                          </div>
+                                        ))}
+                                      </div>
                                     </div>
                                   )}
 
@@ -1024,12 +1080,32 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                 </td>
 
                                                 <td className="py-2.5">
-                                                  <div className="text-dark/80 dark:text-light/80 font-medium">
-                                                    {formatLocation(evt.city, evt.country)}
-                                                  </div>
-                                                  <div className="text-[10px] font-mono text-dark/50 dark:text-light/50">
-                                                    {evt.ip_trunc || 'IP redacted'}
-                                                  </div>
+                                                  {(() => {
+                                                    const loc = formatLocation(evt.city, evt.country, evt.client_class, evt.ip_trunc);
+                                                    return loc.isProxy ? (
+                                                      <div>
+                                                        <div
+                                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                                          title={loc.tooltip}
+                                                        >
+                                                          <Shield className="w-3 h-3 shrink-0" />
+                                                          <span>{loc.text}</span>
+                                                        </div>
+                                                        <div className="text-[10px] font-mono text-dark/40 dark:text-light/40 mt-0.5">
+                                                          {evt.ip_trunc || 'IP redacted'}
+                                                        </div>
+                                                      </div>
+                                                    ) : (
+                                                      <div>
+                                                        <div className="text-dark/80 dark:text-light/80 font-medium">
+                                                          {loc.text}
+                                                        </div>
+                                                        <div className="text-[10px] font-mono text-dark/50 dark:text-light/50">
+                                                          {evt.ip_trunc || 'IP redacted'}
+                                                        </div>
+                                                      </div>
+                                                    );
+                                                  })()}
                                                 </td>
 
                                                 <td className="py-2.5 font-mono text-right">
@@ -1213,12 +1289,32 @@ export default function OutreachTelemetry({ initialAuth }) {
                           </td>
 
                           <td className="py-3.5">
-                            <div className="text-dark/80 dark:text-light/80 font-medium">
-                              {formatLocation(evt.city, evt.country)}
-                            </div>
-                            <div className="text-[11px] font-mono text-dark/50 dark:text-light/50">
-                              {evt.ip_trunc || 'IP redacted'}
-                            </div>
+                            {(() => {
+                              const loc = formatLocation(evt.city, evt.country, evt.client_class, evt.ip_trunc);
+                              return loc.isProxy ? (
+                                <div>
+                                  <div
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                    title={loc.tooltip}
+                                  >
+                                    <Shield className="w-3 h-3 shrink-0" />
+                                    <span>{loc.text}</span>
+                                  </div>
+                                  <div className="text-[11px] font-mono text-dark/40 dark:text-light/40 mt-0.5">
+                                    {evt.ip_trunc || 'IP redacted'}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <div className="text-dark/80 dark:text-light/80 font-medium">
+                                    {loc.text}
+                                  </div>
+                                  <div className="text-[11px] font-mono text-dark/50 dark:text-light/50">
+                                    {evt.ip_trunc || 'IP redacted'}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </td>
 
                           <td className="py-3.5 font-mono text-right">
