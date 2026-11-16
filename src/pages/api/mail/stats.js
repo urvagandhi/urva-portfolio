@@ -102,7 +102,8 @@ export default async function handler(req, res) {
               Array.from({ length: Math.floor(rawMsg.length / 2) }, (_, idx) => [rawMsg[idx * 2], rawMsg[idx * 2 + 1]])
             ) : {});
 
-        if (!msg || Object.keys(msg).length === 0 || msg.status === 'voided') {
+        // Exclude voided, bounced and blocked records from active outreach analytics
+        if (!msg || Object.keys(msg).length === 0 || msg.status === 'voided' || msg.status === 'blocked' || msg.status === 'bounced') {
           continue;
         }
 

@@ -50,7 +50,8 @@ export default async function handler(req, res) {
     const recipientEmail = msg ? (msg.recipient_email || msg.recipient || '') : '';
     const isSender = isSenderEmail(recipientEmail);
 
-    if (!isAdmin && !isSender && msg && Object.keys(msg).length > 0 && msg.status !== 'voided') {
+    const isInactive = msg.status === 'voided' || msg.status === 'blocked' || msg.status === 'bounced';
+    if (!isAdmin && !isSender && msg && Object.keys(msg).length > 0 && !isInactive) {
       const currentOpens = Number(msg.opens || 0);
       const newOpens = currentOpens > 0 ? currentOpens : 1;
 

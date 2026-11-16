@@ -48,8 +48,9 @@ export default async function handler(req, res) {
   try {
     const msg = await hgetall(k(`mail:m:${t}`));
 
-    // Only record clicks if message exists and is not voided
-    if (msg && Object.keys(msg).length > 0 && msg.status !== 'voided') {
+    // Only record clicks if message exists and is active (not voided, blocked, or bounced)
+    const isInactive = msg.status === 'voided' || msg.status === 'blocked' || msg.status === 'bounced';
+    if (msg && Object.keys(msg).length > 0 && !isInactive) {
       const recipientEmail = msg.recipient_email || msg.recipient || '';
       if (isSenderEmail(recipientEmail)) {
         res.setHeader('Location', destUrl);
