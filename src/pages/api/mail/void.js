@@ -78,9 +78,11 @@ export default async function handler(req, res) {
       status: finalStatus,
       voided_at: now
     };
+    if (reason) {
+      updateFields.bounce_reason = String(reason);
+    }
     if (finalStatus === 'blocked' || finalStatus === 'bounced') {
       updateFields.bounced_at = now;
-      if (reason) updateFields.bounce_reason = String(reason);
     }
 
     await hset(k(`mail:m:${targetToken}`), updateFields);

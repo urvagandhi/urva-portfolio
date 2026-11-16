@@ -79,6 +79,7 @@ export default async function handler(req, res) {
 
     let totalBlocked = 0;
     let totalBounced = 0;
+    let totalVoided = 0;
     const blockedCompanies = [];
 
     const companyMap = new Map();
@@ -106,14 +107,15 @@ export default async function handler(req, res) {
               Array.from({ length: Math.floor(rawMsg.length / 2) }, (_, idx) => [rawMsg[idx * 2], rawMsg[idx * 2 + 1]])
             ) : {});
 
-        if (!msg || Object.keys(msg).length === 0 || msg.status === 'voided') {
+        if (!msg || Object.keys(msg).length === 0) {
           continue;
         }
 
-        // Tally blocked and bounced outreach records separately
-        if (msg.status === 'blocked' || msg.status === 'bounced') {
+        // Tally blocked, bounced, and voided outreach records separately
+        if (msg.status === 'blocked' || msg.status === 'bounced' || msg.status === 'voided') {
           if (msg.status === 'blocked') totalBlocked++;
           if (msg.status === 'bounced') totalBounced++;
+          if (msg.status === 'voided') totalVoided++;
 
           blockedCompanies.push({
             token,
@@ -122,7 +124,11 @@ export default async function handler(req, res) {
             name: msg.recipient_name || '',
             track: msg.track || '',
             status: msg.status,
-            reason: msg.bounce_reason || (msg.status === 'blocked' ? 'Domain Access Blocked' : 'Email Address Bounced'),
+            reason: msg.bounce_reason || (
+              msg.status === 'blocked' ? 'Domain Access Blocked' :
+              msg.status === 'voided' ? 'Deleted in Bin (Voided for Retry)' :
+              'Email Address Bounced'
+            ),
             bounced_at: Number(msg.bounced_at || msg.voided_at || msg.created_at || 0),
             bounced_at_formatted: formatIstTimestamp(Number(msg.bounced_at || msg.voided_at || msg.created_at || 0))
           });
@@ -279,7 +285,8 @@ export default async function handler(req, res) {
         avg_dwell_seconds: avgDwellSeconds,
         total_blocked: totalBlocked,
         total_bounced: totalBounced,
-        total_inactive: totalBlocked + totalBounced
+        total_voided: totalVoided,
+        total_inactive: totalBlocked + totalBounced + totalVoided
       },
       slug_rankings: slugRankings,
       company_rollups: companyRollups,

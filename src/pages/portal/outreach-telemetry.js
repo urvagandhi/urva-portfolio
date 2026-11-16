@@ -696,7 +696,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                     ? `${displayedCompanies.length} of ${companyRollups.length} Organisation${companyRollups.length === 1 ? '' : 's'} · ${recentEvents.length} Total Interaction${recentEvents.length === 1 ? '' : 's'}`
                     : feedViewMode === 'flat'
                     ? `${recentEvents.length} Total Interaction Event${recentEvents.length === 1 ? '' : 's'}`
-                    : `${blockedCompaniesList.length} Filtered & Quarantined Record${blockedCompaniesList.length === 1 ? '' : 's'}`
+                    : `${blockedCompaniesList.length} Filtered & Quarantined Record${blockedCompaniesList.length === 1 ? '' : 's'} (${summary.total_blocked || 0} Blocked · ${summary.total_bounced || 0} Bounced${summary.total_voided ? ` · ${summary.total_voided} Retried` : ''})`
                   }
                 </p>
               </div>
@@ -1111,10 +1111,16 @@ export default function OutreachTelemetry({ initialAuth }) {
                               className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                                 item.status === 'blocked'
                                   ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+                                  : item.status === 'voided'
+                                  ? 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400'
                                   : 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
                               }`}
                             >
-                              {item.status === 'blocked' ? 'Domain Block' : 'Address Bounce'}
+                              {item.status === 'blocked'
+                                ? 'Domain Block'
+                                : item.status === 'voided'
+                                ? 'Deleted / Retried'
+                                : 'Address Bounce'}
                             </span>
                           </td>
 
