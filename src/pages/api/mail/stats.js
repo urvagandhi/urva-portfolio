@@ -1,7 +1,7 @@
 import { verifyAdminSession } from '../../../lib/mail/token.js';
 import { k, smembers, pipeline } from '../../../lib/mail/redis.js';
 import { formatIstTimestamp } from '../../../lib/mail/telegram.js';
-import { decodeCity } from '../../../lib/mail/classifier.js';
+import { decodeCity, isSecurityScanner } from '../../../lib/mail/classifier.js';
 
 // In-memory stats cache to prevent Upstash Redis quota exhaustion on polling
 let memoryStatsCache = {
@@ -17,7 +17,9 @@ let memoryStatsCache = {
  */
 function computeEngagementScore(event) {
   let score = 0;
-  if (event.event === 'open') {
+  if (event.event === 'prefetch' || event.is_prefetch) {
+    score = 0;
+  } else if (event.event === 'open') {
     score = event.client_class === 'apple_mpp' ? 0 : 1;
   } else if (event.event === 'click') {
     score = 3;
@@ -72,6 +74,7 @@ export default async function handler(req, res) {
 
     let totalSent = 0;
     let verifiedOpens = 0;
+    let totalPrefetches = 0;
     let totalResumeViews = 0;
     let totalClicks = 0;
     let totalDownloads = 0;
@@ -90,7 +93,7 @@ export default async function handler(req, res) {
       const pipelineCmds = [];
       for (const token of tokens) {
         pipelineCmds.push(['HGETALL', k(`mail:m:${token}`)]);
-        pipelineCmds.push(['LRANGE', k(`mail:events:${token}`), 0, 20]);
+        pipelineCmds.push(['LRANGE', k(`mail:events:${token}`), 0, -1]);
       }
       pipelineCmds.push(['ZREVRANGE', k('mail:stats:slug_clicks'), 0, -1, 'WITHSCORES']);
 
@@ -148,16 +151,6 @@ export default async function handler(req, res) {
           Number(msg.last_opened_at || 0)
         );
 
-        // Verification: If recipient clicked a link, viewed resume, or opened email
-        const isOpened = opens > 0 || views > 0 || clicks > 0;
-        if (isOpened) {
-          verifiedOpens++;
-        }
-        totalResumeViews += views;
-        totalClicks += clicks;
-        totalDownloads += downloads;
-        totalDwellMs += dwellMs;
-
         // Group by company
         const comp = msg.company || 'Unknown Organisation';
         const recipientEmail = msg.recipient_email || msg.recipient || '';
@@ -165,6 +158,8 @@ export default async function handler(req, res) {
           company: comp,
           sent: 0,
           opened: 0,
+          human_opens: 0,
+          prefetches: 0,
           resume_viewed: 0,
           clicks: 0,
           downloads: 0,
@@ -180,35 +175,11 @@ export default async function handler(req, res) {
           existingComp.recipients.push(recipientEmail);
         }
 
-        existingComp.active_attempts.push({
-          token,
-          recipient: recipientEmail,
-          name: msg.recipient_name || '',
-          track: msg.track || '',
-          status: msg.status,
-          opens,
-          views,
-          clicks,
-          downloads,
-          created_at: Number(msg.created_at || 0),
-          created_at_formatted: formatIstTimestamp(Number(msg.created_at || 0))
-        });
-
-        existingComp.sent++;
-        if (isOpened) existingComp.opened++;
-        existingComp.resume_viewed += views;
-        existingComp.clicks += clicks;
-        existingComp.downloads += downloads;
-        if (msgLastEvent > existingComp.last_active) {
-          existingComp.last_active = msgLastEvent;
-        }
-        const msgCreated = Number(msg.created_at || 0);
-        if (!existingComp.first_sent || (msgCreated > 0 && msgCreated < existingComp.first_sent)) {
-          existingComp.first_sent = msgCreated;
-        }
-
-        // Collect interaction events
+        // Collect and dynamically classify interaction events
         const eventJsonList = Array.isArray(rawEventList) ? rawEventList : [];
+        let msgHumanOpens = 0;
+        let msgPrefetches = Number(msg.machine_prefetches || 0);
+
         for (const item of eventJsonList) {
           try {
             const parsed = typeof item === 'string' ? JSON.parse(item) : item;
@@ -219,9 +190,32 @@ export default async function handler(req, res) {
             parsed.track = msg.track;
             parsed.city = parsed.city ? decodeCity(parsed.city) : '';
             parsed.ist_time = formatIstTimestamp(parsed.ts);
-            parsed.engagement_score = computeEngagementScore(parsed);
 
             const eventTs = Number(parsed.ts || 0);
+            const msgCreated = Number(msg.created_at || 0);
+            const deltaSec = msgCreated > 0 ? Math.max(0, (eventTs - msgCreated) / 1000) : (parsed.delta_sec || 0);
+            parsed.delta_sec = Math.round(deltaSec);
+
+            if (parsed.event === 'prefetch') {
+              parsed.is_prefetch = true;
+              msgPrefetches++;
+            } else if (parsed.event === 'open') {
+              const scanner = isSecurityScanner(parsed.ua, parsed.ip_trunc, parsed.as_number, parsed.via);
+              const proxy = parsed.client_class === 'gmail_proxy' || parsed.client_class === 'apple_mpp';
+              if (scanner || (proxy && deltaSec < 60) || deltaSec < 15) {
+                parsed.is_prefetch = true;
+                parsed.prefetch_type = scanner
+                  ? 'security_scanner'
+                  : (parsed.client_class === 'gmail_proxy' ? 'gmail_prefetch' : (parsed.client_class === 'apple_mpp' ? 'apple_prefetch' : 'bot_rapid_scan'));
+                msgPrefetches++;
+              } else {
+                parsed.is_human_open = true;
+                msgHumanOpens++;
+              }
+            }
+
+            parsed.engagement_score = computeEngagementScore(parsed);
+
             if (eventTs > existingComp.last_active) {
               existingComp.last_active = eventTs;
             }
@@ -232,6 +226,48 @@ export default async function handler(req, res) {
             existingComp.events.push(parsed);
             rawEvents.push(parsed);
           } catch (_) {}
+        }
+
+        const effectiveHumanOpens = (eventJsonList.length > 0) ? msgHumanOpens : Math.max(0, opens - msgPrefetches);
+        const isHumanOpened = effectiveHumanOpens > 0 || views > 0 || clicks > 0 || downloads > 0;
+        if (isHumanOpened) {
+          verifiedOpens++;
+        }
+        totalPrefetches += msgPrefetches;
+        totalResumeViews += views;
+        totalClicks += clicks;
+        totalDownloads += downloads;
+        totalDwellMs += dwellMs;
+
+        existingComp.active_attempts.push({
+          token,
+          recipient: recipientEmail,
+          name: msg.recipient_name || '',
+          track: msg.track || '',
+          status: msg.status,
+          opens,
+          human_opens: effectiveHumanOpens,
+          prefetches: msgPrefetches,
+          views,
+          clicks,
+          downloads,
+          created_at: Number(msg.created_at || 0),
+          created_at_formatted: formatIstTimestamp(Number(msg.created_at || 0))
+        });
+
+        existingComp.sent++;
+        if (isHumanOpened) existingComp.opened++;
+        existingComp.human_opens = (existingComp.human_opens || 0) + effectiveHumanOpens;
+        existingComp.prefetches = (existingComp.prefetches || 0) + msgPrefetches;
+        existingComp.resume_viewed += views;
+        existingComp.clicks += clicks;
+        existingComp.downloads += downloads;
+        if (msgLastEvent > existingComp.last_active) {
+          existingComp.last_active = msgLastEvent;
+        }
+        const msgCreated = Number(msg.created_at || 0);
+        if (!existingComp.first_sent || (msgCreated > 0 && msgCreated < existingComp.first_sent)) {
+          existingComp.first_sent = msgCreated;
         }
         companyMap.set(comp, existingComp);
       }
@@ -307,6 +343,8 @@ export default async function handler(req, res) {
           created_at: act.created_at,
           created_at_formatted: act.created_at_formatted,
           opens: act.opens,
+          human_opens: act.human_opens,
+          prefetches: act.prefetches,
           clicks: act.clicks,
           resume_views: act.views
         });
@@ -316,6 +354,29 @@ export default async function handler(req, res) {
         step: idx + 1,
         ...att
       }));
+
+      // Classify engagement confidence tier
+      if (comp.clicks > 0 || comp.resume_viewed > 0 || comp.downloads > 0) {
+        comp.confidence_tier = 'high';
+        comp.confidence_label = 'Confirmed Read';
+        comp.confidence_variant = 'emerald';
+        comp.confidence_tooltip = 'High confidence: Recruiter clicked showcase links or inspected resume';
+      } else if ((comp.human_opens || 0) > 0) {
+        comp.confidence_tier = 'medium';
+        comp.confidence_label = 'Probable Read';
+        comp.confidence_variant = 'amber';
+        comp.confidence_tooltip = 'Medium confidence: Email opened > 60s post-send';
+      } else if ((comp.prefetches || 0) > 0) {
+        comp.confidence_tier = 'low';
+        comp.confidence_label = 'Prefetched';
+        comp.confidence_variant = 'blue';
+        comp.confidence_tooltip = 'Automated: Cached by Google Image Proxy or security scanner upon delivery';
+      } else {
+        comp.confidence_tier = 'unopened';
+        comp.confidence_label = 'Unopened';
+        comp.confidence_variant = 'muted';
+        comp.confidence_tooltip = 'Delivered to inbox, pending recruiter opening';
+      }
 
       // Classify outreach journey type and dynamic UI badge
       const retryCount = priorQuarantined.length;
@@ -416,6 +477,8 @@ export default async function handler(req, res) {
         total_sent: totalSent,
         verified_opens: verifiedOpens,
         open_rate_percent: openRatePercent,
+        machine_prefetches: totalPrefetches,
+        total_raw_opens: verifiedOpens + totalPrefetches,
         total_resume_views: totalResumeViews,
         total_clicks: totalClicks,
         total_downloads: totalDownloads,

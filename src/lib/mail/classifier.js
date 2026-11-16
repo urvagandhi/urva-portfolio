@@ -78,6 +78,82 @@ export function isPrivacyProxy(userAgent, ip = '', asNumber = '', via = '') {
 }
 
 /**
+ * Detects whether an inbound request or event originated from an automated security scanner or crawler.
+ * Identifies legacy browser engines, security proxy subnets, and headless crawlers.
+ *
+ * @param {string} userAgent Inbound User-Agent header
+ * @param {string} [ip] Inbound IP address
+ * @param {string|number} [asNumber] Autonomous System Number
+ * @param {string} [via] Inbound Via proxy header
+ * @returns {boolean} True if automated security scanner
+ */
+export function isSecurityScanner(userAgent, ip = '', asNumber = '', via = '') {
+  if (userAgent && typeof userAgent === 'string') {
+    const ua = userAgent.trim();
+    // Legacy Edge 12 / Chrome 42 pattern (Google Workspace incoming security crawler)
+    if (ua.includes('Edge/12.') || (ua.includes('Chrome/42.') && ua.includes('Edge/'))) {
+      return true;
+    }
+    // Legacy MSIE 8.0 / Trident 4.0 (Enterprise corporate email security gateway)
+    if (ua.includes('MSIE 8.0') || ua.includes('Trident/4.0')) {
+      return true;
+    }
+    // Headless / crawler identifiers
+    if (ua.includes('HeadlessChrome') || ua.includes('PhantomJS') || ua.includes('Cobrowsing/')) {
+      return true;
+    }
+  }
+
+  // Known scanner proxy IP subnets
+  if (ip && typeof ip === 'string') {
+    const cleaned = ip.trim();
+    if (cleaned.startsWith('209.85.238.') || cleaned.startsWith('209.222.82.')) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Classifies telemetry engagement into discrete confidence tiers:
+ * - 'high': Confirmed Human (portfolio link click, resume view, resume download)
+ * - 'medium': Probable Human (email open >= 60s post-send)
+ * - 'low': Machine Prefetch (inbound proxy prefetch < 60s, automated security scanner)
+ * - 'unopened': No engagement recorded
+ *
+ * @param {Object} params Classification parameters
+ * @param {string} params.event Event name ('open' | 'click' | 'resume_view' | etc.)
+ * @param {string} [params.clientClass] Classified client category ('gmail_proxy' | 'apple_mpp' | 'direct_unclassified')
+ * @param {number} [params.deltaSec] Seconds elapsed between send time and event trigger
+ * @param {string} [params.userAgent] Raw User-Agent string
+ * @param {string} [params.ip] Raw or truncated IP address
+ * @returns {'high'|'medium'|'low'|'unopened'} Engagement tier
+ */
+export function classifyEngagementTier({ event, clientClass = '', deltaSec = 0, userAgent = '', ip = '' }) {
+  if (event === 'click' || event === 'resume_view' || event === 'download' || event === 'resume_download') {
+    return 'high';
+  }
+
+  if (event === 'prefetch') {
+    return 'low';
+  }
+
+  if (event === 'open') {
+    const isScanner = isSecurityScanner(userAgent, ip);
+    const isProxy = clientClass === 'gmail_proxy' || clientClass === 'apple_mpp';
+
+    if (isScanner || (isProxy && deltaSec < 60) || deltaSec < 15) {
+      return 'low';
+    }
+
+    return 'medium';
+  }
+
+  return 'unopened';
+}
+
+/**
  * Truncates IP addresses for data minimisation under DPDP Act 2023 and GDPR guidelines.
  * IPv4: 192.168.1.145 -> 192.168.1.xxx
  * IPv6: 2001:db8:85a3::8a2e -> 2001:db8:85a3:xxxx

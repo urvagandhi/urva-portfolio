@@ -1,5 +1,5 @@
 import { verifyToken, verifyAdminSession, isSenderEmail } from '../../../lib/mail/token.js';
-import { classifyClient, truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
+import { classifyClient, truncateIp, decodeCity, isSecurityScanner } from '../../../lib/mail/classifier.js';
 import { isGoogleWorkspaceDomain } from '../../../lib/mail/domain-mx.js';
 import { k, get, set, del, incr, hgetall, hincrby, hset, lpush, expire } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
@@ -68,8 +68,45 @@ export default async function handler(req, res) {
     const region = req.headers['x-vercel-ip-country-region'] || '';
     const city = decodeCity(req.headers['x-vercel-ip-city']);
     const now = Date.now();
+    const createdAt = Number(msg.created_at || now);
+    const deltaSec = Math.max(0, (now - createdAt) / 1000);
 
-    // Persist open event to Redis hash and event log
+    // Detect automated security crawlers and rapid proxy prefetching
+    const isScanner = isSecurityScanner(ua, rawIp, asNumber, via);
+    const isProxyPrefetch = (clientClass === 'gmail_proxy' || clientClass === 'apple_mpp') && deltaSec < 60;
+    const isRapidBotScan = deltaSec < 15 && clientClass !== 'direct_unclassified';
+    const isMachineOpen = isScanner || isProxyPrefetch || isRapidBotScan;
+
+    if (isMachineOpen) {
+      const prefetchType = isScanner
+        ? 'security_scanner'
+        : (clientClass === 'gmail_proxy' ? 'gmail_prefetch' : (clientClass === 'apple_mpp' ? 'apple_prefetch' : 'bot_rapid_scan'));
+
+      // Increment machine_prefetches counter and record event without polluting human opens or alerting
+      await hincrby(k(`mail:m:${t}`), 'machine_prefetches', 1);
+      await hset(k(`mail:m:${t}`), { last_event_at: now });
+
+      const prefetchPayload = JSON.stringify({
+        event: 'prefetch',
+        prefetch_type: prefetchType,
+        ts: now,
+        delta_sec: Math.round(deltaSec),
+        client_class: clientClass,
+        ua,
+        ip_trunc: ipTrunc,
+        as_number: asNumber,
+        via,
+        country,
+        region,
+        city
+      });
+
+      await lpush(k(`mail:events:${t}`), prefetchPayload);
+      await expire(k(`mail:events:${t}`), 5184000); // 60 days TTL
+      return res.status(200).send(PIXEL_BUFFER);
+    }
+
+    // Persist verified human open event to Redis hash and event log
     const updatedOpens = await hincrby(k(`mail:m:${t}`), 'opens', 1);
     await hset(k(`mail:m:${t}`), {
       last_opened_at: now,
@@ -80,6 +117,7 @@ export default async function handler(req, res) {
     const eventPayload = JSON.stringify({
       event: 'open',
       ts: now,
+      delta_sec: Math.round(deltaSec),
       client_class: clientClass,
       ua,
       ip_trunc: ipTrunc,
@@ -109,7 +147,8 @@ export default async function handler(req, res) {
         await del(counterKey);
       }
 
-      // Dispatch real-time Telegram push alert
+      // Dispatch real-time Telegram push alert for verified human open
+      const delayLabel = deltaSec > 60 ? `${Math.round(deltaSec / 60)}m post-send` : `${Math.round(deltaSec)}s post-send`;
       await dispatchTelegramAlert({
         eventType: 'open',
         clientClass,
@@ -117,7 +156,7 @@ export default async function handler(req, res) {
         recipientEmail: msg.recipient_email || msg.recipient,
         company: msg.company,
         track: msg.track,
-        detail: `Open #${updatedOpens}`,
+        detail: `Open #${updatedOpens} (${delayLabel})`,
         ua,
         country,
         region,

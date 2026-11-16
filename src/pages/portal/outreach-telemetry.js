@@ -33,7 +33,8 @@ import {
   Copy,
   Check,
   ExternalLink,
-  ArrowDown
+  ArrowDown,
+  Cpu
 } from 'lucide-react';
 
 export { getServerSideProps } from '../../lib/mail/portal-gssp.js';
@@ -106,12 +107,26 @@ function getEventBadge(evt) {
   let badgeStyle = 'bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 border-dark/10 dark:border-light/10';
   let label = evt.event;
 
-  if (evt.event === 'open') {
+  if (evt.event === 'prefetch' || evt.is_prefetch) {
+    if (evt.prefetch_type === 'security_scanner') {
+      badgeStyle = 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
+      label = 'Security Scanner';
+    } else if (evt.client_class === 'gmail_proxy' || evt.prefetch_type === 'gmail_prefetch') {
+      badgeStyle = 'bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400';
+      label = 'Google Prefetch';
+    } else if (evt.client_class === 'apple_mpp' || evt.prefetch_type === 'apple_prefetch') {
+      badgeStyle = 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
+      label = 'Apple MPP Prefetch';
+    } else {
+      badgeStyle = 'bg-zinc-500/10 border border-zinc-500/30 text-zinc-600 dark:text-zinc-400';
+      label = 'Machine Prefetch';
+    }
+  } else if (evt.event === 'open') {
     badgeStyle =
       evt.client_class === 'apple_mpp'
         ? 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400'
         : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
-    label = `Open (${evt.client_class || 'direct'})`;
+    label = `Recruiter Open (${evt.client_class === 'gmail_proxy' ? 'Gmail' : (evt.client_class || 'direct')})`;
   } else if (evt.event === 'click') {
     badgeStyle = 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400';
     label = 'Showcase Click';
@@ -650,14 +665,19 @@ export default function OutreachTelemetry({ initialAuth }) {
   const recentEvents = stats?.recent_events || [];
 
   const openedCompanies = companyRollups.filter(
-    (c) => (c.opened > 0 || c.resume_viewed > 0 || c.clicks > 0 || c.last_active > 0)
+    (c) => (c.confidence_tier === 'high' || c.confidence_tier === 'medium' || c.opened > 0 || c.resume_viewed > 0 || c.clicks > 0)
+  );
+  const prefetchedCompanies = companyRollups.filter(
+    (c) => c.confidence_tier === 'low' || (c.prefetches > 0 && !(c.opened > 0 || c.resume_viewed > 0 || c.clicks > 0))
   );
   const unopenedCompanies = companyRollups.filter(
-    (c) => !(c.opened > 0 || c.resume_viewed > 0 || c.clicks > 0 || c.last_active > 0)
+    (c) => c.confidence_tier === 'unopened' || (!(c.opened > 0 || c.resume_viewed > 0 || c.clicks > 0) && !(c.prefetches > 0))
   );
 
   const displayedCompanies = companyFilter === 'opened'
     ? openedCompanies
+    : companyFilter === 'prefetched'
+    ? prefetchedCompanies
     : companyFilter === 'unopened'
     ? unopenedCompanies
     : companyRollups;
@@ -842,9 +862,14 @@ export default function OutreachTelemetry({ initialAuth }) {
                       </svg>
                     </div>
                   </div>
-                  <p className="mt-3 text-[11px] text-dark/60 dark:text-light/60 font-medium">
-                    Verified In-Box Reads
-                  </p>
+                  <div className="mt-3 flex items-center justify-between text-[11px] text-dark/60 dark:text-light/60 font-medium">
+                    <span>Verified Human Reads</span>
+                    {Number(summary.machine_prefetches || 0) > 0 && (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400" title={`${summary.machine_prefetches} automated Google Image Proxy or Security Gateway prefetch scan(s)`}>
+                        +{summary.machine_prefetches} prefetched
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Card 3: Resume Views */}
@@ -1044,7 +1069,7 @@ export default function OutreachTelemetry({ initialAuth }) {
             {feedViewMode === 'company' && (
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-dark/5 dark:border-light/5">
                 {/* Status Sub-Filters */}
-                <div className="inline-flex rounded-xl p-1 bg-dark/[0.03] dark:bg-light/[0.04] border border-dark/5 dark:border-light/5 text-xs">
+                <div className="inline-flex rounded-xl p-1 bg-dark/[0.03] dark:bg-light/[0.04] border border-dark/5 dark:border-light/5 text-xs flex-wrap gap-1">
                   <button
                     type="button"
                     onClick={() => handleCompanyFilterChange('all')}
@@ -1072,10 +1097,10 @@ export default function OutreachTelemetry({ initialAuth }) {
                         ? 'bg-emerald-500/20 text-emerald-700 dark:bg-emerald-500/30 dark:text-emerald-300 font-bold shadow-sm'
                         : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
                     }`}
-                    title="Sent and opened emails"
+                    title="Verified human reads, link clicks and resume views"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                    <span>Sent &amp; Opened</span>
+                    <span>Human Engaged</span>
                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
                       companyFilter === 'opened'
                         ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-200'
@@ -1087,16 +1112,37 @@ export default function OutreachTelemetry({ initialAuth }) {
 
                   <button
                     type="button"
+                    onClick={() => handleCompanyFilterChange('prefetched')}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      companyFilter === 'prefetched'
+                        ? 'bg-blue-500/20 text-blue-700 dark:bg-blue-500/30 dark:text-blue-300 font-bold shadow-sm'
+                        : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                    }`}
+                    title="Automated Google Image Proxy or Security Gateway prefetching upon delivery"
+                  >
+                    <Cpu className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Prefetched</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
+                      companyFilter === 'prefetched'
+                        ? 'bg-blue-500/20 text-blue-800 dark:text-blue-200'
+                        : 'bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60'
+                    }`}>
+                      {prefetchedCompanies.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => handleCompanyFilterChange('unopened')}
                     className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
                       companyFilter === 'unopened'
                         ? 'bg-amber-500/20 text-amber-800 dark:bg-amber-500/30 dark:text-amber-300 font-bold shadow-sm'
                         : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
                     }`}
-                    title="Sent but not yet opened"
+                    title="Sent but pending recruiter opening"
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-                    <span>Sent but Not Open</span>
+                    <span>Unopened</span>
                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
                       companyFilter === 'unopened'
                         ? 'bg-amber-500/20 text-amber-800 dark:text-amber-200'
@@ -1136,9 +1182,11 @@ export default function OutreachTelemetry({ initialAuth }) {
             {displayedCompanies.length === 0 ? (
               <div className="text-center py-12 text-xs text-dark/50 dark:text-light/50 font-medium">
                 {companyFilter === 'opened'
-                  ? 'No opened outreach recorded yet.'
+                  ? 'No human recruiter engagement recorded yet.'
+                  : companyFilter === 'prefetched'
+                  ? 'No automated machine prefetches recorded.'
                   : companyFilter === 'unopened'
-                  ? 'All outreach emails have been opened!'
+                  ? 'All outreach emails have been engaged!'
                   : 'No company outreach registered yet. Telemetry will stream in real time.'}
               </div>
             ) : feedViewMode === 'company' ? (
@@ -1216,10 +1264,54 @@ export default function OutreachTelemetry({ initialAuth }) {
                                     <span>Scanner</span>
                                   </span>
                                 )}
+                                {c.confidence_tier === 'high' && (
+                                  <span
+                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 inline-flex items-center gap-1"
+                                    title={c.confidence_tooltip || 'Confirmed human engagement: Recruiter clicked links or inspected resume'}
+                                  >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                                    <span>Confirmed Read</span>
+                                  </span>
+                                )}
+                                {c.confidence_tier === 'medium' && (
+                                  <span
+                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 inline-flex items-center gap-1"
+                                    title={c.confidence_tooltip || 'Probable human: Email opened > 60s post-send'}
+                                  >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+                                    <span>Probable Read</span>
+                                  </span>
+                                )}
+                                {c.confidence_tier === 'low' && (
+                                  <span
+                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 inline-flex items-center gap-1"
+                                    title={c.confidence_tooltip || 'Automated prefetch: Cached by Google Image Proxy or security scanner'}
+                                  >
+                                    <Cpu className="w-3 h-3 text-blue-500" />
+                                    <span>Prefetched</span>
+                                  </span>
+                                )}
+                                {c.confidence_tier === 'unopened' && (
+                                  <span
+                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-dark/5 dark:bg-light/10 text-dark/50 dark:text-light/50 border border-dark/10 dark:border-light/10 inline-flex items-center gap-1"
+                                    title={c.confidence_tooltip || 'Delivered to inbox, pending recruiter opening'}
+                                  >
+                                    <span>Unopened</span>
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="py-4 px-3 text-center text-dark/70 dark:text-light/70 font-mono">{c.sent}</td>
-                            <td className="py-4 px-3 text-center text-emerald-600 dark:text-emerald-400 font-bold font-mono">{c.opened}</td>
+                            <td className="py-4 px-3 text-center font-mono">
+                              <span className={`font-bold ${c.opened > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-dark/40 dark:text-light/40'}`}>
+                                {c.opened}
+                              </span>
+                              {c.prefetches > 0 && (
+                                <span className="block text-[9px] font-normal text-blue-500/80 font-mono" title={`${c.prefetches} automated prefetch/scan(s)`}>
+                                  +{c.prefetches}p
+                                </span>
+                              )}
+                            </td>
                             <td className="py-4 px-3 text-center text-purple-600 dark:text-purple-400 font-bold font-mono">{c.resume_viewed}</td>
                             <td className="py-4 px-3 text-center text-amber-600 dark:text-amber-400 font-bold font-mono">{c.clicks}</td>
                             <td className="py-4 px-4 font-mono text-left whitespace-nowrap">
@@ -1471,9 +1563,9 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                     </span>
                                                   ) : evt.dwell_ms ? (
                                                     <span>{Math.round(evt.dwell_ms / 1000)}s visible</span>
-                                                  ) : evt.event === 'open' ? (
+                                                  ) : evt.event === 'open' || evt.event === 'prefetch' || evt.is_prefetch ? (
                                                     <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
-                                                      Email Opened
+                                                      {evt.delta_sec ? (evt.delta_sec >= 60 ? `+${Math.round(evt.delta_sec / 60)}m post-send` : `+${evt.delta_sec}s post-send`) : (evt.is_prefetch ? 'Automated Pre-scan' : 'Email Opened')}
                                                     </span>
                                                   ) : evt.event === 'resume_view' ? (
                                                     <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
@@ -1798,9 +1890,9 @@ export default function OutreachTelemetry({ initialAuth }) {
                               </span>
                             )}
                             {evt.dwell_ms && <span>{Math.round(evt.dwell_ms / 1000)}s visible</span>}
-                            {!evt.slug && !evt.dwell_ms && evt.event === 'open' && (
+                            {!evt.slug && !evt.dwell_ms && (evt.event === 'open' || evt.event === 'prefetch' || evt.is_prefetch) && (
                               <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
-                                Email Opened
+                                {evt.delta_sec ? (evt.delta_sec >= 60 ? `+${Math.round(evt.delta_sec / 60)}m post-send` : `+${evt.delta_sec}s post-send`) : (evt.is_prefetch ? 'Automated Pre-scan' : 'Email Opened')}
                               </span>
                             )}
                             {!evt.slug && !evt.dwell_ms && evt.event === 'resume_view' && (
