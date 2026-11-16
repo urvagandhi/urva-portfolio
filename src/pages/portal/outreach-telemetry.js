@@ -21,6 +21,7 @@ import {
   Download,
   Clock,
   Shield,
+  ShieldAlert,
   Activity,
   ChevronDown,
   ChevronRight,
