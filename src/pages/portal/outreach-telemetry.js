@@ -137,7 +137,7 @@ export default function OutreachTelemetry({ initialAuth }) {
 
   // Company accordion toggle state (default: all expanded) and view mode switch
   const [collapsedCompanies, setCollapsedCompanies] = useState({});
-  const [feedViewMode, setFeedViewMode] = useState('company'); // 'company' | 'flat'
+  const [feedViewMode, setFeedViewMode] = useState('company'); // 'company' | 'flat' | 'blocked'
   const [companyFilter, setCompanyFilter] = useState('all'); // 'all' | 'opened' | 'unopened'
 
   const toggleCompany = (companyName) => {
@@ -373,6 +373,7 @@ export default function OutreachTelemetry({ initialAuth }) {
   const summary = stats?.summary || {};
   const slugRankings = stats?.slug_rankings || [];
   const companyRollups = stats?.company_rollups || [];
+  const blockedCompaniesList = stats?.blocked_companies || [];
   const recentEvents = stats?.recent_events || [];
 
   const openedCompanies = companyRollups.filter(
@@ -502,10 +503,22 @@ export default function OutreachTelemetry({ initialAuth }) {
                       </svg>
                     </div>
                   </div>
-                  <p className="mt-3 text-[11px] text-dark/60 dark:text-light/60 flex items-center gap-1 font-medium">
-                    <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0" />
-                    <span>Active Registered Transmissions</span>
-                  </p>
+                  <div className="mt-3 flex items-center justify-between text-[11px] font-medium text-dark/60 dark:text-light/60">
+                    <span className="flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0" />
+                      <span>{summary.total_sent ?? 0} Active</span>
+                    </span>
+                    {(summary.total_inactive ?? 0) > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setFeedViewMode('blocked')}
+                        className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 font-bold transition-all cursor-pointer"
+                        title="Click to view blocked and bounced transmissions"
+                      >
+                        {summary.total_inactive} Filtered
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Card 2: Recruiter Opens */}
@@ -749,7 +762,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                   </div>
                 )}
 
-                {/* View mode toggle (Company View vs All Events) */}
+                {/* View mode toggle (Company View vs All Events vs Filtered Inactive) */}
                 <div className="inline-flex rounded-xl p-1 bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs font-medium">
                   <button
                     type="button"
@@ -772,6 +785,25 @@ export default function OutreachTelemetry({ initialAuth }) {
                     }`}
                   >
                     All Events
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFeedViewMode('blocked')}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      feedViewMode === 'blocked'
+                        ? 'bg-rose-600 text-light dark:bg-rose-500 dark:text-dark font-bold shadow-sm'
+                        : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
+                    }`}
+                    title="View blocked domains and bounced email addresses"
+                  >
+                    <span>Filtered</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                      feedViewMode === 'blocked'
+                        ? 'bg-light/20 text-light dark:bg-dark/20 dark:text-dark'
+                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                    }`}>
+                      {blockedCompaniesList.length}
+                    </span>
                   </button>
                 </div>
 
@@ -1007,6 +1039,85 @@ export default function OutreachTelemetry({ initialAuth }) {
                     })}
                   </tbody>
                 </table>
+              </div>
+            ) : feedViewMode === 'blocked' ? (
+              /* View Mode 3: Blocked & Bounced Quarantine Feed */
+              <div className="overflow-x-auto">
+                <div className="mb-4 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 shrink-0 text-rose-500" />
+                    <span>
+                      <strong>Quarantined Inactive Applications:</strong> {blockedCompaniesList.length} emails excluded from active outreach metrics due to enterprise tenant blocks or decommissioned mailboxes.
+                    </span>
+                  </div>
+                  <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-rose-500/20 text-rose-700 dark:text-rose-300">
+                    {summary.total_blocked ?? 0} Blocked · {summary.total_bounced ?? 0} Bounced
+                  </span>
+                </div>
+
+                {blockedCompaniesList.length === 0 ? (
+                  <div className="text-center py-8 text-xs text-dark/50 dark:text-light/50 font-medium">
+                    No blocked or bounced emails found in database.
+                  </div>
+                ) : (
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono text-[11px]">
+                        <th className="pb-3 font-semibold">Company &amp; Recruiter</th>
+                        <th className="pb-3 font-semibold">Category</th>
+                        <th className="pb-3 font-semibold">Reason / Server Response</th>
+                        <th className="pb-3 font-semibold text-right">Identified Time (IST)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-dark/5 dark:divide-light/5">
+                      {blockedCompaniesList.map((item, idx) => (
+                        <tr
+                          key={`${item.token}-${idx}`}
+                          className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors"
+                        >
+                          <td className="py-3.5">
+                            <div className="font-bold text-dark dark:text-light">
+                              {item.company}
+                            </div>
+                            <div className="text-[11px] text-dark/60 dark:text-light/60">
+                              {item.recipient}
+                            </div>
+                            {item.track && (
+                              <span className="inline-block mt-0.5 text-[9px] px-1.5 py-0.5 bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 rounded-full font-medium">
+                                {item.track}
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="py-3.5">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                item.status === 'blocked'
+                                  ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
+                                  : 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                              }`}
+                            >
+                              {item.status === 'blocked' ? 'Domain Block' : 'Address Bounce'}
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 text-xs text-dark/70 dark:text-light/70 max-w-md">
+                            <div className="line-clamp-2 font-mono text-[11px]" title={item.reason}>
+                              {item.reason}
+                            </div>
+                          </td>
+
+                          <td className="py-3.5 font-mono text-right text-xs text-dark/70 dark:text-light/70">
+                            <div>{formatRelativeTime(item.bounced_at)}</div>
+                            <div className="text-[10px] text-dark/50 dark:text-light/50">
+                              {item.bounced_at_formatted}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             ) : (
               /* Flat Chronological Feed View */

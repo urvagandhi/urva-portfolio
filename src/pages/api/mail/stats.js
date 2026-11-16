@@ -77,6 +77,10 @@ export default async function handler(req, res) {
     let totalDownloads = 0;
     let totalDwellMs = 0;
 
+    let totalBlocked = 0;
+    let totalBounced = 0;
+    const blockedCompanies = [];
+
     const companyMap = new Map();
     const rawEvents = [];
     const slugRankings = [];
@@ -102,8 +106,26 @@ export default async function handler(req, res) {
               Array.from({ length: Math.floor(rawMsg.length / 2) }, (_, idx) => [rawMsg[idx * 2], rawMsg[idx * 2 + 1]])
             ) : {});
 
-        // Exclude voided, bounced and blocked records from active outreach analytics
-        if (!msg || Object.keys(msg).length === 0 || msg.status === 'voided' || msg.status === 'blocked' || msg.status === 'bounced') {
+        if (!msg || Object.keys(msg).length === 0 || msg.status === 'voided') {
+          continue;
+        }
+
+        // Tally blocked and bounced outreach records separately
+        if (msg.status === 'blocked' || msg.status === 'bounced') {
+          if (msg.status === 'blocked') totalBlocked++;
+          if (msg.status === 'bounced') totalBounced++;
+
+          blockedCompanies.push({
+            token,
+            company: msg.company || 'Unknown Organisation',
+            recipient: msg.recipient_email || msg.recipient || '',
+            name: msg.recipient_name || '',
+            track: msg.track || '',
+            status: msg.status,
+            reason: msg.bounce_reason || (msg.status === 'blocked' ? 'Domain Access Blocked' : 'Email Address Bounced'),
+            bounced_at: Number(msg.bounced_at || msg.voided_at || msg.created_at || 0),
+            bounced_at_formatted: formatIstTimestamp(Number(msg.bounced_at || msg.voided_at || msg.created_at || 0))
+          });
           continue;
         }
 
@@ -243,6 +265,9 @@ export default async function handler(req, res) {
     const openRatePercent = totalSent > 0 ? Number(((verifiedOpens / totalSent) * 100).toFixed(1)) : 0;
     const avgDwellSeconds = totalResumeViews > 0 ? Math.round(totalDwellMs / totalResumeViews / 1000) : 0;
 
+    // Sort blocked companies reverse-chronologically
+    blockedCompanies.sort((a, b) => (b.bounced_at || 0) - (a.bounced_at || 0));
+
     const responsePayload = {
       summary: {
         total_sent: totalSent,
@@ -251,10 +276,14 @@ export default async function handler(req, res) {
         total_resume_views: totalResumeViews,
         total_clicks: totalClicks,
         total_downloads: totalDownloads,
-        avg_dwell_seconds: avgDwellSeconds
+        avg_dwell_seconds: avgDwellSeconds,
+        total_blocked: totalBlocked,
+        total_bounced: totalBounced,
+        total_inactive: totalBlocked + totalBounced
       },
       slug_rankings: slugRankings,
       company_rollups: companyRollups,
+      blocked_companies: blockedCompanies,
       recent_events: rawEvents.slice(0, 50)
     };
 
