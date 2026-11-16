@@ -683,6 +683,7 @@ export default function OutreachTelemetry({ initialAuth }) {
 
           {/* Unified Company-Wise Outreach & Recruiter Engagement Hub */}
           <div className="p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl w-full">
+            {/* Header: Title + Primary View Segmented Control */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
               <div>
                 <h3 className="text-lg font-bold text-dark dark:text-light flex items-center gap-2">
@@ -690,145 +691,160 @@ export default function OutreachTelemetry({ initialAuth }) {
                   <span>Company-Wise Recruiter Engagement</span>
                 </h3>
                 <p className="text-xs text-dark/60 dark:text-light/60 font-mono mt-0.5">
-                  {displayedCompanies.length} of {companyRollups.length} Organisation{companyRollups.length === 1 ? '' : 's'} · {recentEvents.length} Total Interaction{recentEvents.length === 1 ? '' : 's'}
+                  {feedViewMode === 'company'
+                    ? `${displayedCompanies.length} of ${companyRollups.length} Organisation${companyRollups.length === 1 ? '' : 's'} · ${recentEvents.length} Total Interaction${recentEvents.length === 1 ? '' : 's'}`
+                    : feedViewMode === 'flat'
+                    ? `${recentEvents.length} Total Interaction Event${recentEvents.length === 1 ? '' : 's'}`
+                    : `${blockedCompaniesList.length} Filtered & Quarantined Record${blockedCompaniesList.length === 1 ? '' : 's'}`
+                  }
                 </p>
               </div>
 
-              {/* Segregation Tabs + View mode toggle and expand/collapse controls */}
+              {/* Primary View Segmented Bar */}
               <div className="flex items-center gap-2.5 flex-wrap">
-                {/* Segregation Filter Tabs */}
-                {feedViewMode === 'company' && (
-                  <div className="inline-flex rounded-xl p-1 bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs font-medium">
-                    <button
-                      type="button"
-                      onClick={() => setCompanyFilter('all')}
-                      className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                        companyFilter === 'all'
-                          ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
-                          : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
-                      }`}
-                    >
-                      <span>ALL</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
-                        companyFilter === 'all'
-                          ? 'bg-light/20 text-light dark:bg-dark/20 dark:text-dark'
-                          : 'bg-dark/10 dark:bg-light/10 text-dark/70 dark:text-light/70'
-                      }`}>
-                        {companyRollups.length}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setCompanyFilter('opened')}
-                      className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                        companyFilter === 'opened'
-                          ? 'bg-emerald-600 text-light dark:bg-emerald-500 dark:text-dark font-bold shadow-sm'
-                          : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
-                      }`}
-                      title="Sent and opened emails"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
-                      <span>Sent &amp; Opened</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
-                        companyFilter === 'opened'
-                          ? 'bg-light/20 text-light dark:bg-dark/20 dark:text-dark'
-                          : 'bg-dark/10 dark:bg-light/10 text-dark/70 dark:text-light/70'
-                      }`}>
-                        {openedCompanies.length}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setCompanyFilter('unopened')}
-                      className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                        companyFilter === 'unopened'
-                          ? 'bg-amber-600 text-light dark:bg-amber-500 dark:text-dark font-bold shadow-sm'
-                          : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
-                      }`}
-                      title="Sent but not yet opened"
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-                      <span>Sent but Not Open</span>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
-                        companyFilter === 'unopened'
-                          ? 'bg-light/20 text-light dark:bg-dark/20 dark:text-dark'
-                          : 'bg-dark/10 dark:bg-light/10 text-dark/70 dark:text-light/70'
-                      }`}>
-                        {unopenedCompanies.length}
-                      </span>
-                    </button>
-                  </div>
-                )}
-
-                {/* View mode toggle (Company View vs All Events vs Filtered Inactive) */}
-                <div className="inline-flex rounded-xl p-1 bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs font-medium">
+                <div className="inline-flex rounded-2xl p-1 bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs font-medium shadow-inner">
                   <button
                     type="button"
                     onClick={() => setFeedViewMode('company')}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
                       feedViewMode === 'company'
                         ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
                         : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
                     }`}
                   >
-                    Company View
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>Company View</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setFeedViewMode('flat')}
-                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
                       feedViewMode === 'flat'
                         ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
                         : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
                     }`}
                   >
-                    All Events
+                    <Activity className="w-3.5 h-3.5" />
+                    <span>All Events</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setFeedViewMode('blocked')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
                       feedViewMode === 'blocked'
                         ? 'bg-rose-600 text-light dark:bg-rose-500 dark:text-dark font-bold shadow-sm'
                         : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
                     }`}
                     title="View blocked domains and bounced email addresses"
                   >
+                    <ShieldAlert className="w-3.5 h-3.5" />
                     <span>Filtered</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
                       feedViewMode === 'blocked'
                         ? 'bg-light/20 text-light dark:bg-dark/20 dark:text-dark'
-                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                        : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
                     }`}>
                       {blockedCompaniesList.length}
                     </span>
                   </button>
                 </div>
+              </div>
+            </div>
 
-                {feedViewMode === 'company' && displayedCompanies.length > 0 && (
-                  <div className="inline-flex rounded-xl border border-dark/10 dark:border-light/10 overflow-hidden text-xs">
+            {/* Secondary Controls Bar: Sub-filters (Company View) or Quick Stats (All Events / Filtered) */}
+            {feedViewMode === 'company' && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-dark/5 dark:border-light/5">
+                {/* Status Sub-Filters */}
+                <div className="inline-flex rounded-xl p-1 bg-dark/[0.03] dark:bg-light/[0.04] border border-dark/5 dark:border-light/5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setCompanyFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      companyFilter === 'all'
+                        ? 'bg-dark/10 text-dark dark:bg-light/15 dark:text-light font-bold shadow-sm'
+                        : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                    }`}
+                  >
+                    <span>ALL</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
+                      companyFilter === 'all'
+                        ? 'bg-dark/15 dark:bg-light/20 text-dark dark:text-light'
+                        : 'bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60'
+                    }`}>
+                      {companyRollups.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCompanyFilter('opened')}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      companyFilter === 'opened'
+                        ? 'bg-emerald-500/20 text-emerald-700 dark:bg-emerald-500/30 dark:text-emerald-300 font-bold shadow-sm'
+                        : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                    }`}
+                    title="Sent and opened emails"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                    <span>Sent &amp; Opened</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
+                      companyFilter === 'opened'
+                        ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-200'
+                        : 'bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60'
+                    }`}>
+                      {openedCompanies.length}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCompanyFilter('unopened')}
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                      companyFilter === 'unopened'
+                        ? 'bg-amber-500/20 text-amber-800 dark:bg-amber-500/30 dark:text-amber-300 font-bold shadow-sm'
+                        : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                    }`}
+                    title="Sent but not yet opened"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+                    <span>Sent but Not Open</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
+                      companyFilter === 'unopened'
+                        ? 'bg-amber-500/20 text-amber-800 dark:text-amber-200'
+                        : 'bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60'
+                    }`}>
+                      {unopenedCompanies.length}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Expand / Collapse All Accordion Controls */}
+                {displayedCompanies.length > 0 && (
+                  <div className="inline-flex rounded-xl border border-dark/10 dark:border-light/10 overflow-hidden text-xs self-start sm:self-auto shadow-sm">
                     <button
                       type="button"
                       onClick={() => expandAll()}
-                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors cursor-pointer"
+                      className="px-3 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 font-medium transition-colors cursor-pointer flex items-center gap-1"
                       title="Expand all companies"
                     >
-                      Expand All
+                      <ChevronDown className="w-3.5 h-3.5" />
+                      <span>Expand All</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => collapseAll(displayedCompanies)}
-                      className="px-2.5 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 transition-colors border-l border-dark/10 dark:border-light/10 cursor-pointer"
+                      className="px-3 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 font-medium transition-colors border-l border-dark/10 dark:border-light/10 cursor-pointer flex items-center gap-1"
                       title="Collapse all companies"
                     >
-                      Collapse All
+                      <ChevronRight className="w-3.5 h-3.5" />
+                      <span>Collapse All</span>
                     </button>
                   </div>
                 )}
               </div>
-            </div>
+            )}
 
             {displayedCompanies.length === 0 ? (
               <div className="text-center py-12 text-xs text-dark/50 dark:text-light/50 font-medium">
