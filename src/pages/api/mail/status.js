@@ -57,7 +57,7 @@ export default async function handler(req, res) {
 
     for (const token of tokens) {
       const msg = await hgetall(k(`mail:m:${token}`));
-      if (!msg || Object.keys(msg).length === 0 || msg.status === 'voided') {
+      if (!msg || Object.keys(msg).length === 0 || msg.status === 'voided' || msg.status === 'blocked' || msg.status === 'bounced') {
         continue;
       }
 

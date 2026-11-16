@@ -36,8 +36,8 @@ export default async function handler(req, res) {
   try {
     const msg = await hgetall(k(`mail:m:${t}`));
 
-    // Fail-open if message record does not exist or has been marked voided
-    if (!msg || Object.keys(msg).length === 0 || msg.status === 'voided') {
+    // Fail-open if message record does not exist or has been marked voided, blocked, or bounced
+    if (!msg || Object.keys(msg).length === 0 || msg.status === 'voided' || msg.status === 'blocked' || msg.status === 'bounced') {
       return res.status(200).send(PIXEL_BUFFER);
     }
 
