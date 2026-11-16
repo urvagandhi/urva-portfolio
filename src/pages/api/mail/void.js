@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const { token, custom_msg_id } = req.body || {};
+  const { token, custom_msg_id, status: requestedStatus, reason } = req.body || {};
 
   let targetToken = token;
 
@@ -70,15 +70,25 @@ export default async function handler(req, res) {
     });
   }
 
+  const finalStatus = (requestedStatus === 'blocked' || requestedStatus === 'bounced') ? requestedStatus : 'voided';
+  const now = Date.now();
+
   try {
-    await hset(k(`mail:m:${targetToken}`), {
-      status: 'voided',
-      voided_at: Date.now()
-    });
+    const updateFields = {
+      status: finalStatus,
+      voided_at: now
+    };
+    if (finalStatus === 'blocked' || finalStatus === 'bounced') {
+      updateFields.bounced_at = now;
+      if (reason) updateFields.bounce_reason = String(reason);
+    }
+
+    await hset(k(`mail:m:${targetToken}`), updateFields);
 
     return res.status(200).json({
       success: true,
-      message: 'Message registration voided successfully.'
+      status: finalStatus,
+      message: `Message registration marked as ${finalStatus} successfully.`
     });
   } catch (err) {
     console.error(`[MailTracker:Void] Error voiding record: ${err.message}`);
