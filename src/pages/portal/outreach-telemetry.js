@@ -1,11 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import Layout from '@/components/layout/Layout.js';
 import TransitionEffect from '@/components/layout/TransitionEffect.js';
-import SectionHeading from '@/components/shared/SectionHeading.js';
-import AnimatedText from '@/components/shared/AnimatedText.js';
-import { BorderBeam } from '@/vendor/magicui/border-beam';
 import {
   Lock,
   RefreshCw,
@@ -28,18 +24,19 @@ import {
   ChevronLeft,
   ChevronUp,
   Building2,
-  Layers,
   Users,
   Copy,
   Check,
   ExternalLink,
-  ArrowDown,
-  Cpu
+  Cpu,
+  Search,
+  Filter,
+  Inbox
 } from 'lucide-react';
 
 export { getServerSideProps } from '../../lib/mail/portal-gssp.js';
 
-// Helper to format and decode geographic locations gracefully, masking privacy proxies dynamically
+// Helper to format and decode geographic locations gracefully, masking privacy proxies
 function formatLocation(city, country, clientClass, ip = '', asNumber = '', via = '') {
   const asn = String(asNumber || '').trim();
   const viaHeader = typeof via === 'string' ? via.toLowerCase() : '';
@@ -102,48 +99,48 @@ function formatRelativeTime(ts) {
   return `${diffDays}d ago`;
 }
 
-// Helper to determine styling badge and label for interaction events
+// Clean event badge styling without noisy pastel backgrounds
 function getEventBadge(evt) {
-  let badgeStyle = 'bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 border-dark/10 dark:border-light/10';
+  let badgeStyle = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700';
   let label = evt.event;
 
   if (evt.event === 'prefetch' || evt.is_prefetch) {
     if (evt.prefetch_type === 'security_scanner') {
-      badgeStyle = 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
+      badgeStyle = 'bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400';
       label = 'Security Scanner';
     } else if (evt.prefetch_type === 'scanner_link_detonation') {
-      badgeStyle = 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
-      label = 'Scanner Link Detonation';
+      badgeStyle = 'bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400';
+      label = 'Link Detonation';
     } else if (evt.prefetch_type === 'scanner_doc_detonation') {
-      badgeStyle = 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
-      label = 'Scanner Doc Detonation';
+      badgeStyle = 'bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400';
+      label = 'Doc Detonation';
     } else if (evt.prefetch_type === 'sender_browsing_burst') {
-      badgeStyle = 'bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400';
-      label = 'Sender Sent Review';
+      badgeStyle = 'bg-purple-500/10 border-purple-500/25 text-purple-700 dark:text-purple-400';
+      label = 'Sender Review';
     } else if (evt.client_class === 'gmail_proxy' || evt.prefetch_type === 'gmail_prefetch') {
-      badgeStyle = 'bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400';
+      badgeStyle = 'bg-blue-500/10 border-blue-500/25 text-blue-700 dark:text-blue-400';
       label = 'Google Prefetch';
     } else if (evt.client_class === 'apple_mpp' || evt.prefetch_type === 'apple_prefetch') {
-      badgeStyle = 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
-      label = 'Apple MPP Prefetch';
+      badgeStyle = 'bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400';
+      label = 'Apple MPP';
     } else {
-      badgeStyle = 'bg-zinc-500/10 border border-zinc-500/30 text-zinc-600 dark:text-zinc-400';
+      badgeStyle = 'bg-zinc-500/10 border-zinc-500/25 text-zinc-700 dark:text-zinc-400';
       label = 'Machine Prefetch';
     }
   } else if (evt.event === 'open') {
     badgeStyle =
       evt.client_class === 'apple_mpp'
-        ? 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400'
-        : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400';
+        ? 'bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400'
+        : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400';
     label = `Recruiter Open (${evt.client_class === 'gmail_proxy' ? 'Gmail' : (evt.client_class || 'direct')})`;
   } else if (evt.event === 'click') {
-    badgeStyle = 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400';
+    badgeStyle = 'bg-cyan-500/10 border-cyan-500/25 text-cyan-700 dark:text-cyan-400';
     label = 'Showcase Click';
   } else if (evt.event === 'resume_view') {
-    badgeStyle = 'bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400';
+    badgeStyle = 'bg-purple-500/10 border-purple-500/25 text-purple-700 dark:text-purple-400';
     label = 'Resume View';
   } else if (evt.event === 'download' || evt.event === 'resume_download') {
-    badgeStyle = 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400';
+    badgeStyle = 'bg-indigo-500/10 border-indigo-500/25 text-indigo-700 dark:text-indigo-400';
     label = 'Resume Download';
   } else if (evt.event === 'beacon_dwell') {
     label = 'Active Dwell';
@@ -152,7 +149,7 @@ function getEventBadge(evt) {
   return { badgeStyle, label };
 }
 
-// Helper to compute mathematically authentic sparklines from real event timestamps
+// Minimalist hairline sparklines
 function computeRealSparkline(events, filterFn) {
   const filtered = (events || [])
     .filter(filterFn)
@@ -191,12 +188,12 @@ function computeRealSparkline(events, filterFn) {
   return { line, area, hasData: true };
 }
 
-// Helper to parse complex SMTP Diagnostic Status Notifications (DSNs) into structured tokens
+// Helper to parse complex SMTP Diagnostic Status Notifications (DSNs) into clean structured tokens
 function parseDiagnostic(raw) {
   if (!raw || typeof raw !== 'string') {
     return {
       code: null,
-      cleanMsg: 'Mailbox delivery rejected.',
+      cleanMsg: 'Mailbox delivery rejected',
       helpUrl: null,
       serverTrace: null,
       raw: ''
@@ -257,14 +254,10 @@ function parseDiagnostic(raw) {
     }
   }
 
-  if (cleanMsg && !/[.!?]$/.test(cleanMsg)) {
-    cleanMsg += '.';
-  }
-
   return { code, cleanMsg, helpUrl, serverTrace, raw };
 }
 
-// Reusable Pagination Component with Page Size Selector & Numbered Buttons
+// Clean pagination control following unslop tokens
 function PaginationBar({
   totalItems,
   currentPage,
@@ -299,49 +292,45 @@ function PaginationBar({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 mt-4 border-t border-dark/10 dark:border-light/10 text-xs">
-      {/* Left: Range info & Page Size Selector */}
+    <div className="flex items-center justify-between sm:flex-col sm:items-start gap-3 px-5 py-3.5 border-t border-zinc-200/80 dark:border-zinc-800/80 text-xs bg-zinc-50/50 dark:bg-zinc-900/20">
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-dark/60 dark:text-light/60 font-mono">
-          Showing <span className="font-bold text-dark dark:text-light">{startIdx}</span> to{' '}
-          <span className="font-bold text-dark dark:text-light">{endIdx}</span> of{' '}
-          <span className="font-bold text-dark dark:text-light">{totalItems}</span> {itemLabel}
+        <span className="text-zinc-500 font-mono">
+          Showing <span className="font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{startIdx}</span>–<span className="font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{endIdx}</span> of <span className="font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{totalItems}</span> {itemLabel}
         </span>
 
-        <div className="flex items-center gap-1.5 pl-2 sm:border-l sm:border-dark/10 sm:dark:border-light/10">
-          <span className="text-dark/50 dark:text-light/50 text-[11px]">Show:</span>
+        <div className="flex items-center gap-1.5 pl-2 sm:border-l sm:border-zinc-200 sm:dark:border-zinc-800">
+          <span className="text-zinc-400 text-[11px]">Per page:</span>
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="px-2 py-1 rounded-lg bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 font-mono text-dark dark:text-light text-xs focus:outline-none focus:border-primary dark:focus:border-primaryDark cursor-pointer"
+            className="px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 font-mono text-zinc-800 dark:text-zinc-200 text-xs focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 cursor-pointer shadow-2xs"
           >
             {[10, 15, 25, 50, 100].map((sz) => (
-              <option key={sz} value={sz} className="bg-light dark:bg-dark text-dark dark:text-light">
-                {sz} per page
+              <option key={sz} value={sz} className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100">
+                {sz}
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Right: Page Navigation Buttons */}
       <div className="flex items-center gap-1 self-center sm:self-auto">
         <button
           type="button"
           onClick={() => onPageChange(Math.max(1, safePage - 1))}
           disabled={safePage <= 1}
-          className="px-2.5 py-1.5 rounded-lg border border-dark/10 dark:border-light/10 font-medium text-dark/70 dark:text-light/70 hover:bg-dark/5 dark:hover:bg-light/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer"
-          title="Previous Page"
+          className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer text-xs shadow-2xs"
+          title="Previous page"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
-          <span className="hidden xs:inline">Prev</span>
+          <span>Prev</span>
         </button>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {getPageNumbers().map((p, pIdx) => {
             if (typeof p === 'string') {
               return (
-                <span key={`ell-${pIdx}`} className="px-1 text-dark/40 dark:text-light/40">
+                <span key={`ell-${pIdx}`} className="px-1.5 text-zinc-400">
                   …
                 </span>
               );
@@ -352,10 +341,10 @@ function PaginationBar({
                 key={p}
                 type="button"
                 onClick={() => onPageChange(p)}
-                className={`w-7 h-7 rounded-lg font-mono font-medium text-xs flex items-center justify-center transition-all cursor-pointer ${
+                className={`w-7 h-7 rounded font-mono text-xs flex items-center justify-center transition-colors cursor-pointer tabular-nums ${
                   isActive
-                    ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-xs'
-                    : 'hover:bg-dark/5 dark:hover:bg-light/5 text-dark/70 dark:text-light/70'
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-semibold shadow-2xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                 }`}
               >
                 {p}
@@ -368,10 +357,10 @@ function PaginationBar({
           type="button"
           onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
           disabled={safePage >= totalPages}
-          className="px-2.5 py-1.5 rounded-lg border border-dark/10 dark:border-light/10 font-medium text-dark/70 dark:text-light/70 hover:bg-dark/5 dark:hover:bg-light/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer"
-          title="Next Page"
+          className="px-2.5 py-1 rounded border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1 cursor-pointer text-xs shadow-2xs"
+          title="Next page"
         >
-          <span className="hidden xs:inline">Next</span>
+          <span>Next</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -392,18 +381,19 @@ export default function OutreachTelemetry({ initialAuth }) {
   const [statsError, setStatsError] = useState('');
   const [currentTimeIst, setCurrentTimeIst] = useState('');
 
-  // Company accordion toggle state (default: all expanded) and view mode switch
+  // Accordion toggle state and view mode switch
   const [collapsedCompanies, setCollapsedCompanies] = useState({});
   const [feedViewMode, setFeedViewMode] = useState('company'); // 'company' | 'flat' | 'blocked'
-  const [companyFilter, setCompanyFilter] = useState('all'); // 'all' | 'opened' | 'unopened'
+  const [companyFilter, setCompanyFilter] = useState('all'); // 'all' | 'opened' | 'prefetched' | 'unopened'
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Pagination states across views and sub-filters
+  // Pagination states
   const [pageSize, setPageSize] = useState(15);
   const [pageCompany, setPageCompany] = useState(1);
   const [pageFlat, setPageFlat] = useState(1);
   const [pageBlocked, setPageBlocked] = useState(1);
 
-  // Expandable raw diagnostic logs toggle state
+  // Diagnostics toggle and copy state
   const [expandedDiagnostics, setExpandedDiagnostics] = useState({});
   const [copiedEmail, setCopiedEmail] = useState('');
 
@@ -473,7 +463,7 @@ export default function OutreachTelemetry({ initialAuth }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch telemetry statistics (silent mode skips loading spinner; force bypasses server memory cache)
+  // Fetch telemetry statistics
   const fetchStats = useCallback(async (isSilent = false, isForce = false) => {
     const silent = typeof isSilent === 'boolean' ? isSilent : false;
     const force = typeof isForce === 'boolean' ? isForce : false;
@@ -499,7 +489,7 @@ export default function OutreachTelemetry({ initialAuth }) {
     }
   }, []);
 
-  // Explicit user-triggered refresh with guaranteed visual spin feedback and cache bypass
+  // Manual refresh with visual feedback and cache bypass
   const handleManualRefresh = async () => {
     if (isManualRefreshing || loadingStats) return;
     setIsManualRefreshing(true);
@@ -508,7 +498,7 @@ export default function OutreachTelemetry({ initialAuth }) {
       await fetchStats(false, true);
     } finally {
       const elapsed = Date.now() - start;
-      const minSpinMs = 600;
+      const minSpinMs = 500;
       if (elapsed < minSpinMs) {
         await new Promise((resolve) => setTimeout(resolve, minSpinMs - elapsed));
       }
@@ -516,7 +506,6 @@ export default function OutreachTelemetry({ initialAuth }) {
     }
   };
 
-  // Initial load only; automatic interval polling disabled to preserve Upstash Redis quota
   useEffect(() => {
     if (!isAuthenticated) return;
     fetchStats(false);
@@ -542,10 +531,10 @@ export default function OutreachTelemetry({ initialAuth }) {
         setIsAuthenticated(true);
         setPasskey('');
       } else {
-        setAuthError(data.error || 'Invalid administrative passkey.');
+        setAuthError(data.error || 'Invalid administrative passkey');
       }
     } catch (err) {
-      setAuthError('Connection failed. Please retry.');
+      setAuthError('Connection failed. Please retry');
     } finally {
       setAuthLoading(false);
     }
@@ -559,108 +548,87 @@ export default function OutreachTelemetry({ initialAuth }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'logout' })
       });
-    } catch (_) { }
+    } catch (_) {}
     setIsAuthenticated(false);
     setStats(null);
   };
 
-  // View 1: Unauthenticated Telemetry Gateway (Full Light & Dark Mode)
+  // View 1: Unauthenticated Passkey Console Gateway
   if (!isAuthenticated) {
     return (
       <>
         <Head>
-          <title>Outreach Telemetry Gateway | Urva Gandhi Portfolio</title>
-          <meta
-            name="description"
-            content="Administrative telemetry gateway for Urva Gandhi's outreach metrics."
-          />
+          <title>Outreach Telemetry Gateway | Urva Gandhi</title>
           <meta name="robots" content="noindex, nofollow, noarchive" />
         </Head>
         <TransitionEffect />
-        <main className="flex min-h-screen w-full flex-col items-center justify-center text-dark dark:text-light pt-24 pb-16">
-          <Layout className="flex flex-col items-center justify-center pt-8">
-            <div className="w-full flex justify-center mb-8">
-              <SectionHeading
-                title="Telemetry Gateway"
-                subTitle="ADMINISTRATIVE ACCESS"
-                theme="blue"
-              />
+        <main className="flex min-h-screen w-full flex-col items-center justify-center px-4 pt-32 pb-16 bg-[#f8f9fa] dark:bg-[#0a0a0c]">
+          <div className="w-full max-w-sm rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-[#121316] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                  Telemetry Console
+                </h1>
+                <p className="text-xs text-zinc-500">
+                  Administrative access required
+                </p>
+              </div>
             </div>
 
-            {/* <AnimatedText
-              text="Outreach Telemetry Portal"
-              className="mb-8 lg:!text-5xl sm:!text-4xl xs:!text-2xl text-center max-w-4xl mx-auto"
-            /> */}
-
-            <div className="relative w-full max-w-md p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-2xl overflow-hidden transition-all">
-              <BorderBeam size={220} duration={12} delay={0} colorFrom="#58E6D9" colorTo="#8B5CF6" />
-
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3.5 rounded-2xl bg-primary/10 dark:bg-primaryDark/20 text-primary dark:text-primaryDark border border-primary/20">
-                  <Shield className="w-6 h-6" />
+            <form onSubmit={handleLogin} className="space-y-4">
+              {authError && (
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{authError}</span>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-dark dark:text-light">
-                    Protected Console
-                  </h3>
-                  <p className="text-xs text-dark/60 dark:text-light/60">
-                    Enter your administrative passkey to unlock telemetry.
-                  </p>
+              )}
+
+              <div>
+                <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                  Security passkey
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPass ? 'text' : 'password'}
+                    value={passkey}
+                    onChange={(e) => setPasskey(e.target.value)}
+                    placeholder="Enter passkey"
+                    className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors pr-9 font-mono"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass(!showPass)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
-              <form onSubmit={handleLogin} className="space-y-5">
-                {authError && (
-                  <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>{authError}</span>
-                  </div>
+              <button
+                type="submit"
+                disabled={authLoading || !passkey.trim()}
+                className="w-full py-2.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-40 font-medium text-xs rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed shadow-2xs"
+              >
+                {authLoading ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Unlock console</span>
+                  </>
                 )}
-
-                <div>
-                  <label className="block text-xs font-semibold text-dark/70 dark:text-light/70 mb-2">
-                    Security Passkey
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      value={passkey}
-                      onChange={(e) => setPasskey(e.target.value)}
-                      placeholder="Enter passkey..."
-                      className="w-full px-4 py-3 bg-dark/5 dark:bg-light/5 border border-dark/20 dark:border-light/20 rounded-xl text-dark dark:text-light placeholder-dark/30 dark:placeholder-light/30 text-sm focus:border-primary dark:focus:border-primaryDark focus:outline-none transition-colors pr-11"
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPass(!showPass)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-dark/40 dark:text-light/40 hover:text-dark dark:hover:text-light transition-colors"
-                      aria-label="Toggle password visibility"
-                    >
-                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={authLoading || !passkey.trim()}
-                  className="w-full py-3 bg-dark text-light dark:bg-light dark:text-dark hover:opacity-90 disabled:opacity-50 font-bold text-sm rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
-                >
-                  {authLoading ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      <span>Verifying Passkey...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock className="w-4 h-4" />
-                      <span>Unlock Telemetry Dashboard</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-          </Layout>
+              </button>
+            </form>
+          </div>
         </main>
       </>
     );
@@ -683,13 +651,24 @@ export default function OutreachTelemetry({ initialAuth }) {
     (c) => c.confidence_tier === 'unopened' || (!(c.opened > 0 || c.resume_viewed > 0 || c.clicks > 0) && !(c.prefetches > 0))
   );
 
-  const displayedCompanies = companyFilter === 'opened'
+  const displayedCompaniesBase = companyFilter === 'opened'
     ? openedCompanies
     : companyFilter === 'prefetched'
     ? prefetchedCompanies
     : companyFilter === 'unopened'
     ? unopenedCompanies
     : companyRollups;
+
+  // Real-time search filter
+  const displayedCompanies = useMemo(() => {
+    if (!searchTerm.trim()) return displayedCompaniesBase;
+    const q = searchTerm.toLowerCase().trim();
+    return displayedCompaniesBase.filter((c) => {
+      const matchComp = (c.company || '').toLowerCase().includes(q);
+      const matchRec = Array.isArray(c.recipients) && c.recipients.some(r => r.toLowerCase().includes(q));
+      return matchComp || matchRec;
+    });
+  }, [displayedCompaniesBase, searchTerm]);
 
   // Sliced paginated datasets
   const paginatedCompanies = displayedCompanies.slice(
@@ -705,298 +684,264 @@ export default function OutreachTelemetry({ initialAuth }) {
     pageBlocked * pageSize
   );
 
+  const sparkOutreach = computeRealSparkline(recentEvents, () => true);
+  const sparkOpens = computeRealSparkline(recentEvents, (e) => e.event === 'open');
+  const sparkResumes = computeRealSparkline(
+    recentEvents,
+    (e) => e.event === 'resume_view' || e.event === 'beacon_dwell'
+  );
+  const sparkClicks = computeRealSparkline(recentEvents, (e) => e.event === 'click');
+
   return (
     <>
       <Head>
-        <title>Outreach Telemetry | Urva Gandhi Portfolio</title>
+        <title>Outreach Telemetry | Urva Gandhi</title>
         <meta name="robots" content="noindex, nofollow, noarchive" />
       </Head>
       <TransitionEffect />
-      <main className="flex w-full flex-col items-center justify-center text-dark dark:text-light pt-24 pb-16">
-        <Layout className="pt-16">
-          {/* Header Bar */}
-          <div className="w-full flex justify-center mb-8">
-            <SectionHeading
-              title="Outreach Telemetry"
-              subTitle="Analytics"
-              theme="blue"
-            />
-          </div>
-
-          {/* <AnimatedText
-            text="Recruiter Telemetry Portal"
-            className="mb-6 lg:!text-5xl sm:!text-4xl xs:!text-2xl text-center max-w-4xl mx-auto"
-          /> */}
-
-          {/* Controls Bar */}
-          <div className="w-full flex flex-wrap items-center justify-between gap-4 mb-8 p-4 rounded-2xl border border-dark/10 dark:border-light/10 bg-light/80 dark:bg-dark/80 backdrop-blur-md shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+      <main className="w-full min-h-screen text-zinc-900 dark:text-zinc-100 pb-20 pt-32 sm:pt-28 bg-[#f8f9fa] dark:bg-[#0a0a0c]">
+        <div className="max-w-[1400px] w-full mx-auto px-6 sm:px-4">
+          
+          {/* Console Header Bar */}
+          <div className="flex items-end justify-between md:flex-col md:items-start gap-4 pb-6 mb-6 border-b border-zinc-200/80 dark:border-zinc-800/80">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 dark:text-zinc-500 mb-1.5">
+                <span>Portal</span>
+                <span>/</span>
+                <span className="text-zinc-700 dark:text-zinc-300 font-medium">Outreach Telemetry</span>
               </div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-dark/70 dark:text-light/70">
-                Live Interaction Stream
-              </span>
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+                Outreach Telemetry
+              </h1>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                Deliverability, recipient interaction and scanner telemetry across active applications
+              </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-dark/70 dark:text-light/70 font-mono">
-                <Clock className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
-                <span>{currentTimeIst || 'Syncing clock...'}</span>
+            {/* Console Actions & Status */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Calm Status Heartbeat */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-xs font-mono font-medium shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>Live</span>
+                <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                <span className="tabular-nums">{summary.total_companies ?? companyRollups.length} orgs</span>
               </div>
 
+              {/* IST Clock */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700/80 text-xs font-mono tabular-nums text-zinc-600 dark:text-zinc-300 shadow-2xs">
+                <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                <span>{currentTimeIst || 'Syncing...'}</span>
+              </div>
+
+              {/* Refresh Action */}
               <button
+                type="button"
                 onClick={handleManualRefresh}
                 disabled={isManualRefreshing || loadingStats}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark dark:text-light border border-dark/10 dark:border-light/10 transition-colors font-medium cursor-pointer disabled:opacity-70"
-                title="Refresh Metrics"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700/80 text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
+                title="Refresh metrics"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 transition-transform ${
-                    isManualRefreshing || loadingStats ? 'animate-spin text-primary dark:text-primaryDark' : ''
+                    isManualRefreshing || loadingStats ? 'animate-spin' : ''
                   }`}
                 />
-                <span>{isManualRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+                <span>{isManualRefreshing ? 'Refreshing' : 'Refresh'}</span>
               </button>
 
+              {/* Sign Out Action */}
               <button
+                type="button"
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors font-medium cursor-pointer"
-                title="Sign Out"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-medium transition-colors cursor-pointer"
+                title="Sign out"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>Sign Out</span>
+                <span>Sign out</span>
               </button>
             </div>
           </div>
 
           {statsError && (
-            <div className="w-full mb-8 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
+            <div className="w-full mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{statsError}</span>
             </div>
           )}
 
-          {/* 4 Top KPI Cards — Seamless Horizontal Row (No overflow scrollbars, no dark shadow) */}
-          {(() => {
-            const sparkOutreach = computeRealSparkline(recentEvents, () => true);
-            const sparkOpens = computeRealSparkline(recentEvents, (e) => e.event === 'open');
-            const sparkResumes = computeRealSparkline(
-              recentEvents,
-              (e) => e.event === 'resume_view' || e.event === 'beacon_dwell'
-            );
-            const sparkClicks = computeRealSparkline(recentEvents, (e) => e.event === 'click');
-
-            return (
-              <div className="grid grid-cols-4 gap-4 w-full mb-8">
-                {/* Card 1: Total Companies Outreach */}
-                <div className="relative p-5 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-md shadow-black/5 dark:shadow-black/20 overflow-hidden flex flex-col justify-between">
-                  <BorderBeam size={140} duration={12} delay={0} colorFrom="#58E6D9" colorTo="#8B5CF6" />
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-dark/60 dark:text-light/60">
-                        Total Companies
-                      </span>
-                      <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                        <Mail className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-3xl font-extrabold text-dark dark:text-light">
-                          {companyRollups.length > 0 ? companyRollups.length : (summary.total_companies ?? summary.total_sent ?? 0)}
-                        </span>
-                        <span className="text-xs font-semibold text-dark/50 dark:text-light/50">
-                          Companies
-                        </span>
-                      </div>
-                      {/* Real Sparkline 1 */}
-                      <svg viewBox="0 0 80 24" className="w-16 h-6" fill="none">
-                        <defs>
-                          <linearGradient id="grad-outreach-real" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.35" />
-                            <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path d={sparkOutreach.area} fill="url(#grad-outreach-real)" />
-                        <path d={sparkOutreach.line} stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-[11px] font-medium text-dark/60 dark:text-light/60">
-                    <span className="flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0" />
-                      <span>{summary.total_sent ?? 0} Active Transmissions</span>
+          {/* 4 Top KPI Metric Cards in Desktop-First 4-Column Grid */}
+          <div className="grid grid-cols-4 lg:grid-cols-2 sm:grid-cols-1 gap-4 w-full mb-6">
+            
+            {/* Card 1: Total Companies Outreach */}
+            <div className="p-5 rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-[#121316] flex flex-col justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    Total companies
+                  </span>
+                  <Mail className="w-4 h-4 text-zinc-400" />
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-semibold tracking-tight font-mono tabular-nums text-zinc-900 dark:text-zinc-100">
+                      {companyRollups.length > 0 ? companyRollups.length : (summary.total_companies ?? summary.total_sent ?? 0)}
                     </span>
-                    {(summary.total_inactive ?? 0) > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setFeedViewMode('blocked')}
-                        className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 font-bold transition-all cursor-pointer"
-                        title="Click to view blocked and bounced transmissions"
-                      >
-                        {summary.total_inactive} Filtered
-                      </button>
-                    )}
+                    <span className="text-xs text-zinc-400 font-mono">
+                      orgs
+                    </span>
                   </div>
-                </div>
-
-                {/* Card 2: Recruiter Opens */}
-                <div className="relative p-5 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-md shadow-black/5 dark:shadow-black/20 overflow-hidden flex flex-col justify-between">
-                  <BorderBeam size={140} duration={12} delay={3} colorFrom="#8B5CF6" colorTo="#58E6D9" />
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-dark/60 dark:text-light/60">
-                        Human Engaged
-                      </span>
-                      <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                        <Eye className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-extrabold text-dark dark:text-light">
-                          {openedCompanies.length}
-                        </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                          {companyRollups.length > 0 ? Math.round((openedCompanies.length / companyRollups.length) * 100) : (summary.open_rate_percent ?? 0)}%
-                        </span>
-                      </div>
-                      {/* Real Sparkline 2 */}
-                      <svg viewBox="0 0 80 24" className="w-16 h-6" fill="none">
-                        <defs>
-                          <linearGradient id="grad-opens-real" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#10B981" stopOpacity="0.35" />
-                            <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path d={sparkOpens.area} fill="url(#grad-opens-real)" />
-                        <path d={sparkOpens.line} stroke="#10B981" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between text-[11px] text-dark/60 dark:text-light/60 font-medium">
-                    <span>{summary.verified_opens ?? 0} Transmissions Read</span>
-                    {Number(summary.machine_prefetches || 0) > 0 && (
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400" title={`${summary.machine_prefetches} automated Google Image Proxy or Security Gateway prefetch scan(s)`}>
-                        +{summary.machine_prefetches} prefetched
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Card 3: Resume Views */}
-                <div className="relative p-5 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-md shadow-black/5 dark:shadow-black/20 overflow-hidden flex flex-col justify-between">
-                  <BorderBeam size={140} duration={12} delay={6} colorFrom="#EC4899" colorTo="#8B5CF6" />
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-dark/60 dark:text-light/60">
-                        Resume Views
-                      </span>
-                      <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                        <FileText className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-extrabold text-dark dark:text-light">
-                          {summary.total_resume_views ?? 0}
-                        </span>
-                        <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400">
-                          {summary.avg_dwell_seconds ?? 0}s avg
-                        </span>
-                      </div>
-                      {/* Real Sparkline 3 */}
-                      <svg viewBox="0 0 80 24" className="w-16 h-6" fill="none">
-                        <defs>
-                          <linearGradient id="grad-resume-real" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#A855F7" stopOpacity="0.35" />
-                            <stop offset="100%" stopColor="#A855F7" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path d={sparkResumes.area} fill="url(#grad-resume-real)" />
-                        <path d={sparkResumes.line} stroke="#A855F7" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-[11px] text-dark/60 dark:text-light/60 flex items-center gap-1 font-medium">
-                    <Download className="w-3 h-3 text-dark/50 dark:text-light/50" />
-                    <span>{summary.total_downloads ?? 0} Direct Downloads</span>
-                  </p>
-                </div>
-
-                {/* Card 4: Project Clicks */}
-                <div className="relative p-5 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-md shadow-black/5 dark:shadow-black/20 overflow-hidden flex flex-col justify-between">
-                  <BorderBeam size={140} duration={12} delay={9} colorFrom="#F59E0B" colorTo="#EC4899" />
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-dark/60 dark:text-light/60">
-                        Project Clicks
-                      </span>
-                      <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                        <MousePointer className="w-4 h-4" />
-                      </div>
-                    </div>
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-3xl font-extrabold text-dark dark:text-light">
-                        {summary.total_clicks ?? 0}
-                      </span>
-                      {/* Real Sparkline 4 */}
-                      <svg viewBox="0 0 80 24" className="w-16 h-6" fill="none">
-                        <defs>
-                          <linearGradient id="grad-clicks-real" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.35" />
-                            <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.0" />
-                          </linearGradient>
-                        </defs>
-                        <path d={sparkClicks.area} fill="url(#grad-clicks-real)" />
-                        <path d={sparkClicks.line} stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-[11px] text-dark/60 dark:text-light/60 font-medium">
-                    Showcase &amp; Demo Hops
-                  </p>
+                  {/* Real 1.5px Hairline Sparkline */}
+                  <svg viewBox="0 0 80 24" className="w-16 h-6" fill="none">
+                    <path d={sparkOutreach.line} stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
                 </div>
               </div>
-            );
-          })()}
+              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs font-mono text-zinc-500">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span className="tabular-nums font-medium text-zinc-700 dark:text-zinc-300">{summary.total_sent ?? 0}</span> active
+                </span>
+                {(summary.total_inactive ?? 0) > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setFeedViewMode('blocked')}
+                    className="text-[11px] font-mono text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 underline decoration-dotted cursor-pointer tabular-nums"
+                    title="View filtered and quarantined addresses"
+                  >
+                    {summary.total_inactive} filtered
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Card 2: Human Engaged */}
+            <div className="p-5 rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-[#121316] flex flex-col justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    Human engaged
+                  </span>
+                  <Eye className="w-4 h-4 text-emerald-500" />
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-semibold tracking-tight font-mono tabular-nums text-zinc-900 dark:text-zinc-100">
+                      {openedCompanies.length}
+                    </span>
+                    <span className="text-xs font-mono font-medium px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 tabular-nums">
+                      {companyRollups.length > 0 ? Math.round((openedCompanies.length / companyRollups.length) * 100) : (summary.open_rate_percent ?? 0)}%
+                    </span>
+                  </div>
+                  <svg viewBox="0 0 80 24" className="w-16 h-6" fill="none">
+                    <path d={sparkOpens.line} stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs font-mono text-zinc-500">
+                <span className="tabular-nums"><strong className="text-zinc-800 dark:text-zinc-200 font-medium">{summary.verified_opens ?? 0}</strong> read</span>
+                {Number(summary.machine_prefetches || 0) > 0 && (
+                  <span className="text-[11px] tabular-nums text-zinc-400" title={`${summary.machine_prefetches} automated scanner prefetch scans`}>
+                    +{summary.machine_prefetches} prefetched
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Card 3: Resume Views */}
+            <div className="p-5 rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-[#121316] flex flex-col justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    Resume views
+                  </span>
+                  <FileText className="w-4 h-4 text-purple-500" />
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-semibold tracking-tight font-mono tabular-nums text-zinc-900 dark:text-zinc-100">
+                      {summary.total_resume_views ?? 0}
+                    </span>
+                    <span className="text-xs font-mono text-zinc-500 tabular-nums">
+                      {summary.avg_dwell_seconds ?? 0}s avg
+                    </span>
+                  </div>
+                  <svg viewBox="0 0 80 24" className="w-16 h-6" fill="none">
+                    <path d={sparkResumes.line} stroke="#8b5cf6" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs font-mono text-zinc-500">
+                <span className="flex items-center gap-1.5">
+                  <Download className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="tabular-nums font-medium text-zinc-700 dark:text-zinc-300">{summary.total_downloads ?? 0}</span> direct downloads
+                </span>
+              </div>
+            </div>
+
+            {/* Card 4: Project Clicks */}
+            <div className="p-5 rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-[#121316] flex flex-col justify-between shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    Project clicks
+                  </span>
+                  <MousePointer className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-3xl font-semibold tracking-tight font-mono tabular-nums text-zinc-900 dark:text-zinc-100">
+                    {summary.total_clicks ?? 0}
+                  </span>
+                  <svg viewBox="0 0 80 24" className="w-16 h-6" fill="none">
+                    <path d={sparkClicks.line} stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs font-mono text-zinc-500">
+                <span>Showcase &amp; demo hops</span>
+                <span className="tabular-nums text-zinc-400">{slugRankings.length} slugs</span>
+              </div>
+            </div>
+
+          </div>
 
           {/* Showcase Link Leaderboard */}
-          <div className="p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl w-full mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-dark dark:text-light flex items-center gap-2">
-                <Activity className="w-5 h-5 text-primary dark:text-primaryDark" />
-                <span>Showcase Link Leaderboard</span>
-              </h3>
-              <span className="text-xs text-dark/60 dark:text-light/60 font-mono">
-                {slugRankings.length} Slugs Tracked
+          <div className="p-5 rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-[#121316] mb-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-100 dark:border-zinc-800/60">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-zinc-500" />
+                <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  Showcase Link Leaderboard
+                </h2>
+              </div>
+              <span className="text-xs text-zinc-400 font-mono">
+                {slugRankings.length} slugs tracked
               </span>
             </div>
 
             {slugRankings.length === 0 ? (
-              <div className="text-center py-6 text-xs text-dark/50 dark:text-light/50 font-medium">
-                No project clicks recorded yet.
+              <div className="text-center py-4 text-xs text-zinc-400">
+                No project clicks recorded yet
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3.5">
-                {slugRankings.map((item) => {
+              <div className="grid grid-cols-2 sm:grid-cols-1 gap-x-8 gap-y-3.5">
+                {slugRankings.map((item, idx) => {
                   const maxClicks = Math.max(...slugRankings.map((s) => s.clicks), 1);
                   const pct = Math.round((item.clicks / maxClicks) * 100);
                   return (
-                    <div key={item.slug} className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-mono font-semibold text-dark/90 dark:text-light/90">
-                          {item.slug}
+                    <div key={item.slug} className="space-y-1">
+                      <div className="flex items-center justify-between text-xs font-mono">
+                        <span className="text-zinc-800 dark:text-zinc-200 font-medium flex items-center gap-1.5">
+                          <span className="text-[10px] text-zinc-400">#{idx + 1}</span>
+                          <span>{item.slug}</span>
                         </span>
-                        <span className="font-bold text-primary dark:text-primaryDark">
+                        <span className="text-zinc-500 tabular-nums">
                           {item.clicks} click{item.clicks === 1 ? '' : 's'}
                         </span>
                       </div>
-                      <div className="w-full bg-dark/5 dark:bg-light/10 rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                         <div
-                          className="bg-primary dark:bg-primaryDark h-2 rounded-full transition-all duration-500"
+                          className="bg-zinc-700 dark:bg-zinc-300 h-1.5 rounded-full transition-[width] duration-300"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -1007,217 +952,221 @@ export default function OutreachTelemetry({ initialAuth }) {
             )}
           </div>
 
-          {/* Unified Company-Wise Outreach & Recruiter Engagement Hub */}
-          <div className="p-8 sm:p-6 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-xl w-full">
-            {/* Header: Title + Primary View Segmented Control */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+          {/* Recruiter Engagement Hub Table Container */}
+          <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800/90 bg-white dark:bg-[#121316] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            
+            {/* Header: Title + Primary View Switcher */}
+            <div className="p-4 sm:p-5 border-b border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between lg:flex-col lg:items-start gap-4">
               <div>
-                <h3 className="text-lg font-bold text-dark dark:text-light flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-primary dark:text-primaryDark" />
-                  <span>Company-Wise Recruiter Engagement</span>
-                </h3>
-                <p className="text-xs text-dark/60 dark:text-light/60 font-mono mt-0.5">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-zinc-500" />
+                  <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    Recruiter Engagement &amp; Deliverability
+                  </h2>
+                </div>
+                <p className="text-xs text-zinc-500 font-mono mt-0.5">
                   {feedViewMode === 'company'
-                    ? `${displayedCompanies.length} of ${companyRollups.length} Organisation${companyRollups.length === 1 ? '' : 's'} · ${recentEvents.length} Total Interaction${recentEvents.length === 1 ? '' : 's'}`
+                    ? `${displayedCompanies.length} of ${companyRollups.length} organisations · ${recentEvents.length} interaction events`
                     : feedViewMode === 'flat'
-                    ? `${recentEvents.length} Total Interaction Event${recentEvents.length === 1 ? '' : 's'}`
-                    : `${blockedCompaniesList.length} Filtered & Quarantined Record${blockedCompaniesList.length === 1 ? '' : 's'} (${summary.total_blocked || 0} Blocked · ${summary.total_bounced || 0} Bounced${summary.total_voided ? ` · ${summary.total_voided} Retried` : ''})`
+                    ? `${recentEvents.length} chronological interaction events`
+                    : `${blockedCompaniesList.length} quarantined addresses (${summary.total_blocked || 0} blocked · ${summary.total_bounced || 0} bounced)`
                   }
                 </p>
               </div>
 
-              {/* Primary View Segmented Bar */}
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <div className="inline-flex rounded-2xl p-1 bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 text-xs font-medium shadow-inner">
-                  <button
-                    type="button"
-                    onClick={() => setFeedViewMode('company')}
-                    className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
-                      feedViewMode === 'company'
-                        ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
-                        : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
-                    }`}
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span>Company View</span>
-                  </button>
+              {/* Segmented View Switcher */}
+              <div className="inline-flex rounded-lg p-0.5 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-xs font-medium">
+                <button
+                  type="button"
+                  onClick={() => setFeedViewMode('company')}
+                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer ${
+                    feedViewMode === 'company'
+                      ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-semibold shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  <span>Company View</span>
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setFeedViewMode('flat')}
-                    className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
-                      feedViewMode === 'flat'
-                        ? 'bg-primary text-light dark:bg-primaryDark dark:text-dark font-bold shadow-sm'
-                        : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
-                    }`}
-                  >
-                    <Activity className="w-3.5 h-3.5" />
-                    <span>All Events</span>
-                  </button>
+                <button
+                  type="button"
+                  onClick={() => setFeedViewMode('flat')}
+                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer ${
+                    feedViewMode === 'flat'
+                      ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-semibold shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  <Activity className="w-3.5 h-3.5" />
+                  <span>All Events</span>
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setFeedViewMode('blocked')}
-                    className={`px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
-                      feedViewMode === 'blocked'
-                        ? 'bg-rose-600 text-light dark:bg-rose-500 dark:text-dark font-bold shadow-sm'
-                        : 'text-dark/70 dark:text-light/70 hover:text-dark dark:hover:text-light'
-                    }`}
-                    title="View blocked domains and bounced email addresses"
-                  >
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>Filtered</span>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
-                      feedViewMode === 'blocked'
-                        ? 'bg-light/20 text-light dark:bg-dark/20 dark:text-dark'
-                        : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
-                    }`}>
-                      {blockedCompaniesList.length}
-                    </span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setFeedViewMode('blocked')}
+                  className={`px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 cursor-pointer ${
+                    feedViewMode === 'blocked'
+                      ? 'bg-white dark:bg-zinc-900 text-red-600 dark:text-red-400 font-semibold shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                  title="View blocked domains and bounced email addresses"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Filtered</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-medium bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 tabular-nums">
+                    {blockedCompaniesList.length}
+                  </span>
+                </button>
               </div>
             </div>
 
-            {/* Secondary Controls Bar: Sub-filters (Company View) or Quick Stats (All Events / Filtered) */}
+            {/* Sub-Filters & Real-Time Search Bar (for Company View) */}
             {feedViewMode === 'company' && (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-dark/5 dark:border-light/5">
-                {/* Status Sub-Filters */}
-                <div className="inline-flex rounded-xl p-1 bg-dark/[0.03] dark:bg-light/[0.04] border border-dark/5 dark:border-light/5 text-xs flex-wrap gap-1">
+              <div className="p-3.5 sm:p-3 bg-zinc-50/70 dark:bg-zinc-900/40 border-b border-zinc-200/80 dark:border-zinc-800/80 flex items-center justify-between lg:flex-col lg:items-stretch gap-3 text-xs">
+                
+                {/* Segmented Filter Control */}
+                <div className="inline-flex rounded-lg p-0.5 bg-zinc-200/60 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700/60 font-medium">
                   <button
                     type="button"
                     onClick={() => handleCompanyFilterChange('all')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                       companyFilter === 'all'
-                        ? 'bg-dark/10 text-dark dark:bg-light/15 dark:text-light font-bold shadow-sm'
-                        : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                        ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 font-semibold shadow-2xs'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                     }`}
                   >
-                    <span>ALL</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
-                      companyFilter === 'all'
-                        ? 'bg-dark/15 dark:bg-light/20 text-dark dark:text-light'
-                        : 'bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60'
-                    }`}>
-                      {companyRollups.length}
-                    </span>
+                    <span>All</span>
+                    <span className="font-mono text-[11px] tabular-nums text-zinc-400">{companyRollups.length}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleCompanyFilterChange('opened')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                       companyFilter === 'opened'
-                        ? 'bg-emerald-500/20 text-emerald-700 dark:bg-emerald-500/30 dark:text-emerald-300 font-bold shadow-sm'
-                        : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                        ? 'bg-white dark:bg-zinc-900 text-emerald-700 dark:text-emerald-400 font-semibold shadow-2xs'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                     }`}
-                    title="Verified human reads, link clicks and resume views"
+                    title="Verified human reads, clicks and resume views"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     <span>Human Engaged</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
-                      companyFilter === 'opened'
-                        ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-200'
-                        : 'bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60'
-                    }`}>
-                      {openedCompanies.length}
-                    </span>
+                    <span className="font-mono text-[11px] tabular-nums text-zinc-400">{openedCompanies.length}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleCompanyFilterChange('prefetched')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                       companyFilter === 'prefetched'
-                        ? 'bg-blue-500/20 text-blue-700 dark:bg-blue-500/30 dark:text-blue-300 font-bold shadow-sm'
-                        : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                        ? 'bg-white dark:bg-zinc-900 text-blue-700 dark:text-blue-400 font-semibold shadow-2xs'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                     }`}
-                    title="Automated Google Image Proxy or Security Gateway prefetching upon delivery"
+                    title="Automated scanner or image proxy prefetch upon delivery"
                   >
                     <Cpu className="w-3.5 h-3.5 text-blue-500" />
                     <span>Prefetched</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
-                      companyFilter === 'prefetched'
-                        ? 'bg-blue-500/20 text-blue-800 dark:text-blue-200'
-                        : 'bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60'
-                    }`}>
-                      {prefetchedCompanies.length}
-                    </span>
+                    <span className="font-mono text-[11px] tabular-nums text-zinc-400">{prefetchedCompanies.length}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleCompanyFilterChange('unopened')}
-                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
                       companyFilter === 'unopened'
-                        ? 'bg-amber-500/20 text-amber-800 dark:bg-amber-500/30 dark:text-amber-300 font-bold shadow-sm'
-                        : 'text-dark/60 dark:text-light/60 hover:text-dark dark:hover:text-light'
+                        ? 'bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 font-semibold shadow-2xs'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                     }`}
-                    title="Sent but pending recruiter opening"
+                    title="Delivered to inbox, pending recruiter opening"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
                     <span>Unopened</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
-                      companyFilter === 'unopened'
-                        ? 'bg-amber-500/20 text-amber-800 dark:text-amber-200'
-                        : 'bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60'
-                    }`}>
-                      {unopenedCompanies.length}
-                    </span>
+                    <span className="font-mono text-[11px] tabular-nums text-zinc-400">{unopenedCompanies.length}</span>
                   </button>
                 </div>
 
-                {/* Expand / Collapse All Accordion Controls */}
-                {displayedCompanies.length > 0 && (
-                  <div className="inline-flex rounded-xl border border-dark/10 dark:border-light/10 overflow-hidden text-xs self-start sm:self-auto shadow-sm">
-                    <button
-                      type="button"
-                      onClick={() => expandAll()}
-                      className="px-3 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 font-medium transition-colors cursor-pointer flex items-center gap-1"
-                      title="Expand all companies"
-                    >
-                      <ChevronDown className="w-3.5 h-3.5" />
-                      <span>Expand All</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => collapseAll(displayedCompanies)}
-                      className="px-3 py-1.5 bg-dark/5 dark:bg-light/5 hover:bg-dark/10 dark:hover:bg-light/10 text-dark/70 dark:text-light/70 font-medium transition-colors border-l border-dark/10 dark:border-light/10 cursor-pointer flex items-center gap-1"
-                      title="Collapse all companies"
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                      <span>Collapse All</span>
-                    </button>
+                {/* Search Box + Expand/Collapse */}
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPageCompany(1);
+                      }}
+                      placeholder="Filter company or recruiter..."
+                      className="pl-8 pr-6 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-700/80 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 transition-colors w-60 sm:w-full font-mono shadow-2xs"
+                    />
+                    {searchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 text-xs font-mono"
+                        title="Clear filter"
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
-                )}
+
+                  {displayedCompanies.length > 0 && (
+                    <div className="flex items-center gap-1 text-xs font-mono text-zinc-400 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => expandAll()}
+                        className="px-2 py-1 rounded hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors cursor-pointer flex items-center gap-1"
+                        title="Expand all"
+                      >
+                        <ChevronDown className="w-3.5 h-3.5" />
+                        <span>Expand</span>
+                      </button>
+                      <span>·</span>
+                      <button
+                        type="button"
+                        onClick={() => collapseAll(displayedCompanies)}
+                        className="px-2 py-1 rounded hover:bg-zinc-200/60 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 transition-colors cursor-pointer flex items-center gap-1"
+                        title="Collapse all"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                        <span>Collapse</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {displayedCompanies.length === 0 ? (
-              <div className="text-center py-12 text-xs text-dark/50 dark:text-light/50 font-medium">
-                {companyFilter === 'opened'
-                  ? 'No human recruiter engagement recorded yet.'
+              <div className="text-center py-12 text-xs text-zinc-400">
+                {searchTerm
+                  ? `No organisations matching "${searchTerm}"`
+                  : companyFilter === 'opened'
+                  ? 'No human recruiter engagement recorded yet'
                   : companyFilter === 'prefetched'
-                  ? 'No automated machine prefetches recorded.'
+                  ? 'No automated machine prefetches recorded'
                   : companyFilter === 'unopened'
-                  ? 'All outreach emails have been engaged!'
-                  : 'No company outreach registered yet. Telemetry will stream in real time.'}
+                  ? 'All outreach emails have been engaged'
+                  : 'No company outreach registered yet'}
               </div>
             ) : feedViewMode === 'company' ? (
-              /* Grouped Company Rollup Table with Expandable Accordion */
+              
+              /* Grouped Company Rollup Table with Dedicated Status Column */
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs min-w-[760px]">
+                <table className="w-full text-left text-xs min-w-[840px]">
                   <thead>
-                    <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono">
-                      <th className="pb-3 pr-6 font-semibold min-w-[280px]">Company</th>
-                      <th className="pb-3 px-3 font-semibold text-center w-14">Sent</th>
-                      <th className="pb-3 px-3 font-semibold text-center w-16">Opened</th>
-                      <th className="pb-3 px-3 font-semibold text-center w-16">Resume</th>
-                      <th className="pb-3 px-3 font-semibold text-center w-14">Clicks</th>
-                      <th className="pb-3 pl-4 font-semibold text-right min-w-[130px]">Last Active</th>
+                    <tr className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/30 text-zinc-500 font-mono text-[11px]">
+                      <th className="py-3 px-5 font-medium min-w-[280px]">Company &amp; Recruiter</th>
+                      <th className="py-3 px-3 font-medium min-w-[170px]">Status &amp; Confidence</th>
+                      <th className="py-3 px-3 font-medium text-center w-14">Sent</th>
+                      <th className="py-3 px-3 font-medium text-center w-16">Opened</th>
+                      <th className="py-3 px-3 font-medium text-center w-16">Resume</th>
+                      <th className="py-3 px-3 font-medium text-center w-14">Clicks</th>
+                      <th className="py-3 pr-5 pl-3 font-medium text-right min-w-[130px]">Last Active</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-dark/5 dark:divide-light/5">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
                     {paginatedCompanies.map((c) => {
                       const isExpanded = !collapsedCompanies[c.company];
                       const compEvents = (Array.isArray(c.events) && c.events.length > 0)
@@ -1230,162 +1179,180 @@ export default function OutreachTelemetry({ initialAuth }) {
                         <React.Fragment key={c.company}>
                           <tr
                             onClick={() => toggleCompany(c.company)}
-                            className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors cursor-pointer group"
+                            className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer group"
                           >
-                            <td className="py-4 pr-6 font-bold text-dark dark:text-light">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="p-1 rounded-md bg-dark/5 dark:bg-light/5 group-hover:bg-primary/10 transition-colors shrink-0">
+                            {/* Column 1: Company & Recruiter Email */}
+                            <td className="py-3.5 px-5">
+                              <div className="flex items-start gap-2.5">
+                                <span className="p-0.5 mt-0.5 rounded text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors shrink-0">
                                   {isExpanded ? (
-                                    <ChevronDown className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
+                                    <ChevronDown className="w-3.5 h-3.5" />
                                   ) : (
-                                    <ChevronRight className="w-3.5 h-3.5 text-dark/50 dark:text-light/50" />
+                                    <ChevronRight className="w-3.5 h-3.5" />
                                   )}
                                 </span>
-                                <span className="text-sm font-semibold">{c.company}</span>
-                                {Array.isArray(c.recipients) && c.recipients.length > 0 && (
-                                  <span className="text-[11px] font-normal font-mono text-dark/60 dark:text-light/60">
-                                    ({c.recipients.join(', ')})
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                                    {c.company}
+                                  </div>
+                                  <div className="flex items-center gap-1.5 mt-0.5 font-mono text-[11px] text-zinc-500 truncate">
+                                    <span>{c.recipients?.[0] || 'No email recorded'}</span>
+                                    {c.recipients?.length > 1 && (
+                                      <span className="text-[10px] text-zinc-400">+{c.recipients.length - 1}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Column 2: Dedicated Status & Confidence Badge */}
+                            <td className="py-3.5 px-3">
+                              <div className="flex flex-col items-start gap-1">
+                                {c.confidence_tier === 'high' ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    <span>Confirmed read</span>
                                   </span>
-                                )}
-                                <span className="text-[10px] px-2 py-0.5 rounded-full font-mono font-medium bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70">
-                                  {compEvents.length} event{compEvents.length === 1 ? '' : 's'}
-                                </span>
-                                {c.journey_type === 'retry_success' && (
-                                  <span
-                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 inline-flex items-center gap-1"
-                                    title={`${c.prior_quarantined?.length || 1} prior failed attempt(s) replaced by active recipient`}
-                                  >
-                                    <AlertCircle className="w-3 h-3 text-amber-500" />
-                                    <span>{c.prior_quarantined?.length || 1} Retried</span>
+                                ) : c.confidence_tier === 'medium' ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                    <span>Probable read</span>
                                   </span>
-                                )}
-                                {c.journey_type === 'multi_contact' && (
-                                  <span
-                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 inline-flex items-center gap-1"
-                                    title={`${c.recipients?.length || 2} distinct recruiter contacts reached at this company`}
-                                  >
-                                    <Users className="w-3 h-3 text-blue-500" />
-                                    <span>{c.recipients?.length || 2} Contacts</span>
+                                ) : c.is_security_scanner ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20">
+                                    <Shield className="w-3 h-3" />
+                                    <span>Scanner pre-scan</span>
                                   </span>
-                                )}
-                                {c.is_security_scanner && (
-                                  <span
-                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 inline-flex items-center gap-1"
-                                    title={c.scanner_note || 'Automated Email Security Gateway'}
-                                  >
-                                    <Shield className="w-3 h-3 text-purple-500" />
-                                    <span>Scanner</span>
-                                  </span>
-                                )}
-                                {c.confidence_tier === 'high' && (
-                                  <span
-                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 inline-flex items-center gap-1"
-                                    title={c.confidence_tooltip || 'Confirmed human engagement: Recruiter clicked links or inspected resume'}
-                                  >
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                                    <span>Confirmed Read</span>
-                                  </span>
-                                )}
-                                {c.confidence_tier === 'medium' && (
-                                  <span
-                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 inline-flex items-center gap-1"
-                                    title={c.confidence_tooltip || 'Probable human: Email opened > 60s post-send'}
-                                  >
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-                                    <span>Probable Read</span>
-                                  </span>
-                                )}
-                                {c.confidence_tier === 'low' && (
-                                  <span
-                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 inline-flex items-center gap-1"
-                                    title={c.confidence_tooltip || 'Automated prefetch: Cached by Google Image Proxy or security scanner'}
-                                  >
-                                    <Cpu className="w-3 h-3 text-blue-500" />
+                                ) : c.confidence_tier === 'low' || c.prefetches > 0 ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20">
+                                    <Cpu className="w-3 h-3" />
                                     <span>Prefetched</span>
                                   </span>
-                                )}
-                                {c.confidence_tier === 'unopened' && (
-                                  <span
-                                    className="text-[10px] px-1.5 py-0.5 rounded font-mono font-medium bg-dark/5 dark:bg-light/10 text-dark/50 dark:text-light/50 border border-dark/10 dark:border-light/10 inline-flex items-center gap-1"
-                                    title={c.confidence_tooltip || 'Delivered to inbox, pending recruiter opening'}
-                                  >
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700">
                                     <span>Unopened</span>
                                   </span>
                                 )}
+
+                                <div className="flex items-center gap-1.5 font-mono text-[10px] text-zinc-400">
+                                  {c.journey_type === 'retry_success' && (
+                                    <span className="text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                                      <AlertCircle className="w-2.5 h-2.5" />
+                                      <span>{c.prior_quarantined?.length || 1} retried</span>
+                                    </span>
+                                  )}
+                                  {c.journey_type === 'multi_contact' && (
+                                    <span className="text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
+                                      <Users className="w-2.5 h-2.5" />
+                                      <span>{c.recipients?.length} contacts</span>
+                                    </span>
+                                  )}
+                                  <span>{compEvents.length} event{compEvents.length === 1 ? '' : 's'}</span>
+                                </div>
                               </div>
                             </td>
-                            <td className="py-4 px-3 text-center text-dark/70 dark:text-light/70 font-mono">{c.sent}</td>
-                            <td className="py-4 px-3 text-center font-mono">
-                              <span className={`font-bold ${c.opened > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-dark/40 dark:text-light/40'}`}>
-                                {c.opened}
-                              </span>
+
+                            {/* Column 3: Sent Count */}
+                            <td className="py-3.5 px-3 text-center text-zinc-500 font-mono tabular-nums">{c.sent}</td>
+
+                            {/* Column 4: Opened Count */}
+                            <td className="py-3.5 px-3 text-center font-mono tabular-nums">
+                              {c.opened > 0 ? (
+                                <span className="inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-semibold text-xs border border-emerald-500/20">
+                                  {c.opened}
+                                </span>
+                              ) : (
+                                <span className="text-zinc-400 text-xs">0</span>
+                              )}
                               {c.prefetches > 0 && (
-                                <span className="block text-[9px] font-normal text-blue-500/80 font-mono" title={`${c.prefetches} automated prefetch/scan(s)`}>
+                                <span className="block text-[10px] text-zinc-400 mt-0.5 font-normal" title={`${c.prefetches} automated prefetch scan(s)`}>
                                   +{c.prefetches}p
                                 </span>
                               )}
                             </td>
-                            <td className="py-4 px-3 text-center text-purple-600 dark:text-purple-400 font-bold font-mono">{c.resume_viewed}</td>
-                            <td className="py-4 px-3 text-center text-amber-600 dark:text-amber-400 font-bold font-mono">{c.clicks}</td>
-                            <td className="py-4 pl-4 font-mono text-right whitespace-nowrap">
+
+                            {/* Column 5: Resume Views */}
+                            <td className="py-3.5 px-3 text-center font-mono tabular-nums">
+                              {c.resume_viewed > 0 ? (
+                                <span className="inline-block px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-700 dark:text-purple-400 font-semibold text-xs border border-purple-500/20">
+                                  {c.resume_viewed}
+                                </span>
+                              ) : (
+                                <span className="text-zinc-300 dark:text-zinc-700 text-xs">—</span>
+                              )}
+                            </td>
+
+                            {/* Column 6: Project Clicks */}
+                            <td className="py-3.5 px-3 text-center font-mono tabular-nums">
+                              {c.clicks > 0 ? (
+                                <span className="inline-block px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 font-semibold text-xs border border-amber-500/20">
+                                  {c.clicks}
+                                </span>
+                              ) : (
+                                <span className="text-zinc-300 dark:text-zinc-700 text-xs">—</span>
+                              )}
+                            </td>
+
+                            {/* Column 7: Last Active */}
+                            <td className="py-3.5 pr-5 pl-3 font-mono text-right whitespace-nowrap">
                               {c.last_active > 0 ? (
                                 <div>
-                                  <div className="font-semibold text-xs text-dark/90 dark:text-light/90">
+                                  <div className="font-semibold text-xs text-zinc-800 dark:text-zinc-200">
                                     {formatRelativeTime(c.last_active)}
                                   </div>
-                                  <div className="text-[10px] text-dark/50 dark:text-light/50">
+                                  <div className="text-[10px] text-zinc-400 tabular-nums">
                                     {c.last_active_formatted}
                                   </div>
                                 </div>
                               ) : (
-                                <span className="text-dark/40 dark:text-light/40 text-xs">Pending</span>
+                                <span className="text-zinc-400 text-xs">Pending</span>
                               )}
                             </td>
                           </tr>
 
                           {/* Nested Interaction Details Accordion */}
                           {isExpanded && (
-                            <tr className="bg-transparent">
-                              <td colSpan={6} className="p-0 border-none">
-                                <div className="mx-2 mb-4 p-4 rounded-2xl bg-dark/[0.02] dark:bg-light/[0.02] border border-dark/10 dark:border-light/10">
+                            <tr className="bg-zinc-50/60 dark:bg-zinc-900/40">
+                              <td colSpan={7} className="p-0 border-none">
+                                <div className="m-3 p-4 rounded-lg bg-white dark:bg-[#111113] border border-zinc-200/90 dark:border-zinc-800/90 shadow-2xs">
                                   <div className="flex items-center justify-between mb-3 text-xs">
-                                    <span className="font-semibold text-dark/70 dark:text-light/70 font-mono flex items-center gap-1.5">
-                                      <Building2 className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
+                                    <span className="font-semibold text-zinc-700 dark:text-zinc-300 font-mono flex items-center gap-1.5">
+                                      <Building2 className="w-3.5 h-3.5 text-zinc-400" />
                                       <span>Interactions for {c.company}</span>
                                     </span>
-                                    <span className="text-[11px] text-dark/50 dark:text-light/50 font-mono">
+                                    <span className="text-[11px] text-zinc-400 font-mono tabular-nums">
                                       {compEvents.length} recorded event{compEvents.length === 1 ? '' : 's'}
                                     </span>
                                   </div>
 
                                   {c.is_security_scanner && (
-                                    <div className="mb-3.5 p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-[11px] flex items-center gap-2">
+                                    <div className="mb-3 p-2.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-xs flex items-center gap-2">
                                       <Shield className="w-4 h-4 shrink-0 text-blue-500" />
                                       <span>
-                                        <strong>Enterprise Email Security Gateway Detected:</strong> Links were automatically pre-screened in seconds across cloud scanner IPs (e.g. Proofpoint / SafeLinks) upon email arrival.
+                                        <strong>Enterprise Security Gateway:</strong> Links were automatically pre-screened in seconds across cloud scanner IPs upon email delivery.
                                       </span>
                                     </div>
                                   )}
 
-                                  {/* Outreach Delivery Journey & Multi-Contact Stepper (Minimalist Timeline) */}
+                                  {/* Outreach Delivery Journey Stepper */}
                                   {c.attempts_journey && c.attempts_journey.length > 1 && (
-                                    <div className="mb-4 p-3.5 rounded-2xl bg-dark/[0.02] dark:bg-light/[0.02] border border-dark/10 dark:border-light/10 text-xs">
-                                      <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-dark/5 dark:border-light/5">
+                                    <div className="mb-4 p-3 rounded-lg bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800/80 text-xs">
+                                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-200/80 dark:border-zinc-800/80">
                                         <div className="flex items-center gap-2">
-                                          <Clock className="w-3.5 h-3.5 text-primary dark:text-primaryDark" />
-                                          <span className="font-semibold text-dark/80 dark:text-light/80">
+                                          <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                                          <span className="font-semibold text-zinc-800 dark:text-zinc-200">
                                             {c.journey_type === 'multi_contact' ? 'Multi-Contact Recruiter Outreach' : 'Delivery Journey'}
                                           </span>
-                                          <span className="text-[10px] text-dark/40 dark:text-light/40 font-mono">
+                                          <span className="text-[10px] text-zinc-400 font-mono">
                                             ({c.attempts_journey.length} steps)
                                           </span>
                                         </div>
-                                        <span className="text-[10px] font-mono text-dark/50 dark:text-light/50">
+                                        <span className="text-[10px] font-mono text-zinc-400">
                                           {c.journey_type === 'multi_contact' ? 'Multi-Contact' : 'Discovery Chain'}
                                         </span>
                                       </div>
 
-                                      <div className="space-y-2">
+                                      <div className="space-y-1.5">
                                         {c.attempts_journey.map((att, attIdx) => {
                                           const isBlock = att.status === 'blocked';
                                           const isVoid = att.status === 'voided';
@@ -1397,27 +1364,26 @@ export default function OutreachTelemetry({ initialAuth }) {
                                           return (
                                             <div
                                               key={`${att.token}-${attIdx}`}
-                                              className={`p-3 rounded-xl border transition-all ${
+                                              className={`p-2.5 rounded border transition-colors ${
                                                 att.is_active
-                                                  ? 'bg-emerald-500/[0.03] border-emerald-500/20 dark:bg-emerald-500/[0.06]'
-                                                  : 'bg-dark/[0.02] dark:bg-light/[0.02] border-dark/10 dark:border-light/10'
+                                                  ? 'bg-emerald-500/[0.04] border-emerald-500/20'
+                                                  : 'bg-white dark:bg-zinc-900/60 border-zinc-200 dark:border-zinc-800'
                                               }`}
                                             >
-                                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                                              <div className="flex items-start justify-between sm:flex-col gap-2">
                                                 <div className="min-w-0 flex-1">
-                                                  {/* Recruiter Email & Status Badges Row */}
                                                   <div className="flex items-center gap-2 flex-wrap">
                                                     <span
-                                                      className={`w-4 h-4 rounded-full text-[9px] font-bold font-mono flex items-center justify-center shrink-0 ${
+                                                      className={`w-4 h-4 rounded text-[9px] font-semibold font-mono flex items-center justify-center shrink-0 ${
                                                         att.is_active
                                                           ? 'bg-emerald-500 text-white'
-                                                          : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/30'
+                                                          : 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30'
                                                       }`}
                                                     >
                                                       {att.is_active ? '✓' : att.step}
                                                     </span>
 
-                                                    <span className={`font-mono text-xs font-semibold ${att.is_active ? 'text-dark dark:text-light' : 'text-dark/50 dark:text-light/50 line-through'}`}>
+                                                    <span className={`font-mono text-xs ${att.is_active ? 'font-semibold text-zinc-900 dark:text-zinc-100' : 'text-zinc-400 line-through'}`}>
                                                       {att.recipient}
                                                     </span>
 
@@ -1427,8 +1393,8 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                         e.stopPropagation();
                                                         handleCopy(att.recipient);
                                                       }}
-                                                      className="p-0.5 hover:bg-dark/10 dark:hover:bg-light/10 rounded transition-colors text-dark/40 dark:text-light/40 hover:text-dark dark:hover:text-light cursor-pointer"
-                                                      title="Copy recruiter email"
+                                                      className="p-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
+                                                      title="Copy email"
                                                     >
                                                       {copiedEmail === att.recipient ? (
                                                         <Check className="w-3 h-3 text-emerald-500" />
@@ -1438,7 +1404,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                     </button>
 
                                                     {att.track && (
-                                                      <span className="text-[9px] px-1.5 py-0.2 rounded font-mono uppercase bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60">
+                                                      <span className="text-[9px] px-1.5 py-0.2 rounded font-mono uppercase bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
                                                         {att.track}
                                                       </span>
                                                     )}
@@ -1446,32 +1412,31 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                     <span
                                                       className={`text-[9px] px-1.5 py-0.2 rounded font-medium ${
                                                         att.is_active
-                                                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
                                                           : isBlock
-                                                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                                                          ? 'bg-red-500/10 text-red-700 dark:text-red-400'
                                                           : isVoid
-                                                          ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
-                                                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                                          ? 'bg-purple-500/10 text-purple-700 dark:text-purple-400'
+                                                          : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
                                                       }`}
                                                     >
                                                       {att.is_active ? 'Active' : isBlock ? 'Blocked' : isVoid ? 'Voided' : 'Bounced'}
                                                     </span>
                                                   </div>
 
-                                                  {/* Details Row */}
                                                   {att.is_active ? (
                                                     <div className="mt-1 pl-6 flex items-center gap-2 flex-wrap font-mono text-[11px] text-emerald-600 dark:text-emerald-400">
-                                                      <span className="font-semibold">Delivered &amp; Active</span>
-                                                      <span className="text-dark/30 dark:text-light/30">·</span>
-                                                      <span className="text-dark/70 dark:text-light/70">{att.opens} opens</span>
-                                                      <span className="text-dark/70 dark:text-light/70">{att.clicks} clicks</span>
-                                                      <span className="text-dark/70 dark:text-light/70">{att.resume_views} resume view{att.resume_views === 1 ? '' : 's'}</span>
+                                                      <span className="font-semibold">Delivered</span>
+                                                      <span className="text-zinc-300 dark:text-zinc-700">·</span>
+                                                      <span className="text-zinc-600 dark:text-zinc-400 tabular-nums">{att.opens} opens</span>
+                                                      <span className="text-zinc-600 dark:text-zinc-400 tabular-nums">{att.clicks} clicks</span>
+                                                      <span className="text-zinc-600 dark:text-zinc-400 tabular-nums">{att.resume_views} resume view{att.resume_views === 1 ? '' : 's'}</span>
                                                     </div>
                                                   ) : (
-                                                    <div className="mt-1 pl-6 text-[11px] text-dark/70 dark:text-light/70">
+                                                    <div className="mt-1 pl-6 text-[11px] text-zinc-600 dark:text-zinc-400">
                                                       <div className="flex items-baseline gap-1.5 flex-wrap">
                                                         {diag?.code && (
-                                                          <span className="font-mono text-[10px] font-bold text-rose-600 dark:text-rose-400">
+                                                          <span className="font-mono text-[10px] font-semibold text-red-600 dark:text-red-400">
                                                             [{diag.code}]
                                                           </span>
                                                         )}
@@ -1481,7 +1446,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                             href={diag.helpUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-0.5 font-mono text-[10px] text-primary dark:text-primaryDark hover:underline"
+                                                            className="inline-flex items-center gap-0.5 font-mono text-[10px] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:underline"
                                                           >
                                                             <span>Docs</span>
                                                             <ExternalLink className="w-2.5 h-2.5" />
@@ -1493,14 +1458,14 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                             e.stopPropagation();
                                                             toggleRawDiagnostic(journeyRawKey);
                                                           }}
-                                                          className="text-[10px] font-mono text-dark/40 dark:text-light/40 hover:text-dark dark:hover:text-light underline decoration-dotted cursor-pointer"
+                                                          className="text-[10px] font-mono text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 underline decoration-dotted cursor-pointer"
                                                         >
                                                           {isRawExpanded ? 'hide raw' : 'raw dsn'}
                                                         </button>
                                                       </div>
 
                                                       {isRawExpanded && (
-                                                        <div className="mt-1.5 p-2 rounded-lg bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 font-mono text-[10px] text-dark/70 dark:text-light/70 break-all select-all">
+                                                        <div className="mt-1.5 p-2 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-[10px] text-zinc-700 dark:text-zinc-300 break-all select-all">
                                                           {diag?.raw}
                                                         </div>
                                                       )}
@@ -1508,10 +1473,9 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                   )}
                                                 </div>
 
-                                                {/* Timestamp */}
-                                                <div className="text-[10px] font-mono text-dark/40 dark:text-light/40 sm:text-right shrink-0 pl-6 sm:pl-0">
+                                                <div className="text-[10px] font-mono text-zinc-400 sm:text-right shrink-0 pl-6 sm:pl-0 tabular-nums">
                                                   <div>{formatRelativeTime(att.created_at)}</div>
-                                                  <div className="text-[9px] text-dark/30 dark:text-light/30">{att.created_at_formatted}</div>
+                                                  <div className="text-[9px] text-zinc-400">{att.created_at_formatted}</div>
                                                 </div>
                                               </div>
                                             </div>
@@ -1522,35 +1486,35 @@ export default function OutreachTelemetry({ initialAuth }) {
                                   )}
 
                                   {compEvents.length === 0 ? (
-                                    <div className="text-center py-4 text-xs text-dark/50 dark:text-light/50 font-medium">
-                                      No interaction events recorded yet for this company.
+                                    <div className="text-center py-4 text-xs text-zinc-400">
+                                      No interaction events recorded yet for this organisation
                                     </div>
                                   ) : (
                                     <div className="overflow-x-auto">
                                       <table className="w-full text-left text-xs">
                                         <thead>
-                                          <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono text-[11px]">
-                                            <th className="pb-2.5 font-semibold">Recruiter &amp; Track</th>
-                                            <th className="pb-2.5 font-semibold">Event &amp; Class</th>
-                                            <th className="pb-2.5 font-semibold">Detail</th>
-                                            <th className="pb-2.5 font-semibold">Location &amp; IP</th>
-                                            <th className="pb-2.5 font-semibold text-right">Time (IST)</th>
+                                          <tr className="border-b border-zinc-200 dark:border-zinc-800 text-zinc-400 font-mono text-[11px]">
+                                            <th className="pb-2 font-medium">Recruiter &amp; Track</th>
+                                            <th className="pb-2 font-medium">Event</th>
+                                            <th className="pb-2 font-medium">Detail</th>
+                                            <th className="pb-2 font-medium">Location &amp; IP</th>
+                                            <th className="pb-2 font-medium text-right">Time (IST)</th>
                                           </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-dark/5 dark:divide-light/5">
+                                        <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
                                           {compEvents.map((evt, eIdx) => {
                                             const { badgeStyle, label } = getEventBadge(evt);
                                             return (
                                               <tr
                                                 key={`${evt.token}-${evt.ts}-${eIdx}`}
-                                                className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors"
+                                                className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
                                               >
                                                 <td className="py-2.5">
-                                                  <div className="font-medium text-dark/90 dark:text-light/90">
+                                                  <div className="font-semibold text-zinc-900 dark:text-zinc-100">
                                                     {evt.recipient || 'No email'}
                                                   </div>
                                                   {evt.track && (
-                                                    <span className="inline-block mt-0.5 text-[9px] px-1.5 py-0.5 bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 rounded-full font-medium">
+                                                    <span className="inline-block mt-0.5 text-[9px] px-1.5 py-0.2 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded font-mono">
                                                       {evt.track}
                                                     </span>
                                                   )}
@@ -1558,33 +1522,33 @@ export default function OutreachTelemetry({ initialAuth }) {
 
                                                 <td className="py-2.5">
                                                   <span
-                                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeStyle}`}
+                                                    className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${badgeStyle}`}
                                                   >
                                                     {label}
                                                   </span>
                                                 </td>
 
-                                                <td className="py-2.5 font-medium text-dark/80 dark:text-light/80">
+                                                <td className="py-2.5 text-zinc-700 dark:text-zinc-300">
                                                   {evt.slug ? (
-                                                    <span className="font-mono text-primary dark:text-primaryDark">
+                                                    <span className="font-mono text-zinc-900 dark:text-zinc-100 font-medium">
                                                       /{evt.slug}
                                                     </span>
                                                   ) : evt.dwell_ms ? (
-                                                    <span>{Math.round(evt.dwell_ms / 1000)}s visible</span>
+                                                    <span className="font-mono tabular-nums">{Math.round(evt.dwell_ms / 1000)}s visible</span>
                                                   ) : evt.event === 'open' || evt.event === 'prefetch' || evt.is_prefetch ? (
-                                                    <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
-                                                      {evt.delta_sec ? (evt.delta_sec >= 60 ? `+${Math.round(evt.delta_sec / 60)}m post-send` : `+${evt.delta_sec}s post-send`) : (evt.is_prefetch ? 'Automated Pre-scan' : 'Email Opened')}
+                                                    <span className="text-zinc-500 font-mono text-[11px] tabular-nums">
+                                                      {evt.delta_sec ? (evt.delta_sec >= 60 ? `+${Math.round(evt.delta_sec / 60)}m post-send` : `+${evt.delta_sec}s post-send`) : (evt.is_prefetch ? 'Automated pre-scan' : 'Email opened')}
                                                     </span>
                                                   ) : evt.event === 'resume_view' ? (
-                                                    <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
-                                                      {evt.session_num ? `Session #${evt.session_num}` : 'Web Resume'}
+                                                    <span className="text-zinc-500 font-mono text-[11px]">
+                                                      {evt.session_num ? `Session #${evt.session_num}` : 'Web resume'}
                                                     </span>
                                                   ) : evt.event === 'resume_download' || evt.event === 'download' ? (
-                                                    <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
-                                                      {evt.download_num ? `Download #${evt.download_num}` : 'PDF Download'}
+                                                    <span className="text-zinc-500 font-mono text-[11px]">
+                                                      {evt.download_num ? `Download #${evt.download_num}` : 'PDF download'}
                                                     </span>
                                                   ) : (
-                                                    <span className="text-dark/40 dark:text-light/40">—</span>
+                                                    <span className="text-zinc-400">—</span>
                                                   )}
                                                 </td>
 
@@ -1594,22 +1558,22 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                     return loc.isProxy ? (
                                                       <div>
                                                         <div
-                                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20"
                                                           title={loc.tooltip}
                                                         >
                                                           <Shield className="w-3 h-3 shrink-0" />
                                                           <span>{loc.text}</span>
                                                         </div>
-                                                        <div className="text-[10px] font-mono text-dark/40 dark:text-light/40 mt-0.5">
+                                                        <div className="text-[10px] font-mono text-zinc-400 mt-0.5 tabular-nums">
                                                           {evt.ip_trunc || 'IP redacted'}
                                                         </div>
                                                       </div>
                                                     ) : (
                                                       <div>
-                                                        <div className="text-dark/80 dark:text-light/80 font-medium">
+                                                        <div className="text-zinc-800 dark:text-zinc-200 font-medium">
                                                           {loc.text}
                                                         </div>
-                                                        <div className="text-[10px] font-mono text-dark/50 dark:text-light/50">
+                                                        <div className="text-[10px] font-mono text-zinc-400 tabular-nums">
                                                           {evt.ip_trunc || 'IP redacted'}
                                                         </div>
                                                       </div>
@@ -1617,11 +1581,11 @@ export default function OutreachTelemetry({ initialAuth }) {
                                                   })()}
                                                 </td>
 
-                                                <td className="py-2.5 font-mono text-right">
-                                                  <div className="font-semibold text-xs text-dark/90 dark:text-light/90">
+                                                <td className="py-2.5 font-mono text-right tabular-nums">
+                                                  <div className="font-semibold text-xs text-zinc-800 dark:text-zinc-200">
                                                     {formatRelativeTime(evt.ts)}
                                                   </div>
-                                                  <div className="text-[10px] text-dark/50 dark:text-light/50">
+                                                  <div className="text-[10px] text-zinc-400">
                                                     {evt.ist_time || evt.ts}
                                                   </div>
                                                 </td>
@@ -1651,192 +1615,187 @@ export default function OutreachTelemetry({ initialAuth }) {
                 />
               </div>
             ) : feedViewMode === 'blocked' ? (
+              
               /* View Mode 3: Blocked & Bounced Quarantine Feed */
               <div className="overflow-x-auto">
-                <div className="mb-4 p-4 rounded-2xl bg-white/70 dark:bg-dark/40 backdrop-blur-md border border-dark/10 dark:border-light/10 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                <div className="p-4 bg-zinc-50/60 dark:bg-zinc-900/30 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between sm:flex-col sm:items-start gap-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
-                      <Shield className="w-4 h-4" />
+                    <div className="w-7 h-7 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                      <ShieldAlert className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-dark dark:text-light">
+                      <div className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                         Quarantined Inactive Applications ({blockedCompaniesList.length})
                       </div>
-                      <div className="text-[11px] text-dark/60 dark:text-light/60">
-                        Excluded from active engagement metrics due to decommissioned mailboxes or domain blocks.
+                      <div className="text-[11px] text-zinc-500">
+                        Excluded from active engagement metrics due to decommissioned mailboxes or tenant blocks
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 font-mono text-[11px]">
-                    <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-700 dark:text-rose-300 font-semibold border border-rose-500/20">
-                      {summary.total_blocked ?? 0} Blocked
+                    <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-700 dark:text-red-400 font-medium border border-red-500/20 tabular-nums">
+                      {summary.total_blocked ?? 0} blocked
                     </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-300 font-semibold border border-amber-500/20">
-                      {summary.total_bounced ?? 0} Bounced
+                    <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium border border-amber-500/20 tabular-nums">
+                      {summary.total_bounced ?? 0} bounced
                     </span>
                     {summary.total_voided > 0 && (
-                      <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/20">
-                        {summary.total_voided} Retried
+                      <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-700 dark:text-purple-400 font-medium border border-purple-500/20 tabular-nums">
+                        {summary.total_voided} retried
                       </span>
                     )}
                   </div>
                 </div>
 
                 {blockedCompaniesList.length === 0 ? (
-                  <div className="text-center py-12 text-xs text-dark/50 dark:text-light/50 font-medium">
-                    No blocked or bounced emails found in database.
+                  <div className="text-center py-12 text-xs text-zinc-400">
+                    No blocked or bounced emails found in database
                   </div>
                 ) : (
                   <>
                     <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono text-[11px]">
-                        <th className="pb-3 font-semibold">Company &amp; Recruiter</th>
-                        <th className="pb-3 font-semibold">Classification</th>
-                        <th className="pb-3 font-semibold">Server Diagnostic Response</th>
-                        <th className="pb-3 font-semibold text-right">Identified Time (IST)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-dark/5 dark:divide-light/5">
-                      {(() => {
-                        const activeCompanyNames = new Set(companyRollups.map(c => (c.company || '').toLowerCase().trim()));
-                        const companyFailCounts = {};
-                        for (const b of blockedCompaniesList) {
-                          const norm = (b.company || '').toLowerCase().trim();
-                          companyFailCounts[norm] = (companyFailCounts[norm] || 0) + 1;
-                        }
+                      <thead>
+                        <tr className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/30 text-zinc-500 font-mono text-[11px]">
+                          <th className="py-3 px-5 font-medium">Company &amp; Recruiter</th>
+                          <th className="py-3 px-3 font-medium">Classification</th>
+                          <th className="py-3 px-3 font-medium">Server Diagnostic Response</th>
+                          <th className="py-3 pr-5 pl-3 font-medium text-right">Identified (IST)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                        {(() => {
+                          const activeCompanyNames = new Set(companyRollups.map(c => (c.company || '').toLowerCase().trim()));
+                          const companyFailCounts = {};
+                          for (const b of blockedCompaniesList) {
+                            const norm = (b.company || '').toLowerCase().trim();
+                            companyFailCounts[norm] = (companyFailCounts[norm] || 0) + 1;
+                          }
 
-                        return paginatedBlocked.map((item, idx) => {
-                          const normName = (item.company || '').toLowerCase().trim();
-                          const hasActive = activeCompanyNames.has(normName);
-                          const failCount = companyFailCounts[normName] || 1;
-                          const diag = parseDiagnostic(item.reason);
-                          const isRawExpanded = !!expandedDiagnostics[item.token];
+                          return paginatedBlocked.map((item, idx) => {
+                            const normName = (item.company || '').toLowerCase().trim();
+                            const hasActive = activeCompanyNames.has(normName);
+                            const failCount = companyFailCounts[normName] || 1;
+                            const diag = parseDiagnostic(item.reason);
+                            const isRawExpanded = !!expandedDiagnostics[item.token];
 
-                          return (
-                            <tr
-                              key={`${item.token}-${idx}`}
-                              className="hover:bg-dark/[0.02] dark:hover:bg-light/[0.02] transition-colors"
-                            >
-                              <td className="py-3.5 pr-4">
-                                <div className="font-bold text-dark dark:text-light flex items-center gap-1.5 flex-wrap">
-                                  <span>{item.company}</span>
-                                  {hasActive ? (
-                                    <span className="text-[9px] px-2 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 rounded-full font-mono font-medium">
-                                      ✓ Retried &amp; Active
-                                    </span>
-                                  ) : failCount > 1 ? (
-                                    <span className="text-[9px] px-2 py-0.5 bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/25 rounded-full font-mono font-medium">
-                                      {failCount} Attempts Failed
-                                    </span>
-                                  ) : null}
-                                </div>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className="text-[11px] text-dark/60 dark:text-light/60 font-mono">
-                                    {item.recipient}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleCopy(item.recipient);
-                                    }}
-                                    className="p-1 hover:bg-dark/10 dark:hover:bg-light/10 rounded transition-colors text-dark/40 dark:text-light/40 hover:text-dark dark:hover:text-light cursor-pointer"
-                                    title="Copy recruiter email"
-                                  >
-                                    {copiedEmail === item.recipient ? (
-                                      <Check className="w-3 h-3 text-emerald-500" />
-                                    ) : (
-                                      <Copy className="w-3 h-3" />
-                                    )}
-                                  </button>
-                                </div>
-                                {item.track && (
-                                  <span className="inline-block mt-1 text-[9px] px-1.5 py-0.2 bg-dark/5 dark:bg-light/10 text-dark/60 dark:text-light/60 rounded font-mono uppercase tracking-wider">
-                                    {item.track}
-                                  </span>
-                                )}
-                              </td>
-
-                              <td className="py-3.5 pr-4 whitespace-nowrap">
-                                <span
-                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                    item.status === 'blocked'
-                                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400'
-                                      : item.status === 'voided'
-                                      ? 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400'
-                                      : 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
-                                  }`}
-                                >
-                                  {item.status === 'blocked'
-                                    ? 'Domain Block'
-                                    : item.status === 'voided'
-                                    ? 'Voided for Retry'
-                                    : 'Address Bounce'}
-                                </span>
-                              </td>
-
-                              <td className="py-3.5 pr-4 text-xs">
-                                <div className="space-y-1.5 max-w-xl">
-                                  <div className="flex items-start gap-2 flex-wrap">
-                                    {diag.code && (
-                                      <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/25 shrink-0">
-                                        {diag.code}
+                            return (
+                              <tr
+                                key={`${item.token}-${idx}`}
+                                className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
+                              >
+                                <td className="py-3.5 px-5">
+                                  <div className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 flex-wrap">
+                                    <span>{item.company}</span>
+                                    {hasActive ? (
+                                      <span className="text-[9px] px-1.5 py-0.2 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 rounded font-mono">
+                                        ✓ Retried &amp; Active
                                       </span>
-                                    )}
-                                    <span className="text-xs font-medium text-dark/90 dark:text-light/90 leading-relaxed">
-                                      {diag.cleanMsg}
-                                    </span>
+                                    ) : failCount > 1 ? (
+                                      <span className="text-[9px] px-1.5 py-0.2 bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20 rounded font-mono tabular-nums">
+                                        {failCount} attempts failed
+                                      </span>
+                                    ) : null}
                                   </div>
-
-                                  <div className="flex items-center gap-3 pt-0.5 flex-wrap">
-                                    {diag.helpUrl && (
-                                      <a
-                                        href={diag.helpUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 text-[11px] font-mono text-primary dark:text-primaryDark hover:underline cursor-pointer"
-                                      >
-                                        <span>
-                                          {diag.helpUrl.includes('google')
-                                            ? 'Google Help Guide'
-                                            : diag.helpUrl.includes('aka.ms') || diag.helpUrl.includes('microsoft')
-                                            ? 'Microsoft DSN Guide'
-                                            : 'Vendor Help Guide'}
-                                        </span>
-                                        <ExternalLink className="w-2.5 h-2.5" />
-                                      </a>
-                                    )}
-
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="text-[11px] text-zinc-500 font-mono">
+                                      {item.recipient}
+                                    </span>
                                     <button
                                       type="button"
-                                      onClick={() => toggleRawDiagnostic(item.token)}
-                                      className="text-[10px] font-mono text-dark/50 dark:text-light/50 hover:text-dark dark:hover:text-light underline decoration-dotted transition-colors cursor-pointer"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCopy(item.recipient);
+                                      }}
+                                      className="p-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
+                                      title="Copy email"
                                     >
-                                      {isRawExpanded ? '▲ Hide raw server DSN' : '▼ Raw server DSN log'}
+                                      {copiedEmail === item.recipient ? (
+                                        <Check className="w-3 h-3 text-emerald-500" />
+                                      ) : (
+                                        <Copy className="w-3 h-3" />
+                                      )}
                                     </button>
                                   </div>
-
-                                  {isRawExpanded && (
-                                    <div className="mt-2 p-2.5 rounded-xl bg-dark/5 dark:bg-light/5 border border-dark/10 dark:border-light/10 font-mono text-[10px] text-dark/80 dark:text-light/80 break-all select-all leading-relaxed">
-                                      {diag.raw}
-                                    </div>
+                                  {item.track && (
+                                    <span className="inline-block mt-1 text-[9px] px-1.5 py-0.2 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded font-mono uppercase">
+                                      {item.track}
+                                    </span>
                                   )}
-                                </div>
-                              </td>
+                                </td>
 
-                              <td className="py-3.5 font-mono text-right text-xs text-dark/70 dark:text-light/70 whitespace-nowrap">
-                                <div className="font-semibold text-dark/90 dark:text-light/90">{formatRelativeTime(item.bounced_at)}</div>
-                                <div className="text-[10px] text-dark/45 dark:text-light/45">
-                                  {item.bounced_at_formatted}
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        });
-                      })()}
-                    </tbody>
-                  </table>
+                                <td className="py-3.5 px-3 whitespace-nowrap">
+                                  <span
+                                    className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+                                      item.status === 'blocked'
+                                        ? 'bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-400'
+                                        : item.status === 'voided'
+                                        ? 'bg-purple-500/10 border-purple-500/20 text-purple-700 dark:text-purple-400'
+                                        : 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400'
+                                    }`}
+                                  >
+                                    {item.status === 'blocked'
+                                      ? 'Domain Block'
+                                      : item.status === 'voided'
+                                      ? 'Voided for Retry'
+                                      : 'Address Bounce'}
+                                  </span>
+                                </td>
+
+                                <td className="py-3.5 px-3 text-xs">
+                                  <div className="space-y-1 max-w-xl">
+                                    <div className="flex items-start gap-1.5 flex-wrap">
+                                      {diag.code && (
+                                        <span className="px-1.5 py-0.2 rounded font-mono text-[10px] font-semibold bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20 shrink-0">
+                                          {diag.code}
+                                        </span>
+                                      )}
+                                      <span className="text-xs text-zinc-800 dark:text-zinc-200 leading-snug">
+                                        {diag.cleanMsg}
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 pt-0.5 flex-wrap">
+                                      {diag.helpUrl && (
+                                        <a
+                                          href={diag.helpUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1 text-[11px] font-mono text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:underline cursor-pointer"
+                                        >
+                                          <span>Vendor guide</span>
+                                          <ExternalLink className="w-2.5 h-2.5" />
+                                        </a>
+                                      )}
+
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleRawDiagnostic(item.token)}
+                                        className="text-[10px] font-mono text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 underline decoration-dotted transition-colors cursor-pointer"
+                                      >
+                                        {isRawExpanded ? 'hide raw dsn' : 'raw server dsn'}
+                                      </button>
+                                    </div>
+
+                                    {isRawExpanded && (
+                                      <div className="mt-1.5 p-2 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-[10px] text-zinc-700 dark:text-zinc-300 break-all select-all leading-relaxed">
+                                        {diag.raw}
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+
+                                <td className="py-3.5 pr-5 pl-3 font-mono text-right text-xs text-zinc-500 whitespace-nowrap tabular-nums">
+                                  <div className="font-semibold text-zinc-800 dark:text-zinc-200">{formatRelativeTime(item.bounced_at)}</div>
+                                  <div className="text-[10px] text-zinc-400">
+                                    {item.bounced_at_formatted}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          });
+                        })()}
+                      </tbody>
+                    </table>
                     <PaginationBar
                       totalItems={blockedCompaniesList.length}
                       currentPage={pageBlocked}
@@ -1849,97 +1808,98 @@ export default function OutreachTelemetry({ initialAuth }) {
                 )}
               </div>
             ) : (
+              
               /* Flat Chronological Feed View */
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-dark/10 dark:border-light/10 text-dark/60 dark:text-light/60 font-mono">
-                      <th className="pb-3 font-semibold">Recruiter &amp; Company</th>
-                      <th className="pb-3 font-semibold">Event &amp; Class</th>
-                      <th className="pb-3 font-semibold">Detail</th>
-                      <th className="pb-3 font-semibold">Location &amp; IP</th>
-                      <th className="pb-3 font-semibold text-right">Time (IST)</th>
+                    <tr className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/30 text-zinc-500 font-mono text-[11px]">
+                      <th className="py-3 px-5 font-medium">Recruiter &amp; Company</th>
+                      <th className="py-3 px-3 font-medium">Event</th>
+                      <th className="py-3 px-3 font-medium">Detail</th>
+                      <th className="py-3 px-3 font-medium">Location &amp; IP</th>
+                      <th className="py-3 pr-5 pl-3 font-medium text-right">Time (IST)</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-dark/5 dark:divide-light/5">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
                     {paginatedEvents.map((evt, idx) => {
                       const { badgeStyle, label } = getEventBadge(evt);
                       return (
                         <tr
                           key={`${evt.token}-${evt.ts}-${idx}`}
-                          className="hover:bg-dark/5 dark:hover:bg-light/5 transition-colors"
+                          className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors"
                         >
-                          <td className="py-3.5">
-                            <div className="font-bold text-dark dark:text-light">
-                              {evt.company || 'Unknown Org'}
+                          <td className="py-3.5 px-5">
+                            <div className="font-semibold text-zinc-900 dark:text-zinc-100">
+                              {evt.company || 'Unknown Organisation'}
                             </div>
-                            <div className="text-[11px] text-dark/60 dark:text-light/60">
+                            <div className="text-[11px] text-zinc-500 font-mono">
                               {evt.recipient || 'No email'}
                             </div>
                             {evt.track && (
-                              <span className="inline-block mt-0.5 text-[10px] px-2 py-0.5 bg-dark/5 dark:bg-light/10 text-dark/70 dark:text-light/70 rounded-full font-medium">
+                              <span className="inline-block mt-0.5 text-[9px] px-1.5 py-0.2 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded font-mono uppercase">
                                 {evt.track}
                               </span>
                             )}
                           </td>
 
-                          <td className="py-3.5">
+                          <td className="py-3.5 px-3">
                             <span
-                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold border ${badgeStyle}`}
+                              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${badgeStyle}`}
                             >
                               {label}
                             </span>
                           </td>
 
-                          <td className="py-3.5 text-dark/80 dark:text-light/80 font-medium">
+                          <td className="py-3.5 px-3 text-zinc-700 dark:text-zinc-300">
                             {evt.slug && (
-                              <span className="font-mono text-primary dark:text-primaryDark">
+                              <span className="font-mono text-zinc-900 dark:text-zinc-100 font-medium">
                                 /{evt.slug}
                               </span>
                             )}
-                            {evt.dwell_ms && <span>{Math.round(evt.dwell_ms / 1000)}s visible</span>}
+                            {evt.dwell_ms && <span className="font-mono tabular-nums">{Math.round(evt.dwell_ms / 1000)}s visible</span>}
                             {!evt.slug && !evt.dwell_ms && (evt.event === 'open' || evt.event === 'prefetch' || evt.is_prefetch) && (
-                              <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
-                                {evt.delta_sec ? (evt.delta_sec >= 60 ? `+${Math.round(evt.delta_sec / 60)}m post-send` : `+${evt.delta_sec}s post-send`) : (evt.is_prefetch ? 'Automated Pre-scan' : 'Email Opened')}
+                              <span className="text-zinc-500 font-mono text-[11px] tabular-nums">
+                                {evt.delta_sec ? (evt.delta_sec >= 60 ? `+${Math.round(evt.delta_sec / 60)}m post-send` : `+${evt.delta_sec}s post-send`) : (evt.is_prefetch ? 'Automated pre-scan' : 'Email opened')}
                               </span>
                             )}
                             {!evt.slug && !evt.dwell_ms && evt.event === 'resume_view' && (
-                              <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
-                                {evt.session_num ? `Session #${evt.session_num}` : 'Web Resume'}
+                              <span className="text-zinc-500 font-mono text-[11px]">
+                                {evt.session_num ? `Session #${evt.session_num}` : 'Web resume'}
                               </span>
                             )}
                             {!evt.slug && !evt.dwell_ms && (evt.event === 'resume_download' || evt.event === 'download') && (
-                              <span className="text-dark/70 dark:text-light/70 font-mono text-[11px]">
-                                {evt.download_num ? `Download #${evt.download_num}` : 'PDF Download'}
+                              <span className="text-zinc-500 font-mono text-[11px]">
+                                {evt.download_num ? `Download #${evt.download_num}` : 'PDF download'}
                               </span>
                             )}
                             {!evt.slug && !evt.dwell_ms && evt.event !== 'open' && evt.event !== 'resume_view' && evt.event !== 'resume_download' && evt.event !== 'download' && (
-                              <span className="text-dark/40 dark:text-light/40">—</span>
+                              <span className="text-zinc-400">—</span>
                             )}
                           </td>
 
-                          <td className="py-3.5">
+                          <td className="py-3.5 px-3">
                             {(() => {
                               const loc = formatLocation(evt.city, evt.country, evt.client_class, evt.ip_trunc, evt.as_number, evt.via);
                               return loc.isProxy ? (
                                 <div>
                                   <div
-                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20"
                                     title={loc.tooltip}
                                   >
                                     <Shield className="w-3 h-3 shrink-0" />
                                     <span>{loc.text}</span>
                                   </div>
-                                  <div className="text-[11px] font-mono text-dark/40 dark:text-light/40 mt-0.5">
+                                  <div className="text-[10px] font-mono text-zinc-400 mt-0.5 tabular-nums">
                                     {evt.ip_trunc || 'IP redacted'}
                                   </div>
                                 </div>
                               ) : (
                                 <div>
-                                  <div className="text-dark/80 dark:text-light/80 font-medium">
+                                  <div className="text-zinc-800 dark:text-zinc-200 font-medium">
                                     {loc.text}
                                   </div>
-                                  <div className="text-[11px] font-mono text-dark/50 dark:text-light/50">
+                                  <div className="text-[10px] font-mono text-zinc-400 tabular-nums">
                                     {evt.ip_trunc || 'IP redacted'}
                                   </div>
                                 </div>
@@ -1947,11 +1907,11 @@ export default function OutreachTelemetry({ initialAuth }) {
                             })()}
                           </td>
 
-                          <td className="py-3.5 font-mono text-right">
-                            <div className="font-semibold text-xs text-dark/90 dark:text-light/90">
+                          <td className="py-3.5 pr-5 pl-3 font-mono text-right tabular-nums">
+                            <div className="font-semibold text-xs text-zinc-800 dark:text-zinc-200">
                               {formatRelativeTime(evt.ts)}
                             </div>
-                            <div className="text-[10px] text-dark/50 dark:text-light/50">
+                            <div className="text-[10px] text-zinc-400">
                               {evt.ist_time || evt.ts}
                             </div>
                           </td>
@@ -1971,7 +1931,8 @@ export default function OutreachTelemetry({ initialAuth }) {
               </div>
             )}
           </div>
-        </Layout>
+
+        </div>
       </main>
     </>
   );

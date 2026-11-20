@@ -182,8 +182,8 @@ export default function App({ Component, pageProps }) {
       <main
         className={`${montserrat.variable} font-mont bg-light dark:bg-dark w-full min-h-screen h-full relative overflow-clip ${isPortal ? "portal-page" : ""}`}
       >
-        {/* Global Interactive Particles Background */}
-        {mounted && (
+        {/* Global Interactive Particles Background (Disabled on /portal for calm technical console) */}
+        {mounted && !isPortal && (
           <Particles
             className="fixed inset-0 z-0 opacity-60 dark:opacity-80 pointer-events-none"
             quantity={100}
