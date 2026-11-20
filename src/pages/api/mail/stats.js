@@ -178,7 +178,9 @@ export default async function handler(req, res) {
         // Collect and dynamically classify interaction events
         const eventJsonList = Array.isArray(rawEventList) ? rawEventList : [];
         let msgHumanOpens = 0;
-        let msgPrefetches = Number(msg.machine_prefetches || 0);
+        let msgHumanViews = 0;
+        let msgHumanClicks = 0;
+        let msgPrefetches = eventJsonList.length > 0 ? 0 : Number(msg.machine_prefetches || 0);
 
         for (const item of eventJsonList) {
           try {
@@ -196,22 +198,31 @@ export default async function handler(req, res) {
             const deltaSec = msgCreated > 0 ? Math.max(0, (eventTs - msgCreated) / 1000) : (parsed.delta_sec || 0);
             parsed.delta_sec = Math.round(deltaSec);
 
-            if (parsed.event === 'prefetch') {
+            const scanner = isSecurityScanner(parsed.ua, parsed.ip_trunc, parsed.as_number, parsed.via);
+            const isRapidScan = deltaSec > 0 && deltaSec < 30;
+
+            if (parsed.event === 'prefetch' || parsed.is_prefetch || scanner || isRapidScan) {
               parsed.is_prefetch = true;
+              if (!parsed.prefetch_type) {
+                parsed.prefetch_type = scanner
+                  ? (parsed.event === 'click' ? 'scanner_link_detonation' : (parsed.event === 'resume_view' ? 'scanner_doc_detonation' : 'security_scanner'))
+                  : 'bot_rapid_scan';
+              }
               msgPrefetches++;
             } else if (parsed.event === 'open') {
-              const scanner = isSecurityScanner(parsed.ua, parsed.ip_trunc, parsed.as_number, parsed.via);
               const proxy = parsed.client_class === 'gmail_proxy' || parsed.client_class === 'apple_mpp';
-              if (scanner || (proxy && deltaSec < 60) || deltaSec < 15) {
+              if (proxy && deltaSec < 60) {
                 parsed.is_prefetch = true;
-                parsed.prefetch_type = scanner
-                  ? 'security_scanner'
-                  : (parsed.client_class === 'gmail_proxy' ? 'gmail_prefetch' : (parsed.client_class === 'apple_mpp' ? 'apple_prefetch' : 'bot_rapid_scan'));
+                parsed.prefetch_type = parsed.client_class === 'gmail_proxy' ? 'gmail_prefetch' : 'apple_prefetch';
                 msgPrefetches++;
               } else {
                 parsed.is_human_open = true;
                 msgHumanOpens++;
               }
+            } else if (parsed.event === 'resume_view') {
+              msgHumanViews++;
+            } else if (parsed.event === 'click') {
+              msgHumanClicks++;
             }
 
             parsed.engagement_score = computeEngagementScore(parsed);
@@ -219,7 +230,7 @@ export default async function handler(req, res) {
             if (eventTs > existingComp.last_active) {
               existingComp.last_active = eventTs;
             }
-            if (parsed.event === 'click' && eventTs > 0) {
+            if (parsed.event === 'click' && eventTs > 0 && !parsed.is_prefetch) {
               existingComp.click_timestamps.push(eventTs);
             }
 
@@ -229,13 +240,15 @@ export default async function handler(req, res) {
         }
 
         const effectiveHumanOpens = (eventJsonList.length > 0) ? msgHumanOpens : Math.max(0, opens - msgPrefetches);
-        const isHumanOpened = effectiveHumanOpens > 0 || views > 0 || clicks > 0 || downloads > 0;
+        const effectiveHumanViews = (eventJsonList.length > 0) ? msgHumanViews : Math.max(0, views);
+        const effectiveHumanClicks = (eventJsonList.length > 0) ? msgHumanClicks : Math.max(0, clicks);
+        const isHumanOpened = effectiveHumanOpens > 0 || effectiveHumanViews > 0 || effectiveHumanClicks > 0 || downloads > 0;
         if (isHumanOpened) {
           verifiedOpens++;
         }
         totalPrefetches += msgPrefetches;
-        totalResumeViews += views;
-        totalClicks += clicks;
+        totalResumeViews += effectiveHumanViews;
+        totalClicks += effectiveHumanClicks;
         totalDownloads += downloads;
         totalDwellMs += dwellMs;
 
@@ -248,8 +261,8 @@ export default async function handler(req, res) {
           opens,
           human_opens: effectiveHumanOpens,
           prefetches: msgPrefetches,
-          views,
-          clicks,
+          views: effectiveHumanViews,
+          clicks: effectiveHumanClicks,
           downloads,
           created_at: Number(msg.created_at || 0),
           created_at_formatted: formatIstTimestamp(Number(msg.created_at || 0))
@@ -259,8 +272,8 @@ export default async function handler(req, res) {
         if (isHumanOpened) existingComp.opened++;
         existingComp.human_opens = (existingComp.human_opens || 0) + effectiveHumanOpens;
         existingComp.prefetches = (existingComp.prefetches || 0) + msgPrefetches;
-        existingComp.resume_viewed += views;
-        existingComp.clicks += clicks;
+        existingComp.resume_viewed += effectiveHumanViews;
+        existingComp.clicks += effectiveHumanClicks;
         existingComp.downloads += downloads;
         if (msgLastEvent > existingComp.last_active) {
           existingComp.last_active = msgLastEvent;
@@ -284,16 +297,22 @@ export default async function handler(req, res) {
       }
     }
 
-    // Flag automated enterprise email security scanner behavior (e.g. Proofpoint, SafeLinks, Mimecast)
-    // Heuristic: >= 5 rapid link clicks executed within 120 seconds
+    // Flag automated enterprise email security scanner behavior (e.g. Proofpoint, Defender Safe Links, Mimecast)
     for (const comp of companyMap.values()) {
       const clickTimes = (comp.click_timestamps || []).sort((a, b) => a - b);
+      const hasScannerEvents = (comp.events || []).some(
+        (e) => e.is_prefetch && (e.prefetch_type?.includes('scanner') || e.prefetch_type === 'security_scanner')
+      );
+
       if (clickTimes.length >= 5) {
         const spanMs = clickTimes[clickTimes.length - 1] - clickTimes[0];
         if (spanMs <= 120000) {
           comp.is_security_scanner = true;
           comp.scanner_note = `Automated Email Security Gateway (Pre-screened ${clickTimes.length} links in ${Math.round(spanMs / 1000)}s)`;
         }
+      } else if (hasScannerEvents && comp.human_opens === 0) {
+        comp.is_security_scanner = true;
+        comp.scanner_note = 'Automated Security Scanner Detonation (Defender ATP / Safe Links)';
       }
       delete comp.click_timestamps;
 
@@ -474,6 +493,7 @@ export default async function handler(req, res) {
 
     const responsePayload = {
       summary: {
+        total_companies: companyMap.size,
         total_sent: totalSent,
         verified_opens: verifiedOpens,
         open_rate_percent: openRatePercent,

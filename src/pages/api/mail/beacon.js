@@ -1,5 +1,5 @@
 import { verifyToken, verifyAdminSession, isSenderEmail } from '../../../lib/mail/token.js';
-import { truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
+import { isSecurityScanner, truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
 import { k, hgetall, hincrby, hset, lpush, expire, exists, set, get } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
 
@@ -57,6 +57,37 @@ export default async function handler(req, res) {
       const region = req.headers['x-vercel-ip-country-region'] || '';
       const city = decodeCity(req.headers['x-vercel-ip-city']);
       const now = Date.now();
+      const createdAt = Number(msg.created_at || now);
+      const deltaSec = Math.max(0, (now - createdAt) / 1000);
+
+      // Check if this beacon originated from an automated security crawler (e.g. Microsoft Defender visiting /api/mail/doc)
+      const isScanner = isSecurityScanner(ua, rawIp, asNumber, via);
+
+      if (isScanner) {
+        // Record as prefetch without incrementing human resume views or dispatching Telegram alerts
+        await hincrby(k(`mail:m:${t}`), 'machine_prefetches', 1);
+        await hset(k(`mail:m:${t}`), { last_event_at: now });
+
+        const scannerPayload = JSON.stringify({
+          event: 'prefetch',
+          prefetch_type: 'scanner_doc_detonation',
+          is_prefetch: true,
+          ts: now,
+          delta_sec: Math.round(deltaSec),
+          client_class: 'security_scanner',
+          ua,
+          ip_trunc: ipTrunc,
+          as_number: asNumber,
+          via,
+          country,
+          region,
+          city
+        });
+
+        await lpush(k(`mail:events:${t}`), scannerPayload);
+        await expire(k(`mail:events:${t}`), 5184000);
+        return res.status(204).end();
+      }
 
       if (event === 'resume_view') {
         const sessionKey = k(`mail:session:${t}:resume`);

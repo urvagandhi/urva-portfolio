@@ -1,6 +1,6 @@
 import { verifyToken, verifyAdminSession, isSenderEmail } from '../../../lib/mail/token.js';
 import { resolveDestination } from '../../../lib/mail/allowlist.js';
-import { truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
+import { isSecurityScanner, truncateIp, decodeCity } from '../../../lib/mail/classifier.js';
 import { k, hgetall, hincrby, hset, lpush, expire, zincrby, incr, sadd, smembers, get, set } from '../../../lib/mail/redis.js';
 import { dispatchTelegramAlert } from '../../../lib/mail/telegram.js';
 
@@ -68,6 +68,43 @@ export default async function handler(req, res) {
       const region = req.headers['x-vercel-ip-country-region'] || '';
       const city = decodeCity(req.headers['x-vercel-ip-city']);
       const now = Date.now();
+      const createdAt = Number(msg.created_at || now);
+      const deltaSec = Math.max(0, (now - createdAt) / 1000);
+
+      // Check if this click originated from an automated security crawler or URL detonation engine (e.g. Microsoft Safe Links)
+      const isScanner = isSecurityScanner(ua, rawIp, asNumber, via);
+
+      if (isScanner) {
+        // Increment machine_prefetches and record prefetch event without polluting human metrics or alerting
+        await hincrby(k(`mail:m:${t}`), 'machine_prefetches', 1);
+        await hset(k(`mail:m:${t}`), { last_event_at: now });
+
+        const scannerPayload = JSON.stringify({
+          event: 'prefetch',
+          prefetch_type: 'scanner_link_detonation',
+          is_prefetch: true,
+          slug,
+          dest_url: destUrl,
+          ts: now,
+          delta_sec: Math.round(deltaSec),
+          client_class: 'security_scanner',
+          ua,
+          ip_trunc: ipTrunc,
+          as_number: asNumber,
+          via,
+          country,
+          region,
+          city
+        });
+
+        await lpush(k(`mail:events:${t}`), scannerPayload);
+        await expire(k(`mail:events:${t}`), 5184000);
+
+        // Redirect scanner cleanly to destination so domain reputation is preserved
+        res.setHeader('Location', destUrl);
+        res.setHeader('Cache-Control', 'no-store, private');
+        return res.status(302).end();
+      }
 
       // Increment click metrics in hash and global leaderboard sorted set
       const currentOpens = Number(msg.opens || 0);

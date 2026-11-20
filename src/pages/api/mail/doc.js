@@ -40,6 +40,9 @@ export default async function handler(req, res) {
   const beaconScript = isAdmin ? '' : `
   <script>
     (function() {
+      // Discard automated headless browsers and synthetic webdrivers immediately
+      if (navigator.webdriver) return;
+
       const TOKEN = "${t}";
       const SESS_STORAGE_KEY = 'outreach_sess_' + TOKEN;
       let sessionId = null;
@@ -54,6 +57,7 @@ export default async function handler(req, res) {
       }
 
       let visibleStartTime = document.visibilityState === 'visible' ? Date.now() : null;
+      let accumulatedDwellMs = 0;
 
       function sendPayload(data) {
         const payload = JSON.stringify(Object.assign({ t: TOKEN, sid: sessionId }, data));
@@ -75,8 +79,25 @@ export default async function handler(req, res) {
         }
       }
 
-      // Initial resume_view event trigger
-      sendPayload({ event: 'resume_view' });
+      // Human-interaction gated resume_view trigger:
+      // Real humans scroll, move their mouse, touch the screen, or dwell for >= 3 seconds.
+      // Automated crawlers and detonation sandboxes close immediately without interaction.
+      let viewTriggered = false;
+      function triggerResumeView() {
+        if (viewTriggered) return;
+        viewTriggered = true;
+        sendPayload({ event: 'resume_view' });
+      }
+
+      ['mousemove', 'scroll', 'touchstart', 'keydown'].forEach(function(evt) {
+        window.addEventListener(evt, triggerResumeView, { once: true, passive: true });
+      });
+
+      setTimeout(function() {
+        if (document.visibilityState === 'visible') {
+          triggerResumeView();
+        }
+      }, 3000);
 
       // Track dwell time on visibility changes
       document.addEventListener('visibilitychange', function() {

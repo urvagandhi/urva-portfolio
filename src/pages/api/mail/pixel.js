@@ -61,6 +61,21 @@ export default async function handler(req, res) {
         return res.status(200).send(PIXEL_BUFFER);
       }
     }
+
+    // Multi-token burst detection (Swipe / Sent-Mail Review Guard):
+    // Real recipients only open the one email addressed to them.
+    // If requests for 2 or more distinct tokens arrive from proxy infrastructure within 60s,
+    // this is mathematically the sender reviewing their Sent folder on mobile.
+    let isSwipeBurst = false;
+    if (clientClass === 'gmail_proxy' || clientClass === 'apple_mpp') {
+      const burstKey = k('mail:proxy:recent_tokens');
+      const prevToken = await get(burstKey);
+      if (prevToken && prevToken !== t) {
+        isSwipeBurst = true;
+      }
+      await set(burstKey, t, { ex: 60 });
+    }
+
     const forwardedFor = req.headers['x-forwarded-for'];
     const rawIp = forwardedFor ? forwardedFor.split(',')[0].trim() : (req.socket?.remoteAddress || '');
     const ipTrunc = truncateIp(rawIp);
@@ -71,16 +86,18 @@ export default async function handler(req, res) {
     const createdAt = Number(msg.created_at || now);
     const deltaSec = Math.max(0, (now - createdAt) / 1000);
 
-    // Detect automated security crawlers and rapid proxy prefetching
+    // Detect automated security crawlers, rapid proxy prefetching, and mobile review bursts
     const isScanner = isSecurityScanner(ua, rawIp, asNumber, via);
     const isProxyPrefetch = (clientClass === 'gmail_proxy' || clientClass === 'apple_mpp') && deltaSec < 60;
     const isRapidBotScan = deltaSec < 15 && clientClass !== 'direct_unclassified';
-    const isMachineOpen = isScanner || isProxyPrefetch || isRapidBotScan;
+    const isMachineOpen = isScanner || isProxyPrefetch || isRapidBotScan || isSwipeBurst;
 
     if (isMachineOpen) {
-      const prefetchType = isScanner
-        ? 'security_scanner'
-        : (clientClass === 'gmail_proxy' ? 'gmail_prefetch' : (clientClass === 'apple_mpp' ? 'apple_prefetch' : 'bot_rapid_scan'));
+      const prefetchType = isSwipeBurst
+        ? 'sender_browsing_burst'
+        : (isScanner
+            ? 'security_scanner'
+            : (clientClass === 'gmail_proxy' ? 'gmail_prefetch' : (clientClass === 'apple_mpp' ? 'apple_prefetch' : 'bot_rapid_scan')));
 
       // Increment machine_prefetches counter and record event without polluting human opens or alerting
       await hincrby(k(`mail:m:${t}`), 'machine_prefetches', 1);
@@ -89,6 +106,7 @@ export default async function handler(req, res) {
       const prefetchPayload = JSON.stringify({
         event: 'prefetch',
         prefetch_type: prefetchType,
+        is_prefetch: true,
         ts: now,
         delta_sec: Math.round(deltaSec),
         client_class: clientClass,

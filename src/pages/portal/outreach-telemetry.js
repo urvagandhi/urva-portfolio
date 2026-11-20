@@ -111,6 +111,15 @@ function getEventBadge(evt) {
     if (evt.prefetch_type === 'security_scanner') {
       badgeStyle = 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
       label = 'Security Scanner';
+    } else if (evt.prefetch_type === 'scanner_link_detonation') {
+      badgeStyle = 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
+      label = 'Scanner Link Detonation';
+    } else if (evt.prefetch_type === 'scanner_doc_detonation') {
+      badgeStyle = 'bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400';
+      label = 'Scanner Doc Detonation';
+    } else if (evt.prefetch_type === 'sender_browsing_burst') {
+      badgeStyle = 'bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-400';
+      label = 'Sender Sent Review';
     } else if (evt.client_class === 'gmail_proxy' || evt.prefetch_type === 'gmail_prefetch') {
       badgeStyle = 'bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400';
       label = 'Google Prefetch';
@@ -781,22 +790,27 @@ export default function OutreachTelemetry({ initialAuth }) {
 
             return (
               <div className="grid grid-cols-4 gap-4 w-full mb-8">
-                {/* Card 1: Total Outreach */}
+                {/* Card 1: Total Companies Outreach */}
                 <div className="relative p-5 rounded-3xl border border-dark/10 bg-light/80 dark:border-light/10 dark:bg-dark/80 backdrop-blur-md shadow-md shadow-black/5 dark:shadow-black/20 overflow-hidden flex flex-col justify-between">
                   <BorderBeam size={140} duration={12} delay={0} colorFrom="#58E6D9" colorTo="#8B5CF6" />
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-dark/60 dark:text-light/60">
-                        Total Outreach
+                        Total Companies
                       </span>
                       <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                         <Mail className="w-4 h-4" />
                       </div>
                     </div>
                     <div className="flex items-baseline justify-between">
-                      <span className="text-3xl font-extrabold text-dark dark:text-light">
-                        {summary.total_sent ?? 0}
-                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-3xl font-extrabold text-dark dark:text-light">
+                          {companyRollups.length > 0 ? companyRollups.length : (summary.total_companies ?? summary.total_sent ?? 0)}
+                        </span>
+                        <span className="text-xs font-semibold text-dark/50 dark:text-light/50">
+                          Companies
+                        </span>
+                      </div>
                       {/* Real Sparkline 1 */}
                       <svg viewBox="0 0 80 24" className="w-16 h-6" fill="none">
                         <defs>
@@ -813,7 +827,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                   <div className="mt-3 flex items-center justify-between text-[11px] font-medium text-dark/60 dark:text-light/60">
                     <span className="flex items-center gap-1">
                       <CheckCircle className="w-3 h-3 text-emerald-500 shrink-0" />
-                      <span>{summary.total_sent ?? 0} Active</span>
+                      <span>{summary.total_sent ?? 0} Active Transmissions</span>
                     </span>
                     {(summary.total_inactive ?? 0) > 0 && (
                       <button
@@ -834,7 +848,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                   <div>
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-dark/60 dark:text-light/60">
-                        Recruiter Opens
+                        Human Engaged
                       </span>
                       <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                         <Eye className="w-4 h-4" />
@@ -843,10 +857,10 @@ export default function OutreachTelemetry({ initialAuth }) {
                     <div className="flex items-baseline justify-between">
                       <div className="flex items-baseline gap-2">
                         <span className="text-3xl font-extrabold text-dark dark:text-light">
-                          {summary.verified_opens ?? 0}
+                          {openedCompanies.length}
                         </span>
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
-                          {summary.open_rate_percent ?? 0}%
+                          {companyRollups.length > 0 ? Math.round((openedCompanies.length / companyRollups.length) * 100) : (summary.open_rate_percent ?? 0)}%
                         </span>
                       </div>
                       {/* Real Sparkline 2 */}
@@ -863,7 +877,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between text-[11px] text-dark/60 dark:text-light/60 font-medium">
-                    <span>Verified Human Reads</span>
+                    <span>{summary.verified_opens ?? 0} Transmissions Read</span>
                     {Number(summary.machine_prefetches || 0) > 0 && (
                       <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400" title={`${summary.machine_prefetches} automated Google Image Proxy or Security Gateway prefetch scan(s)`}>
                         +{summary.machine_prefetches} prefetched
@@ -1200,8 +1214,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                       <th className="pb-3 px-3 font-semibold text-center w-16">Opened</th>
                       <th className="pb-3 px-3 font-semibold text-center w-16">Resume</th>
                       <th className="pb-3 px-3 font-semibold text-center w-14">Clicks</th>
-                      <th className="pb-3 px-4 font-semibold min-w-[130px]">Last Active</th>
-                      <th className="pb-3 pl-4 font-semibold text-right w-20">Actions</th>
+                      <th className="pb-3 pl-4 font-semibold text-right min-w-[130px]">Last Active</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-dark/5 dark:divide-light/5">
@@ -1314,7 +1327,7 @@ export default function OutreachTelemetry({ initialAuth }) {
                             </td>
                             <td className="py-4 px-3 text-center text-purple-600 dark:text-purple-400 font-bold font-mono">{c.resume_viewed}</td>
                             <td className="py-4 px-3 text-center text-amber-600 dark:text-amber-400 font-bold font-mono">{c.clicks}</td>
-                            <td className="py-4 px-4 font-mono text-left whitespace-nowrap">
+                            <td className="py-4 pl-4 font-mono text-right whitespace-nowrap">
                               {c.last_active > 0 ? (
                                 <div>
                                   <div className="font-semibold text-xs text-dark/90 dark:text-light/90">
@@ -1328,17 +1341,12 @@ export default function OutreachTelemetry({ initialAuth }) {
                                 <span className="text-dark/40 dark:text-light/40 text-xs">Pending</span>
                               )}
                             </td>
-                            <td className="py-4 pl-4 text-right font-medium whitespace-nowrap">
-                              <span className="text-xs text-primary dark:text-primaryDark hover:underline inline-flex items-center gap-1">
-                                {isExpanded ? 'Hide' : 'View'} ({compEvents.length})
-                              </span>
-                            </td>
                           </tr>
 
                           {/* Nested Interaction Details Accordion */}
                           {isExpanded && (
                             <tr className="bg-transparent">
-                              <td colSpan={7} className="p-0 border-none">
+                              <td colSpan={6} className="p-0 border-none">
                                 <div className="mx-2 mb-4 p-4 rounded-2xl bg-dark/[0.02] dark:bg-light/[0.02] border border-dark/10 dark:border-light/10">
                                   <div className="flex items-center justify-between mb-3 text-xs">
                                     <span className="font-semibold text-dark/70 dark:text-light/70 font-mono flex items-center gap-1.5">

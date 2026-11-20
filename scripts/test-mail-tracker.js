@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { generateToken, verifyToken } from '../src/lib/mail/token.js';
 import { ALLOWED_SLUGS, resolveDestination } from '../src/lib/mail/allowlist.js';
-import { classifyClient, truncateIp, escapeHtml, decodeCity } from '../src/lib/mail/classifier.js';
+import { classifyClient, truncateIp, escapeHtml, decodeCity, isSecurityScanner, classifyEngagementTier } from '../src/lib/mail/classifier.js';
 import {
   k,
   clearMockStore,
@@ -386,6 +386,69 @@ async function runUnitTests() {
       assert.equal(decodeCity(null), '', 'Null input should return empty string');
       assert.equal(decodeCity(undefined), '', 'Undefined input should return empty string');
       assert.equal(decodeCity(12345), '', 'Non-string input should return empty string');
+    }
+  );
+
+  await testCase(
+    'UT-SUPP-05',
+    'classifier.js | isSecurityScanner() detects Microsoft Defender ATP, synthetic future Chrome versions, and security ASNs',
+    async () => {
+      // 1. Microsoft Corporation ASN (AS8075)
+      assert.equal(isSecurityScanner('Mozilla/5.0 Chrome/120.0', '57.155.170.1', '8075'), true, 'AS8075 must be detected as scanner');
+      // 2. Microsoft Defender frozen engine (Chrome 109)
+      assert.equal(isSecurityScanner('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/109.0.0.0 Safari/537.36'), true, 'Chrome 109 must be detected');
+      // 3. Synthetic future Chrome versions (Chrome 154, Chrome 155)
+      assert.equal(isSecurityScanner('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154.0.0.0 Safari/537.36'), true, 'Chrome 154 must be detected');
+      assert.equal(isSecurityScanner('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/155.0.0.0 Safari/537.36'), true, 'Chrome 155 must be detected');
+      // 4. Legacy Safe Links crawler (Chrome 63)
+      assert.equal(isSecurityScanner('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 Chrome/63.0.3239.84 Safari/537.36'), true, 'Chrome 63 must be detected');
+      // 5. Azure Defender subnet
+      assert.equal(isSecurityScanner('Mozilla/5.0 Safari/537.36', '57.155.171.12'), true, 'Azure 57.155 subnet must be detected');
+      // 6. Genuine human browser on residential/cellular network must NOT be flagged
+      const humanUa = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36';
+      assert.equal(isSecurityScanner(humanUa, '152.59.4.54', '55836'), false, 'Genuine human client must not be flagged');
+    }
+  );
+
+  await testCase(
+    'UT-SUPP-06',
+    'classifier.js | classifyEngagementTier() classifies security scanner events as low confidence',
+    async () => {
+      // Scanner open
+      const scannerOpenTier = classifyEngagementTier({
+        event: 'open',
+        clientClass: 'direct_unclassified',
+        deltaSec: 18,
+        userAgent: 'Mozilla/5.0 Chrome/109.0.0.0 Safari/537.36',
+        asNumber: '8075'
+      });
+      assert.equal(scannerOpenTier, 'low', 'Scanner open must be low confidence');
+
+      // Scanner resume view
+      const scannerViewTier = classifyEngagementTier({
+        event: 'resume_view',
+        deltaSec: 25,
+        userAgent: 'Mozilla/5.0 Chrome/154.0.0.0 Safari/537.36',
+        asNumber: '8075'
+      });
+      assert.equal(scannerViewTier, 'low', 'Scanner resume view must be low confidence');
+
+      // Human open >= 30s
+      const humanOpenTier = classifyEngagementTier({
+        event: 'open',
+        clientClass: 'direct_unclassified',
+        deltaSec: 120,
+        userAgent: 'Mozilla/5.0 Chrome/120.0.0.0 Safari/537.36'
+      });
+      assert.equal(humanOpenTier, 'medium', 'Genuine human open must be medium confidence');
+
+      // Human link click
+      const humanClickTier = classifyEngagementTier({
+        event: 'click',
+        deltaSec: 150,
+        userAgent: 'Mozilla/5.0 Chrome/120.0.0.0 Safari/537.36'
+      });
+      assert.equal(humanClickTier, 'high', 'Genuine human click must be high confidence');
     }
   );
 }
